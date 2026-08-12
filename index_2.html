@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1C3557">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>ACT & SPEAK</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── TOKENS ─────────────────────────────────────────────────── */
+    :root {
+      --navy:       #1C3557;
+      --navy-deep:  #0F1F33;
+      --navy-mid:   #2E4E7E;
+      --gold:       #C9A030;
+      --gold-light: #E8C55A;
+      --gold-dim:   #8A6A1A;
+      --surface:    #FFFFFF;
+      --surface-2:  #F4F6F9;
+      --surface-3:  #E8ECF2;
+      --text-1:     #0F1F33;
+      --text-2:     #4A5568;
+      --text-3:     #8896A8;
+      --danger:     #C0392B;
+      --success:    #0F6E56;
+      --radius-sm:  8px;
+      --radius-md:  14px;
+      --radius-lg:  22px;
+      --shadow-sm:  0 1px 4px rgba(15,31,51,.08);
+      --shadow-md:  0 4px 20px rgba(15,31,51,.12);
+      --shadow-lg:  0 12px 40px rgba(15,31,51,.18);
+      --transition: 200ms cubic-bezier(.4,0,.2,1);
+    }
+    [data-theme="dark"] {
+      --surface:   #111827;
+      --surface-2: #1F2937;
+      --surface-3: #374151;
+      --text-1:    #F9FAFB;
+      --text-2:    #D1D5DB;
+      --text-3:    #6B7280;
+      --shadow-sm: 0 1px 4px rgba(0,0,0,.3);
+      --shadow-md: 0 4px 20px rgba(0,0,0,.4);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,.5);
+    }
+
+    /* ── RESET ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--surface);
+      color: var(--text-1);
+      height: 100%;
+      overflow: hidden;
+      transition: background var(--transition), color var(--transition);
+    }
+    input, button, textarea { font-family: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+
+    /* ── LAYOUT ─────────────────────────────────────────────────── */
+    #app {
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── SCREENS ────────────────────────────────────────────────── */
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 300ms ease, transform 300ms ease;
+      transform: translateY(12px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .screen.active {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+
+    /* ── SPLASH ─────────────────────────────────────────────────── */
+    #screen-splash {
+      background: linear-gradient(160deg, var(--navy-deep) 0%, var(--navy) 50%, var(--navy-mid) 100%);
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    .splash-logo {
+      width: 120px;
+      height: 120px;
+      background: transparent;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .splash-logo svg { width: 48px; height: 48px; }
+    @keyframes pulse-gold {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(201,160,48,.3); }
+      50%       { box-shadow: 0 0 0 16px rgba(201,160,48,.0); }
+    }
+    .splash-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      color: #fff;
+      letter-spacing: .02em;
+    }
+    .splash-tagline {
+      font-size: 12px;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    .splash-loader {
+      width: 40px;
+      height: 2px;
+      background: rgba(255,255,255,.15);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 16px;
+    }
+    .splash-loader-bar {
+      height: 100%;
+      width: 0;
+      background: var(--gold);
+      border-radius: 2px;
+      animation: load-bar 1.8s ease forwards;
+    }
+    @keyframes load-bar { to { width: 100%; } }
+
+    /* ── LOGIN ──────────────────────────────────────────────────── */
+    #screen-login {
+      background: var(--surface);
+    }
+    .login-hero {
+      background: linear-gradient(160deg, var(--navy-deep) 0%, var(--navy) 60%, var(--navy-mid) 100%);
+      padding: 60px 32px 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-hero::before {
+      content: '';
+      position: absolute;
+      bottom: -60px; left: 50%;
+      transform: translateX(-50%);
+      width: 160%;
+      height: 120px;
+      background: var(--surface);
+      border-radius: 50%;
+    }
+    .login-logo {
+      width: 80px;
+      height: 80px;
+      background: transparent;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 4px;
+      position: relative;
+      z-index: 1;
+    }
+    .login-logo svg { width: 38px; height: 38px; }
+    .login-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      color: #fff;
+      position: relative; z-index: 1;
+    }
+    .login-sub {
+      font-size: 11px;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      position: relative; z-index: 1;
+    }
+    .login-form-wrap {
+      flex: 1;
+      padding: 48px 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .login-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-1);
+      margin-bottom: 6px;
+    }
+    .login-hint {
+      font-size: 13px;
+      color: var(--text-3);
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-2);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .field input {
+      width: 100%;
+      height: 52px;
+      background: var(--surface-2);
+      border: 1.5px solid var(--surface-3);
+      border-radius: var(--radius-md);
+      padding: 0 16px;
+      font-size: 15px;
+      color: var(--text-1);
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .field input:focus {
+      border-color: var(--navy);
+      box-shadow: 0 0 0 3px rgba(28,53,87,.12);
+      background: var(--surface);
+    }
+    [data-theme="dark"] .field input { background: var(--surface-2); border-color: var(--surface-3); }
+    [data-theme="dark"] .field input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,160,48,.15); }
+
+    .btn-primary {
+      width: 100%;
+      height: 54px;
+      background: var(--navy);
+      color: #fff;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: .02em;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+      position: relative;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .btn-primary:active { transform: scale(.98); }
+    .btn-primary:hover { background: var(--navy-mid); box-shadow: var(--shadow-md); }
+    .btn-primary.gold { background: var(--gold); }
+    .btn-primary.gold:hover { background: var(--gold-light); }
+    .btn-primary:disabled { opacity: .5; pointer-events: none; }
+    .btn-primary .btn-loader {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: inherit;
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .btn-primary.loading .btn-loader { opacity: 1; }
+    .btn-spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      background: #FDE8E8;
+      color: var(--danger);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+      line-height: 1.5;
+    }
+    .error-msg.show { display: block; }
+    [data-theme="dark"] .error-msg { background: rgba(192,57,43,.2); }
+
+    .forgot-link {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--text-3);
+    }
+    .forgot-link a {
+      color: var(--navy);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    [data-theme="dark"] .forgot-link a { color: var(--gold); }
+
+    /* ── DASHBOARD ──────────────────────────────────────────────── */
+    #screen-dashboard {
+      background: var(--surface-2);
+      overflow-y: auto;
+    }
+    .dash-header {
+      background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 100%);
+      padding: 52px 20px 28px;
+      position: relative;
+    }
+    .dash-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .dash-greeting-label {
+      font-size: 11px;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .dash-greeting-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: #fff;
+    }
+    .dash-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(201,160,48,.25);
+      border: 2px solid rgba(201,160,48,.5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--gold-light);
+      cursor: pointer;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .dash-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .dash-level-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(201,160,48,.15);
+      border: 1px solid rgba(201,160,48,.35);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 11px;
+      color: var(--gold-light);
+      font-weight: 500;
+    }
+    .dash-level-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+    .dash-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .dash-stat {
+      background: rgba(255,255,255,.07);
+      border-radius: var(--radius-md);
+      padding: 14px 12px;
+      text-align: center;
+    }
+    .dash-stat-num {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .dash-stat-num span { font-size: 13px; color: var(--gold); }
+    .dash-stat-label {
+      font-size: 10px;
+      color: rgba(255,255,255,.45);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .dash-body {
+      padding: 20px 16px 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .qa-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 8px;
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .qa-btn:active { transform: scale(.95); box-shadow: none; }
+    .qa-icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .qa-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-2);
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 16px 18px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--surface-3);
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+    .card-action {
+      font-size: 12px;
+      color: var(--navy);
+      font-weight: 500;
+    }
+    [data-theme="dark"] .card-action { color: var(--gold); }
+
+    /* Task items */
+    .task-item {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid var(--surface-2);
+      transition: background var(--transition);
+    }
+    .task-item:last-child { border-bottom: none; }
+    .task-item:active { background: var(--surface-2); }
+    .task-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .task-dot.urgent { background: #C0392B; }
+    .task-dot.high   { background: #E67E22; }
+    .task-dot.normal { background: var(--navy); }
+    .task-dot.done   { background: #27AE60; }
+    .task-info { flex: 1; min-width: 0; }
+    .task-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+    .task-meta {
+      font-size: 11px;
+      color: var(--text-3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .task-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .task-badge.afaire  { background: #EFF6FF; color: #1C3557; }
+    .task-badge.encours { background: #FFF3CD; color: #856404; }
+    .task-badge.done    { background: #D4EDDA; color: #155724; }
+    .task-badge.urgent  { background: #FDE8E8; color: #C0392B; }
+    [data-theme="dark"] .task-badge.afaire  { background: rgba(28,53,87,.4);   color: #93C5FD; }
+    [data-theme="dark"] .task-badge.encours { background: rgba(133,100,4,.4);  color: #FCD34D; }
+    [data-theme="dark"] .task-badge.done    { background: rgba(21,87,36,.4);   color: #6EE7B7; }
+    [data-theme="dark"] .task-badge.urgent  { background: rgba(192,57,43,.3);  color: #FCA5A5; }
+
+    /* Score bar */
+    .score-wrap {
+      padding: 16px 18px;
+    }
+    .score-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .score-label { font-size: 13px; color: var(--text-2); font-weight: 500; }
+    .score-num {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    [data-theme="dark"] .score-num { color: var(--gold); }
+    .score-num small { font-size: 13px; color: var(--text-3); font-weight: 400; }
+    .score-bar-bg {
+      height: 8px;
+      background: var(--surface-3);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .score-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--navy), var(--gold));
+      border-radius: 4px;
+      transition: width 1s ease;
+    }
+    .score-next {
+      font-size: 11px;
+      color: var(--text-3);
+      margin-top: 6px;
+    }
+
+    /* Announcement item */
+    .announce-item {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--surface-2);
+    }
+    .announce-item:last-child { border-bottom: none; }
+    .announce-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .announce-badge {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--navy);
+      color: #fff;
+    }
+    .announce-badge.gold { background: var(--gold); }
+    .announce-date { font-size: 11px; color: var(--text-3); }
+    .announce-title { font-size: 14px; font-weight: 500; color: var(--text-1); margin-bottom: 4px; }
+    .announce-body  { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+
+    /* ── BOTTOM NAV ─────────────────────────────────────────────── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 68px;
+      background: var(--surface);
+      border-top: 1px solid var(--surface-3);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding-bottom: env(safe-area-inset-bottom);
+      z-index: 100;
+      box-shadow: 0 -4px 20px rgba(15,31,51,.06);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 16px;
+      border-radius: 12px;
+      transition: background var(--transition);
+      flex: 1;
+    }
+    .nav-item:active { background: var(--surface-2); }
+    .nav-icon {
+      font-size: 22px;
+      line-height: 1;
+      transition: transform var(--transition);
+    }
+    .nav-item.active .nav-icon { transform: scale(1.1); }
+    .nav-label {
+      font-size: 9px;
+      font-weight: 500;
+      color: var(--text-3);
+      letter-spacing: .04em;
+    }
+    .nav-item.active .nav-label { color: var(--navy); font-weight: 600; }
+    [data-theme="dark"] .nav-item.active .nav-label { color: var(--gold); }
+    .nav-center-btn {
+      width: 52px; height: 52px;
+      background: var(--navy);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 16px rgba(28,53,87,.4);
+      transition: transform var(--transition), box-shadow var(--transition);
+      flex-shrink: 0;
+    }
+    .nav-center-btn:active { transform: scale(.93); box-shadow: 0 2px 8px rgba(28,53,87,.3); }
+
+    /* ── PROFILE SCREEN ─────────────────────────────────────────── */
+    #screen-profile { background: var(--surface-2); overflow-y: auto; }
+    .profile-hero {
+      background: linear-gradient(135deg, var(--navy-deep), var(--navy));
+      padding: 52px 20px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+    .profile-avatar-wrap {
+      position: relative;
+    }
+    .profile-avatar {
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      background: rgba(201,160,48,.2);
+      border: 3px solid rgba(201,160,48,.5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--gold-light);
+      overflow: hidden;
+    }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-avatar-edit {
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 28px; height: 28px;
+      background: var(--gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      box-shadow: var(--shadow-md);
+    }
+    .profile-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: #fff;
+      text-align: center;
+    }
+    .profile-role {
+      font-size: 12px;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .profile-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .badge {
+      font-size: 18px;
+      background: rgba(255,255,255,.08);
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: default;
+    }
+    .profile-body {
+      margin-top: -24px;
+      padding: 0 16px 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .profile-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .profile-card-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-3);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 14px 18px 0;
+    }
+    .profile-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--surface-2);
+      transition: background var(--transition);
+    }
+    .profile-row:last-child { border-bottom: none; }
+    .profile-row:active { background: var(--surface-2); }
+    .profile-row-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .profile-row-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+    }
+    .profile-row-label { font-size: 14px; font-weight: 500; color: var(--text-1); }
+    .profile-row-sub   { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+    .profile-row-right { font-size: 18px; color: var(--text-3); }
+
+    /* Theme toggle */
+    .theme-toggle {
+      width: 44px; height: 26px;
+      background: var(--surface-3);
+      border-radius: 13px;
+      position: relative;
+      transition: background var(--transition);
+      cursor: pointer;
+    }
+    .theme-toggle.on { background: var(--navy); }
+    [data-theme="dark"] .theme-toggle.on { background: var(--gold); }
+    .theme-toggle-dot {
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 20px; height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform var(--transition);
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+    .theme-toggle.on .theme-toggle-dot { transform: translateX(18px); }
+
+    /* ── ADMIN PANEL ────────────────────────────────────────────── */
+    #screen-admin { background: var(--surface-2); overflow-y: auto; }
+    .admin-header {
+      background: linear-gradient(135deg, var(--navy-deep), var(--navy));
+      padding: 52px 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .admin-header-icon {
+      width: 44px; height: 44px;
+      background: rgba(201,160,48,.2);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .admin-header-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .admin-header-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,.5);
+      margin-top: 2px;
+    }
+    .admin-body { padding: 16px 16px 100px; display: flex; flex-direction: column; gap: 14px; }
+
+    /* Member list item */
+    .member-item {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .member-av {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--navy);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .member-av img { width: 100%; height: 100%; object-fit: cover; }
+    .member-info { flex: 1; min-width: 0; }
+    .member-name { font-size: 14px; font-weight: 500; color: var(--text-1); }
+    .member-role { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .member-status {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .member-status.active   { background: #D4EDDA; color: #155724; }
+    .member-status.pending  { background: #FFF3CD; color: #856404; }
+    .member-status.blocked  { background: #FDE8E8; color: #C0392B; }
+    [data-theme="dark"] .member-status.active  { background: rgba(21,87,36,.4);  color: #6EE7B7; }
+    [data-theme="dark"] .member-status.pending { background: rgba(133,100,4,.4); color: #FCD34D; }
+    .member-actions { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--surface-2); }
+    .member-action-btn {
+      flex: 1;
+      height: 34px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      transition: background var(--transition);
+    }
+    .member-action-btn.approve { background: #D4EDDA; color: #155724; }
+    .member-action-btn.block   { background: #FDE8E8; color: #C0392B; }
+    .member-action-btn.unblock { background: var(--surface-2); color: var(--text-2); }
+
+    /* Invite form */
+    .invite-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+    }
+    .invite-title { font-size: 15px; font-weight: 600; color: var(--text-1); margin-bottom: 14px; }
+    .invite-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .invite-input {
+      flex: 1;
+      height: 46px;
+      background: var(--surface-2);
+      border: 1.5px solid var(--surface-3);
+      border-radius: var(--radius-sm);
+      padding: 0 14px;
+      font-size: 14px;
+      color: var(--text-1);
+      outline: none;
+    }
+    .invite-input:focus { border-color: var(--navy); }
+    .invite-select {
+      height: 46px;
+      background: var(--surface-2);
+      border: 1.5px solid var(--surface-3);
+      border-radius: var(--radius-sm);
+      padding: 0 10px;
+      font-size: 13px;
+      color: var(--text-1);
+      outline: none;
+    }
+    .btn-invite {
+      width: 100%;
+      height: 46px;
+      background: var(--navy);
+      color: #fff;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      transition: background var(--transition);
+    }
+    .btn-invite:active { background: var(--navy-mid); }
+
+    /* ── TOAST ──────────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 84px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--navy-deep);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 12px 20px;
+      border-radius: 30px;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      transition: opacity .3s, transform .3s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 9999;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    [data-theme="dark"] #toast { background: var(--surface-3); }
+
+    /* ── MODAL ──────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,31,51,.6);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: flex;
+      align-items: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal {
+      width: 100%;
+      background: var(--surface);
+      border-radius: 24px 24px 0 0;
+      padding: 8px 0 40px;
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(.4,0,.2,1);
+    }
+    .modal-overlay.show .modal { transform: translateY(0); }
+    .modal-handle {
+      width: 36px; height: 4px;
+      background: var(--surface-3);
+      border-radius: 2px;
+      margin: 8px auto 20px;
+    }
+    .modal-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-1);
+      padding: 0 20px;
+      margin-bottom: 16px;
+    }
+    .modal-option {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      transition: background var(--transition);
+    }
+    .modal-option:active { background: var(--surface-2); }
+    .modal-option-icon {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .modal-option-label { font-size: 15px; font-weight: 500; color: var(--text-1); }
+    .modal-option-sub   { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+
+    /* ── UTILITY ────────────────────────────────────────────────── */
+    .empty-state {
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state-title { font-size: 15px; font-weight: 600; color: var(--text-1); margin-bottom: 6px; }
+    .empty-state-body  { font-size: 13px; color: var(--text-3); line-height: 1.6; }
+
+    .coming-soon {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 32px 20px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .coming-soon-icon { font-size: 36px; margin-bottom: 12px; }
+    .coming-soon-title { font-size: 16px; font-weight: 600; color: var(--text-1); margin-bottom: 6px; }
+    .coming-soon-body  { font-size: 13px; color: var(--text-3); line-height: 1.5; }
+    .coming-soon-badge {
+      display: inline-block;
+      background: var(--surface-2);
+      color: var(--text-3);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SPLASH -->
+  <div id="screen-splash" class="screen active">
+    <div class="splash-logo">
+      <img src="logo.png" alt="ACT&SPEAK" style="width:110px;height:110px;object-fit:contain;animation:pulse-gold 2s ease-in-out infinite;border-radius:50%">
+    </div>
+    <div class="splash-name">ACT & SPEAK</div>
+    <div class="splash-tagline">Espace membres</div>
+    <div class="splash-loader"><div class="splash-loader-bar"></div></div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="screen-login" class="screen">
+    <div class="login-hero">
+      <div class="login-logo">
+        <img src="logo.png" alt="ACT&SPEAK" style="width:72px;height:72px;object-fit:contain;border-radius:50%">
+      </div>
+      <div class="login-name">ACT & SPEAK</div>
+      <div class="login-sub">Espace membres</div>
+    </div>
+    <div class="login-form-wrap">
+      <div class="login-title">Connexion</div>
+      <div class="login-hint">Accès réservé aux membres autorisés par l'administration.</div>
+      <div class="field">
+        <label>Adresse e-mail</label>
+        <input type="email" id="login-email" placeholder="ton.email@gmail.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input type="password" id="login-pwd" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div id="login-error" class="error-msg"></div>
+      <button class="btn-primary" id="btn-login" onclick="handleLogin()">
+        <span>Se connecter</span>
+        <div class="btn-loader"><div class="btn-spinner"></div></div>
+      </button>
+      <div class="forgot-link">
+        <a href="#" onclick="handleForgot(event)">Mot de passe oublié ?</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="screen-dashboard" class="screen">
+    <div class="dash-header">
+      <div class="dash-header-top">
+        <div>
+          <div class="dash-greeting-label">Bonjour</div>
+          <div class="dash-greeting-name" id="dash-name">—</div>
+        </div>
+        <div class="dash-avatar" id="dash-avatar" onclick="showScreen('profile')">
+          <span id="dash-avatar-initial">?</span>
+        </div>
+      </div>
+      <div class="dash-level-badge">
+        <div class="dash-level-dot"></div>
+        <span id="dash-level-label">Membre</span>
+      </div>
+      <div class="dash-stats">
+        <div class="dash-stat">
+          <div class="dash-stat-num" id="stat-tasks">0</div>
+          <div class="dash-stat-label">Tâches</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-num" id="stat-score">0<span>pts</span></div>
+          <div class="dash-stat-label">Score</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-num" id="stat-members">10</div>
+          <div class="dash-stat-label">Membres</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-body">
+
+      <!-- Quick actions (adaptées au niveau) -->
+      <div>
+        <div class="section-title">Actions rapides</div>
+        <div class="quick-actions" id="quick-actions"></div>
+      </div>
+
+      <!-- Mes tâches -->
+      <div>
+        <div class="section-title">Mes tâches</div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-title-dot" style="background:#C0392B"></div>
+              En cours
+            </div>
+            <span class="card-action">Tout voir</span>
+          </div>
+          <div id="tasks-list">
+            <div class="empty-state">
+              <div class="empty-state-icon">✅</div>
+              <div class="empty-state-title">Aucune tâche active</div>
+              <div class="empty-state-body">Le bureau n'a pas encore assigné de tâche à ton compte.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Score parcours -->
+      <div>
+        <div class="section-title">Mon parcours</div>
+        <div class="card">
+          <div class="score-wrap">
+            <div class="score-top">
+              <div class="score-label">Score de participation</div>
+              <div class="score-num" id="score-display">0 <small>/ 100</small></div>
+            </div>
+            <div class="score-bar-bg">
+              <div class="score-bar-fill" id="score-bar" style="width:0%"></div>
+            </div>
+            <div class="score-next" id="score-next">Continue à participer pour monter en niveau.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Annonces -->
+      <div>
+        <div class="section-title">Annonces</div>
+        <div class="card" id="announces-card">
+          <div class="announce-item">
+            <div class="announce-top">
+              <div class="announce-badge gold">Officiel</div>
+              <div class="announce-date">Aujourd'hui</div>
+            </div>
+            <div class="announce-title">Bienvenue sur ACT & SPEAK App</div>
+            <div class="announce-body">L'application officielle de l'association est maintenant disponible. Profil, tâches, chat et bien plus arrivent bientôt.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom nav -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="switchNav(this,'dashboard')">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-label">Accueil</div>
+      </button>
+      <button class="nav-item" onclick="switchNav(this,'tasks-screen')">
+        <div class="nav-icon">✅</div>
+        <div class="nav-label">Tâches</div>
+      </button>
+      <button class="nav-center-btn" onclick="showQuickAdd()">➕</button>
+      <button class="nav-item" onclick="switchNav(this,'chat-screen')">
+        <div class="nav-icon">💬</div>
+        <div class="nav-label">Chat</div>
+      </button>
+      <button class="nav-item" onclick="switchNav(this,'profile')">
+        <div class="nav-icon">👤</div>
+        <div class="nav-label">Profil</div>
+      </button>
+    </nav>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="screen-profile" class="screen">
+    <div class="profile-hero">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" id="profile-avatar">
+          <span id="profile-avatar-initial">?</span>
+        </div>
+        <div class="profile-avatar-edit" onclick="changePhoto()">✏️</div>
+      </div>
+      <div class="profile-name" id="profile-name">—</div>
+      <div class="profile-role" id="profile-role">Membre</div>
+      <div class="profile-badges">
+        <div class="badge" title="Membre fondateur">🏅</div>
+        <div class="badge" title="Première connexion">⚡</div>
+      </div>
+    </div>
+
+    <div class="profile-body">
+
+      <div class="profile-card">
+        <div class="profile-card-title">Mon compte</div>
+        <div class="profile-row" onclick="editName()">
+          <div class="profile-row-left">
+            <div class="profile-row-icon" style="background:#EFF6FF">👤</div>
+            <div>
+              <div class="profile-row-label">Nom affiché</div>
+              <div class="profile-row-sub" id="profile-display-name">—</div>
+            </div>
+          </div>
+          <div class="profile-row-right">›</div>
+        </div>
+        <div class="profile-row">
+          <div class="profile-row-left">
+            <div class="profile-row-icon" style="background:#F0FDF4">📧</div>
+            <div>
+              <div class="profile-row-label">E-mail</div>
+              <div class="profile-row-sub" id="profile-email">—</div>
+            </div>
+          </div>
+          <div class="profile-row-right" style="font-size:12px;color:var(--text-3)">Vérifié ✓</div>
+        </div>
+        <div class="profile-row">
+          <div class="profile-row-left">
+            <div class="profile-row-icon" style="background:#FFF7ED">🎖️</div>
+            <div>
+              <div class="profile-row-label">Rôle</div>
+              <div class="profile-row-sub" id="profile-role-detail">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-card-title">Apparence</div>
+        <div class="profile-row">
+          <div class="profile-row-left">
+            <div class="profile-row-icon" style="background:#F5F3FF">🌙</div>
+            <div>
+              <div class="profile-row-label">Mode nuit</div>
+              <div class="profile-row-sub">Thème sombre de l'application</div>
+            </div>
+          </div>
+          <div class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
+            <div class="theme-toggle-dot"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-card" id="admin-section" style="display:none">
+        <div class="profile-card-title">Administration</div>
+        <div class="profile-row" onclick="showScreen('admin')">
+          <div class="profile-row-left">
+            <div class="profile-row-icon" style="background:#FEF3C7">⚙️</div>
+            <div>
+              <div class="profile-row-label">Gérer les membres</div>
+              <div class="profile-row-sub">Invitations, rôles, accès</div>
+            </div>
+          </div>
+          <div class="profile-row-right">›</div>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="profile-card-title">Compte</div>
+        <div class="profile-row" onclick="handleLogout()" style="cursor:pointer">
+          <div class="profile-row-left">
+            <div class="profile-row-icon" style="background:#FDE8E8">🚪</div>
+            <div>
+              <div class="profile-row-label" style="color:var(--danger)">Se déconnecter</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="showScreen('dashboard');switchNavDash()">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-label">Accueil</div>
+      </button>
+      <button class="nav-item">
+        <div class="nav-icon">✅</div>
+        <div class="nav-label">Tâches</div>
+      </button>
+      <button class="nav-center-btn" onclick="showQuickAdd()">➕</button>
+      <button class="nav-item">
+        <div class="nav-icon">💬</div>
+        <div class="nav-label">Chat</div>
+      </button>
+      <button class="nav-item active">
+        <div class="nav-icon">👤</div>
+        <div class="nav-label">Profil</div>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="screen-admin" class="screen">
+    <div class="admin-header">
+      <div>
+        <button onclick="showScreen('profile')" style="color:rgba(255,255,255,.6);font-size:20px;margin-bottom:8px">‹ Retour</button>
+      </div>
+    </div>
+    <div style="background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:0 20px 24px;display:flex;align-items:center;gap:14px">
+      <div class="admin-header-icon">⚙️</div>
+      <div>
+        <div class="admin-header-title">Gestion membres</div>
+        <div class="admin-header-sub" id="admin-count">— membres dans l'app</div>
+      </div>
+    </div>
+
+    <div class="admin-body">
+
+      <!-- Inviter -->
+      <div class="invite-card">
+        <div class="invite-title">Inviter un nouveau membre</div>
+        <div class="invite-row">
+          <input class="invite-input" id="invite-email" type="email" placeholder="email@gmail.com">
+          <select class="invite-select" id="invite-level">
+            <option value="3">Adhérent</option>
+            <option value="2">Membre actif</option>
+            <option value="1">Bureau</option>
+          </select>
+        </div>
+        <input class="invite-input" id="invite-name" type="text" placeholder="Nom complet" style="width:100%;margin-bottom:10px">
+        <input class="invite-input" id="invite-role" type="text" placeholder="Rôle (ex: Secrétaire Général)" style="width:100%;margin-bottom:10px">
+        <input class="invite-input" id="invite-pwd" type="text" placeholder="Mot de passe provisoire" style="width:100%;margin-bottom:10px">
+        <button class="btn-invite" onclick="inviteMember()">Créer le compte</button>
+      </div>
+
+      <!-- Liste membres -->
+      <div>
+        <div class="section-title">Tous les membres</div>
+        <div id="members-list" style="display:flex;flex-direction:column;gap:10px">
+          <div class="empty-state">
+            <div class="empty-state-icon">⏳</div>
+            <div class="empty-state-title">Chargement...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL QUICK ADD -->
+  <div class="modal-overlay" id="modal-quick" onclick="closeModal('modal-quick')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Que veux-tu faire ?</div>
+      <div class="modal-option" onclick="closeModal('modal-quick');showToast('Module tâches — Session 2 🚀')">
+        <div class="modal-option-icon" style="background:#EFF6FF">📋</div>
+        <div>
+          <div class="modal-option-label">Nouvelle tâche</div>
+          <div class="modal-option-sub">Créer et assigner une tâche</div>
+        </div>
+      </div>
+      <div class="modal-option" onclick="closeModal('modal-quick');showToast('Module annonces — bientôt ✨')">
+        <div class="modal-option-icon" style="background:#FFF7ED">📢</div>
+        <div>
+          <div class="modal-option-label">Publier une annonce</div>
+          <div class="modal-option-sub">Visible par tous les membres</div>
+        </div>
+      </div>
+      <div class="modal-option" onclick="closeModal('modal-quick');showToast('Module réunions — Session 4 📅')">
+        <div class="modal-option-icon" style="background:#F0FDF4">📅</div>
+        <div>
+          <div class="modal-option-label">Convoquer une réunion</div>
+          <div class="modal-option-sub">Avec ordre du jour et convocations</div>
+        </div>
+      </div>
+      <div class="modal-option" onclick="closeModal('modal-quick');showToast('Trésorerie — Session 5 💰')">
+        <div class="modal-option-icon" style="background:#F5F3FF">💰</div>
+        <div>
+          <div class="modal-option-label">Saisir une dépense</div>
+          <div class="modal-option-sub">Avec justificatif photo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast"></div>
+
+</div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword,
+         signOut, sendPasswordResetEmail,
+         onAuthStateChanged, createUserWithEmailAndPassword,
+         updateProfile }                           from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc,
+         collection, getDocs, updateDoc,
+         serverTimestamp, query, orderBy }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes,
+         getDownloadURL }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+/* ── CONFIG ──────────────────────────────────────────────────────── */
+const firebaseConfig = {
+  apiKey:            "AIzaSyCg0iChSrt3yLXn0yd-RFPUy8YmKy0hX8Y",
+  authDomain:        "act-speak.firebaseapp.com",
+  projectId:         "act-speak",
+  storageBucket:     "act-speak.firebasestorage.app",
+  messagingSenderId: "126056935392",
+  appId:             "1:126056935392:web:5eb731a61b08e8197f8585",
+  measurementId:     "G-EKH5553EN5"
+};
+
+const app     = initializeApp(firebaseConfig);
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const storage = getStorage(app);
+
+/* ── STATE ───────────────────────────────────────────────────────── */
+let currentUser  = null;
+let currentProfile = null;
+
+/* ── NIVEAU LABELS ───────────────────────────────────────────────── */
+const LEVEL_LABELS = { 1: "Bureau Exécutif", 2: "Membre actif", 3: "Adhérent" };
+const LEVEL_COLORS = { 1: "#C9A030", 2: "#1C3557", 3: "#4B5563" };
+
+/* ── QUICK ACTIONS par niveau ────────────────────────────────────── */
+const QUICK_ACTIONS = {
+  1: [ // Bureau
+    { icon:"📋", label:"Tâches",    color:"#EFF6FF", fn:"showToast('Module tâches — Session 2')" },
+    { icon:"📢", label:"Annonce",   color:"#FFF7ED", fn:"showToast('Annonces — bientôt')" },
+    { icon:"📅", label:"Réunion",   color:"#F0FDF4", fn:"showToast('Réunions — Session 4')" },
+    { icon:"💰", label:"Dépense",   color:"#F5F3FF", fn:"showToast('Trésorerie — Session 5')" },
+  ],
+  2: [ // Membre actif
+    { icon:"✅", label:"Mes tâches",  color:"#EFF6FF", fn:"showToast('Mes tâches — Session 2')" },
+    { icon:"📅", label:"Agenda",      color:"#F0FDF4", fn:"showToast('Agenda — Session 4')" },
+    { icon:"💬", label:"Chat",        color:"#FFF7ED", fn:"showToast('Chat — Session 3')" },
+    { icon:"🗳️", label:"Sondages",   color:"#F5F3FF", fn:"showToast('Sondages — Session 6')" },
+  ],
+  3: [ // Adhérent
+    { icon:"📰", label:"Actualités", color:"#EFF6FF", fn:"showToast('Fil actualités — Session 3')" },
+    { icon:"📅", label:"Événements", color:"#F0FDF4", fn:"showToast('Événements — Session 4')" },
+    { icon:"👥", label:"Annuaire",   color:"#FFF7ED", fn:"showToast('Annuaire — Session 6')" },
+    { icon:"⬆️", label:"Rejoindre", color:"#F5F3FF", fn:"showToast('Demande envoyée !')" },
+  ],
+};
+
+/* ── AUTH STATE ──────────────────────────────────────────────────── */
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    const profile = await loadProfile(user.uid);
+    if (profile && profile.statut !== 'bloque') {
+      currentProfile = profile;
+      populateDashboard(profile, user);
+      await showScreen('dashboard');
+    } else if (profile && profile.statut === 'bloque') {
+      await signOut(auth);
+      showError("Votre accès a été suspendu. Contactez l'administrateur.");
+      showScreen('login');
+    } else {
+      // Nouveau compte sans profil → créer profil basique
+      await createBasicProfile(user);
+      currentProfile = await loadProfile(user.uid);
+      populateDashboard(currentProfile, user);
+      await showScreen('dashboard');
+    }
+  } else {
+    currentUser = null;
+    currentProfile = null;
+    showScreen('login');
+  }
+});
+
+/* ── LOAD PROFILE ────────────────────────────────────────────────── */
+async function loadProfile(uid) {
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    return snap.exists() ? snap.data() : null;
+  } catch { return null; }
+}
+
+async function createBasicProfile(user) {
+  const nom = user.displayName || user.email.split('@')[0];
+  await setDoc(doc(db, "users", user.uid), {
+    uid:       user.uid,
+    email:     user.email,
+    nom:       nom,
+    prenom:    nom.split(' ').pop(),
+    role:      "Membre",
+    niveau:    3,
+    statut:    "actif",
+    score:     0,
+    badges:    ["⚡"],
+    photo:     "",
+    dateAdhesion: serverTimestamp(),
+    createdAt: serverTimestamp(),
+  });
+}
+
+/* ── POPULATE DASHBOARD ──────────────────────────────────────────── */
+function populateDashboard(profile, user) {
+  const prenom = profile.prenom || profile.nom || "Membre";
+  const initial = prenom.charAt(0).toUpperCase();
+  const niveau  = profile.niveau || 3;
+  const score   = profile.score  || 0;
+
+  // Header
+  document.getElementById('dash-name').textContent = prenom;
+  document.getElementById('dash-avatar-initial').textContent = initial;
+  document.getElementById('dash-level-label').textContent = LEVEL_LABELS[niveau] || "Membre";
+
+  // Stats
+  document.getElementById('stat-score').innerHTML = `${score}<span>pts</span>`;
+
+  // Quick actions
+  const qa = document.getElementById('quick-actions');
+  qa.innerHTML = '';
+  (QUICK_ACTIONS[niveau] || QUICK_ACTIONS[3]).forEach(a => {
+    qa.innerHTML += `
+      <button class="qa-btn" onclick="${a.fn}">
+        <div class="qa-icon" style="background:${a.color}">${a.icon}</div>
+        <div class="qa-label">${a.label}</div>
+      </button>`;
+  });
+
+  // Profile screen
+  document.getElementById('profile-name').textContent = profile.nom || user.email;
+  document.getElementById('profile-role').textContent = profile.role || "Membre";
+  document.getElementById('profile-email').textContent = user.email;
+  document.getElementById('profile-display-name').textContent = profile.nom || "—";
+  document.getElementById('profile-role-detail').textContent =
+    (LEVEL_LABELS[niveau] || "Membre") + (profile.role ? ' · ' + profile.role : '');
+  document.getElementById('profile-avatar-initial').textContent = initial;
+
+  // Score bar
+  const scoreEl = document.getElementById('score-display');
+  const barEl   = document.getElementById('score-bar');
+  scoreEl.innerHTML = `${score} <small>/ 100</small>`;
+  setTimeout(() => { barEl.style.width = Math.min(score, 100) + '%'; }, 300);
+  document.getElementById('score-next').textContent =
+    score < 20 ? "Confirme tes premières tâches pour marquer des points." :
+    score < 50 ? "Bonne progression ! Continue à participer aux réunions." :
+    score < 80 ? "Excellent niveau ! Le bureau peut te proposer une promotion." :
+                 "Score exceptionnel — membre exemplaire de l'association.";
+
+  // Admin section visible pour niveau 1 seulement
+  if (niveau === 1) {
+    document.getElementById('admin-section').style.display = 'block';
+    loadAdminMembers();
+  }
+
+  // Avatar photo
+  if (profile.photo) {
+    document.getElementById('dash-avatar').innerHTML = `<img src="${profile.photo}" alt="">`;
+    document.getElementById('profile-avatar').innerHTML = `<img src="${profile.photo}" alt="">`;
+  }
+
+  // Theme
+  if (localStorage.getItem('theme') === 'dark') {
+    document.documentElement.setAttribute('data-theme','dark');
+    document.getElementById('theme-toggle').classList.add('on');
+  }
+}
+
+/* ── LOGIN ───────────────────────────────────────────────────────── */
+window.handleLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const pwd   = document.getElementById('login-pwd').value;
+  const btn   = document.getElementById('btn-login');
+  const errEl = document.getElementById('login-error');
+
+  if (!email || !pwd) { showError("Remplis tous les champs."); return; }
+
+  btn.classList.add('loading');
+  errEl.classList.remove('show');
+
+  try {
+    await signInWithEmailAndPassword(auth, email, pwd);
+    // onAuthStateChanged prend le relais
+  } catch(e) {
+    btn.classList.remove('loading');
+    const msgs = {
+      'auth/user-not-found':    "Aucun compte trouvé pour cet e-mail.",
+      'auth/wrong-password':    "Mot de passe incorrect.",
+      'auth/invalid-email':     "Adresse e-mail invalide.",
+      'auth/too-many-requests': "Trop de tentatives. Réessaie dans quelques minutes.",
+      'auth/invalid-credential':"E-mail ou mot de passe incorrect.",
+    };
+    showError(msgs[e.code] || "Connexion impossible. Vérifie tes identifiants.");
+  }
+};
+
+function showError(msg) {
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = msg;
+  errEl.classList.add('show');
+}
+
+window.handleForgot = async function(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { showError("Entre ton e-mail d'abord."); return; }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    showToast("E-mail de réinitialisation envoyé ✉️");
+  } catch { showError("Adresse e-mail introuvable."); }
+};
+
+window.handleLogout = async function() {
+  await signOut(auth);
+  showToast("Déconnexion réussie");
+};
+
+/* ── ADMIN ───────────────────────────────────────────────────────── */
+async function loadAdminMembers() {
+  const snap = await getDocs(collection(db, "users"));
+  const list = document.getElementById('members-list');
+  const countEl = document.getElementById('admin-count');
+  let html = '';
+  let count = 0;
+
+  snap.forEach(d => {
+    const m = d.data(); count++;
+    const statusClass = m.statut === 'bloque' ? 'blocked' : m.statut === 'en_attente' ? 'pending' : 'active';
+    const statusLabel = m.statut === 'bloque' ? 'Bloqué' : m.statut === 'en_attente' ? 'En attente' : 'Actif';
+    const initial = (m.nom || m.email || '?').charAt(0).toUpperCase();
+    const avatarBg = LEVEL_COLORS[m.niveau] || '#1C3557';
+    const avatarEl = m.photo
+      ? `<img src="${m.photo}" alt="">`
+      : `<span style="font-size:17px;color:#fff;font-weight:700">${initial}</span>`;
+
+    html += `
+      <div class="member-item">
+        <div class="member-av" style="background:${avatarBg}">${avatarEl}</div>
+        <div class="member-info">
+          <div class="member-name">${m.nom || m.email}</div>
+          <div class="member-role">${m.role || '—'} · ${LEVEL_LABELS[m.niveau] || 'Adhérent'}</div>
+          <div class="member-actions">
+            ${m.statut === 'bloque'
+              ? `<button class="member-action-btn unblock" onclick="setMemberStatus('${d.id}','actif')">Débloquer</button>`
+              : `<button class="member-action-btn block"   onclick="setMemberStatus('${d.id}','bloque')">Bloquer</button>`}
+            <button class="member-action-btn approve" onclick="promoteLevel('${d.id}',${Math.max(1,(m.niveau||3)-1)})">Promouvoir</button>
+          </div>
+        </div>
+        <div class="member-status ${statusClass}">${statusLabel}</div>
+      </div>`;
+  });
+
+  list.innerHTML = html || `<div class="empty-state"><div class="empty-state-icon">👥</div><div class="empty-state-title">Aucun membre</div></div>`;
+  if(countEl) countEl.textContent = `${count} membre${count>1?'s':''} dans l'app`;
+}
+
+window.setMemberStatus = async function(uid, statut) {
+  await updateDoc(doc(db, "users", uid), { statut });
+  showToast(statut === 'bloque' ? "Accès bloqué" : "Accès rétabli");
+  loadAdminMembers();
+};
+
+window.promoteLevel = async function(uid, niveau) {
+  await updateDoc(doc(db, "users", uid), { niveau });
+  showToast("Niveau mis à jour → " + LEVEL_LABELS[niveau]);
+  loadAdminMembers();
+};
+
+window.inviteMember = async function() {
+  const email  = document.getElementById('invite-email').value.trim();
+  const nom    = document.getElementById('invite-name').value.trim();
+  const role   = document.getElementById('invite-role').value.trim();
+  const niveau = parseInt(document.getElementById('invite-level').value);
+  const pwd    = document.getElementById('invite-pwd').value.trim();
+
+  if (!email || !nom || !pwd) { showToast("Remplis tous les champs obligatoires"); return; }
+
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+    await updateProfile(cred.user, { displayName: nom });
+    await setDoc(doc(db, "users", cred.user.uid), {
+      uid: cred.user.uid, email, nom,
+      prenom: nom.split(' ').pop(),
+      role: role || "Membre", niveau,
+      statut: "actif", score: 0,
+      badges: ["⚡"], photo: "",
+      dateAdhesion: serverTimestamp(),
+      createdAt: serverTimestamp(),
+    });
+    // Rester connecté avec le compte admin
+    showToast(`✅ Compte créé pour ${nom}`);
+    document.getElementById('invite-email').value = '';
+    document.getElementById('invite-name').value  = '';
+    document.getElementById('invite-role').value  = '';
+    document.getElementById('invite-pwd').value   = '';
+    loadAdminMembers();
+  } catch(e) {
+    const msgs = {
+      'auth/email-already-in-use': "Cet e-mail a déjà un compte.",
+      'auth/weak-password': "Mot de passe trop court (min. 6 caractères).",
+    };
+    showToast(msgs[e.code] || "Erreur : " + e.message);
+  }
+};
+
+/* ── PHOTO DE PROFIL ─────────────────────────────────────────────── */
+window.changePhoto = function() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !currentUser) return;
+    showToast("Upload en cours...");
+    try {
+      const storageRef = ref(storage, `photos/${currentUser.uid}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      await updateDoc(doc(db, "users", currentUser.uid), { photo: url });
+      await updateProfile(currentUser, { photoURL: url });
+      // Mettre à jour l'affichage
+      const img = `<img src="${url}" alt="">`;
+      document.getElementById('dash-avatar').innerHTML = img;
+      document.getElementById('profile-avatar').innerHTML = img;
+      showToast("Photo mise à jour ✅");
+    } catch { showToast("Erreur lors de l'upload"); }
+  };
+  input.click();
+};
+
+/* ── THEME ───────────────────────────────────────────────────────── */
+window.toggleTheme = function() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('theme-toggle').classList.toggle('on', !isDark);
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  showToast(isDark ? "Mode jour activé ☀️" : "Mode nuit activé 🌙");
+};
+
+/* ── SCREENS ─────────────────────────────────────────────────────── */
+window.showScreen = async function(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('screen-' + id);
+  if (target) {
+    await new Promise(r => setTimeout(r, 10));
+    target.classList.add('active');
+    if (id === 'admin') loadAdminMembers();
+  }
+};
+
+window.switchNav = function(el, screen) {
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  if (screen === 'profile') showScreen('profile');
+  else if (screen === 'dashboard') showScreen('dashboard');
+  else showToast('Module ' + screen + ' — bientôt 🚀');
+};
+
+window.switchNavDash = function() {
+  // appelé depuis profile pour revenir dashboard et activer le bon nav
+};
+
+/* ── MODAL ───────────────────────────────────────────────────────── */
+window.showQuickAdd = function() {
+  if (!currentProfile || currentProfile.niveau > 1) {
+    showToast("Action réservée au bureau");
+    return;
+  }
+  document.getElementById('modal-quick').classList.add('show');
+};
+
+window.closeModal = function(id) {
+  document.getElementById(id).classList.remove('show');
+};
+
+/* ── TOAST ───────────────────────────────────────────────────────── */
+window.showToast = function(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+};
+
+/* ── SPLASH → LOGIN ──────────────────────────────────────────────── */
+setTimeout(() => {
+  if (!auth.currentUser) showScreen('login');
+}, 2000);
+
+/* ── KEYBOARD ────────────────────────────────────────────────────── */
+document.getElementById('login-pwd').addEventListener('keypress', e => {
+  if (e.key === 'Enter') handleLogin();
+});
+</script>
+
+</body>
+</html>
