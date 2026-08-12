@@ -993,6 +993,256 @@
       border-radius: 20px;
       margin-top: 12px;
     }
+
+    /* ── TACHES SCREEN ──────────────────────────────────────────── */
+    #screen-taches { background: var(--surface-2); overflow-y: auto; }
+    .taches-header {
+      background: linear-gradient(135deg, var(--navy-deep), var(--navy));
+      padding: 52px 20px 20px;
+    }
+    .taches-header-top {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+    }
+    .taches-title { font-size: 22px; font-weight: 700; color: #fff; }
+    .taches-sub   { font-size: 12px; color: rgba(255,255,255,.5); margin-top: 2px; }
+    .btn-new-tache {
+      height: 38px; padding: 0 16px;
+      background: var(--gold); color: #fff;
+      border-radius: 10px; font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+      transition: transform var(--transition);
+    }
+    .btn-new-tache:active { transform: scale(.96); }
+
+    /* Filtres */
+    .taches-filters {
+      display: flex; gap: 8px; overflow-x: auto;
+      padding: 0 20px 16px; scrollbar-width: none;
+    }
+    .taches-filters::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      flex-shrink: 0; height: 32px; padding: 0 14px;
+      border-radius: 20px; font-size: 12px; font-weight: 500;
+      background: rgba(255,255,255,.1); color: rgba(255,255,255,.7);
+      transition: background var(--transition), color var(--transition);
+      white-space: nowrap;
+    }
+    .filter-chip.active { background: var(--gold); color: #fff; font-weight: 600; }
+
+    /* Corps tâches */
+    .taches-body { padding: 16px 16px 100px; display: flex; flex-direction: column; gap: 10px; }
+
+    /* Carte tâche */
+    .tache-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .tache-card:active { transform: scale(.99); }
+    .tache-card-top {
+      padding: 14px 16px 10px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .tache-priority-bar {
+      width: 4px; border-radius: 2px; flex-shrink: 0;
+      align-self: stretch; min-height: 40px;
+    }
+    .tache-priority-bar.urgente { background: #C0392B; }
+    .tache-priority-bar.haute   { background: #E67E22; }
+    .tache-priority-bar.moyenne { background: var(--navy); }
+    .tache-priority-bar.basse   { background: #27AE60; }
+    .tache-info { flex: 1; min-width: 0; }
+    .tache-nom {
+      font-size: 15px; font-weight: 600; color: var(--text-1);
+      margin-bottom: 4px; line-height: 1.3;
+    }
+    .tache-assignee {
+      font-size: 12px; color: var(--text-3);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .tache-assignee-dot {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--navy); display: flex; align-items: center;
+      justify-content: center; font-size: 9px; font-weight: 700; color: #fff;
+    }
+    .tache-type-badge {
+      font-size: 10px; font-weight: 600; padding: 3px 10px;
+      border-radius: 20px; flex-shrink: 0; align-self: flex-start;
+    }
+    .tache-type-badge.urgente  { background: #FDE8E8; color: #C0392B; }
+    .tache-type-badge.ponct    { background: #EFF6FF; color: #1C3557; }
+    .tache-type-badge.recur    { background: #F0FDF4; color: #0F6E56; }
+    .tache-type-badge.test     { background: #FFF3CD; color: #856404; }
+    [data-theme="dark"] .tache-type-badge.urgente { background: rgba(192,57,43,.25); color: #FCA5A5; }
+    [data-theme="dark"] .tache-type-badge.ponct   { background: rgba(28,53,87,.4);   color: #93C5FD; }
+    [data-theme="dark"] .tache-type-badge.recur   { background: rgba(15,110,86,.3);  color: #6EE7B7; }
+
+    .tache-card-meta {
+      padding: 0 16px 10px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .tache-meta-item {
+      font-size: 11px; color: var(--text-3);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .tache-meta-item strong { color: var(--text-2); }
+
+    .tache-card-actions {
+      padding: 10px 16px 14px;
+      display: flex; gap: 8px;
+      border-top: 1px solid var(--surface-2);
+    }
+    .tache-action-btn {
+      flex: 1; height: 36px; border-radius: 8px;
+      font-size: 12px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: transform var(--transition), opacity var(--transition);
+    }
+    .tache-action-btn:active { transform: scale(.96); opacity: .8; }
+    .tache-action-btn.confirmer { background: #D4EDDA; color: #155724; }
+    .tache-action-btn.en-cours  { background: #FFF3CD; color: #856404; }
+    .tache-action-btn.terminer  { background: var(--navy); color: #fff; }
+    .tache-action-btn.detail    { background: var(--surface-2); color: var(--text-2); }
+    [data-theme="dark"] .tache-action-btn.confirmer { background: rgba(21,87,36,.35);  color: #6EE7B7; }
+    [data-theme="dark"] .tache-action-btn.en-cours  { background: rgba(133,100,4,.35); color: #FCD34D; }
+    [data-theme="dark"] .tache-action-btn.detail    { background: var(--surface-3);    color: var(--text-2); }
+
+    /* ── MODAL TACHE ─────────────────────────────────────────── */
+    #modal-tache { z-index: 600; }
+    .modal-tache-content {
+      width: 100%; background: var(--surface);
+      border-radius: 24px 24px 0 0;
+      padding: 8px 0 0;
+      max-height: 92vh; overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(.4,0,.2,1);
+    }
+    .modal-overlay.show .modal-tache-content { transform: translateY(0); }
+    .modal-form-field { padding: 0 20px; margin-bottom: 16px; }
+    .modal-form-field label {
+      display: block; font-size: 11px; font-weight: 600;
+      color: var(--text-3); letter-spacing: .08em;
+      text-transform: uppercase; margin-bottom: 8px;
+    }
+    .modal-form-field input,
+    .modal-form-field select,
+    .modal-form-field textarea {
+      width: 100%; background: var(--surface-2);
+      border: 1.5px solid var(--surface-3);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px; font-size: 14px;
+      color: var(--text-1); outline: none;
+      transition: border-color var(--transition);
+      font-family: inherit;
+    }
+    .modal-form-field input:focus,
+    .modal-form-field select:focus,
+    .modal-form-field textarea:focus { border-color: var(--navy); }
+    [data-theme="dark"] .modal-form-field input,
+    [data-theme="dark"] .modal-form-field select,
+    [data-theme="dark"] .modal-form-field textarea {
+      background: var(--surface-2); border-color: var(--surface-3); color: var(--text-1);
+    }
+    .modal-form-field textarea { min-height: 80px; resize: none; }
+    .modal-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-form-btns { padding: 16px 20px 40px; display: flex; gap: 10px; }
+    .btn-cancel {
+      flex: 1; height: 50px; border-radius: var(--radius-md);
+      background: var(--surface-2); color: var(--text-2);
+      font-size: 14px; font-weight: 600;
+    }
+    .btn-submit {
+      flex: 2; height: 50px; border-radius: var(--radius-md);
+      background: var(--navy); color: #fff;
+      font-size: 14px; font-weight: 600;
+      position: relative; overflow: hidden;
+    }
+    .btn-submit:active { opacity: .85; }
+
+    /* ── DETAIL TACHE ───────────────────────────────────────── */
+    #screen-tache-detail { background: var(--surface-2); overflow-y: auto; }
+    .detail-header {
+      background: linear-gradient(135deg, var(--navy-deep), var(--navy));
+      padding: 52px 20px 24px;
+    }
+    .detail-back {
+      font-size: 14px; color: rgba(255,255,255,.6);
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 16px; background: none; border: none; cursor: pointer;
+    }
+    .detail-title { font-size: 20px; font-weight: 700; color: #fff; line-height: 1.3; }
+    .detail-body  { padding: 16px 16px 100px; display: flex; flex-direction: column; gap: 14px; }
+    .detail-card  {
+      background: var(--surface); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm); overflow: hidden;
+    }
+    .detail-card-title {
+      font-size: 11px; font-weight: 600; color: var(--text-3);
+      letter-spacing: .1em; text-transform: uppercase;
+      padding: 14px 18px 0;
+    }
+    .detail-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 18px; border-bottom: 1px solid var(--surface-2);
+      font-size: 13px;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row-label { color: var(--text-3); font-weight: 500; }
+    .detail-row-val   { color: var(--text-1); font-weight: 600; text-align: right; max-width: 60%; }
+
+    /* Commentaires */
+    .comment-item {
+      padding: 12px 18px; border-bottom: 1px solid var(--surface-2);
+      display: flex; gap: 10px;
+    }
+    .comment-item:last-child { border-bottom: none; }
+    .comment-av {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--navy); display: flex; align-items: center;
+      justify-content: center; font-size: 12px; font-weight: 700;
+      color: #fff; flex-shrink: 0; overflow: hidden;
+    }
+    .comment-av img { width: 100%; height: 100%; object-fit: cover; }
+    .comment-body { flex: 1; }
+    .comment-top  { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .comment-author { font-size: 12px; font-weight: 600; color: var(--text-1); }
+    .comment-time   { font-size: 10px; color: var(--text-3); }
+    .comment-text   { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+    .comment-input-wrap {
+      padding: 12px 18px;
+      display: flex; gap: 10px; align-items: center;
+      border-top: 1px solid var(--surface-2);
+    }
+    .comment-input {
+      flex: 1; background: var(--surface-2);
+      border: 1.5px solid var(--surface-3);
+      border-radius: 20px; padding: 10px 16px;
+      font-size: 13px; color: var(--text-1);
+      outline: none; font-family: inherit;
+    }
+    .comment-input:focus { border-color: var(--navy); }
+    .comment-send {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--navy); color: #fff;
+      font-size: 16px; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Statut selector */
+    .statut-btns { padding: 14px 18px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .statut-btn {
+      height: 42px; border-radius: 10px; font-size: 12px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      border: 2px solid transparent; transition: all var(--transition);
+    }
+    .statut-btn.afaire  { background: var(--surface-2); color: var(--text-2); }
+    .statut-btn.encours { background: #FFF3CD;           color: #856404; }
+    .statut-btn.termine { background: #D4EDDA;           color: #155724; }
+    .statut-btn.selected { border-color: var(--navy); }
+    [data-theme="dark"] .statut-btn.selected { border-color: var(--gold); }
+
   </style>
 </head>
 <body>
@@ -1140,7 +1390,7 @@
         <div class="nav-icon">🏠</div>
         <div class="nav-label">Accueil</div>
       </button>
-      <button class="nav-item" onclick="switchNav(this,'tasks-screen')">
+      <button class="nav-item" onclick="goTo('taches')">
         <div class="nav-icon">✅</div>
         <div class="nav-label">Tâches</div>
       </button>
@@ -1321,6 +1571,196 @@
     </div>
   </div>
 
+
+  <!-- ══ ÉCRAN TACHES ══ -->
+  <div id="screen-taches" class="screen">
+    <div class="taches-header">
+      <div class="taches-header-top">
+        <div>
+          <div class="taches-title">Tâches</div>
+          <div class="taches-sub" id="taches-count-label">Chargement...</div>
+        </div>
+        <button class="btn-new-tache" id="btn-new-tache" style="display:none" onclick="openModalTache()">
+          ➕ Nouvelle
+        </button>
+      </div>
+    </div>
+    <div class="taches-filters">
+      <button class="filter-chip active" onclick="filterTaches(this,'toutes')">Toutes</button>
+      <button class="filter-chip" onclick="filterTaches(this,'afaire')">À faire</button>
+      <button class="filter-chip" onclick="filterTaches(this,'encours')">En cours</button>
+      <button class="filter-chip" onclick="filterTaches(this,'urgente')">Urgentes</button>
+      <button class="filter-chip" onclick="filterTaches(this,'termine')">Terminées</button>
+    </div>
+    <div class="taches-body" id="taches-body">
+      <div class="empty-state">
+        <div class="empty-state-icon">⏳</div>
+        <div class="empty-state-title">Chargement des tâches...</div>
+      </div>
+    </div>
+    <nav class="bottom-nav">
+      <button class="nav-item" onclick="goTo('dashboard')">
+        <div class="nav-icon">🏠</div><div class="nav-label">Accueil</div>
+      </button>
+      <button class="nav-item active">
+        <div class="nav-icon">✅</div><div class="nav-label">Tâches</div>
+      </button>
+      <button class="nav-center-btn" onclick="openModalTache()">➕</button>
+      <button class="nav-item" onclick="goTo('chat')">
+        <div class="nav-icon">💬</div><div class="nav-label">Chat</div>
+      </button>
+      <button class="nav-item" onclick="goTo('profile')">
+        <div class="nav-icon">👤</div><div class="nav-label">Profil</div>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ══ ÉCRAN DÉTAIL TACHE ══ -->
+  <div id="screen-tache-detail" class="screen">
+    <div class="detail-header">
+      <button class="detail-back" onclick="goTo('taches')">‹ Retour aux tâches</button>
+      <div class="detail-title" id="detail-tache-nom">—</div>
+    </div>
+    <div class="detail-body">
+
+      <!-- Statut -->
+      <div class="detail-card">
+        <div class="detail-card-title">Mettre à jour le statut</div>
+        <div class="statut-btns" id="detail-statut-btns">
+          <button class="statut-btn afaire"  onclick="updateStatutTache('A faire')">📋 À faire</button>
+          <button class="statut-btn encours" onclick="updateStatutTache('En cours')">⚡ En cours</button>
+          <button class="statut-btn termine" onclick="updateStatutTache('Terminée')">✅ Terminée</button>
+        </div>
+      </div>
+
+      <!-- Infos -->
+      <div class="detail-card">
+        <div class="detail-card-title">Informations</div>
+        <div class="detail-row">
+          <span class="detail-row-label">Assigné à</span>
+          <span class="detail-row-val" id="detail-assignee">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-row-label">Type</span>
+          <span class="detail-row-val" id="detail-type">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-row-label">Priorité</span>
+          <span class="detail-row-val" id="detail-priorite">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-row-label">Catégorie</span>
+          <span class="detail-row-val" id="detail-cat">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-row-label">Échéance</span>
+          <span class="detail-row-val" id="detail-echeance">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-row-label">Canal rapport</span>
+          <span class="detail-row-val" id="detail-canal">—</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-row-label">Statut actuel</span>
+          <span class="detail-row-val" id="detail-statut">—</span>
+        </div>
+        <div class="detail-row" id="detail-ref-row">
+          <span class="detail-row-label">Référence</span>
+          <span class="detail-row-val" id="detail-ref">—</span>
+        </div>
+      </div>
+
+      <!-- Commentaires -->
+      <div class="detail-card">
+        <div class="detail-card-title" style="padding:14px 18px">Commentaires</div>
+        <div id="comments-list">
+          <div class="empty-state" style="padding:20px">
+            <div class="empty-state-body">Aucun commentaire. Sois le premier !</div>
+          </div>
+        </div>
+        <div class="comment-input-wrap">
+          <input class="comment-input" id="comment-input" placeholder="Écrire un commentaire..." type="text">
+          <button class="comment-send" onclick="sendComment()">➤</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ MODAL NOUVELLE TACHE ══ -->
+  <div class="modal-overlay" id="modal-tache" onclick="closeModalTache()">
+    <div class="modal-tache-content" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="modal-tache-title">Nouvelle tâche</div>
+
+      <div class="modal-form-field">
+        <label>Titre de la tâche *</label>
+        <input type="text" id="t-nom" placeholder="Ex: Préparer le rapport mensuel">
+      </div>
+      <div class="modal-form-field">
+        <label>Assigner à *</label>
+        <select id="t-assignee">
+          <option value="">— Choisir un membre —</option>
+        </select>
+      </div>
+      <div class="modal-form-row">
+        <div class="modal-form-field" style="margin-bottom:0">
+          <label>Type *</label>
+          <select id="t-type">
+            <option value="Ponctuelle">Ponctuelle</option>
+            <option value="Récurrente">Récurrente</option>
+            <option value="Urgente">Urgente</option>
+            <option value="Test">Test</option>
+          </select>
+        </div>
+        <div class="modal-form-field" style="margin-bottom:0">
+          <label>Priorité *</label>
+          <select id="t-priorite">
+            <option value="Haute">Haute</option>
+            <option value="Moyenne">Moyenne</option>
+            <option value="Basse">Basse</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-form-row" style="margin-top:16px">
+        <div class="modal-form-field" style="margin-bottom:0">
+          <label>Catégorie</label>
+          <select id="t-cat">
+            <option value="Administration">Administration</option>
+            <option value="Communication">Communication</option>
+            <option value="Finance">Finance</option>
+            <option value="Projet">Projet</option>
+            <option value="Réunion">Réunion</option>
+            <option value="Autre">Autre</option>
+          </select>
+        </div>
+        <div class="modal-form-field" style="margin-bottom:0">
+          <label>Canal rapport</label>
+          <select id="t-canal">
+            <option value="App">App</option>
+            <option value="E-mail">E-mail</option>
+            <option value="WhatsApp">WhatsApp</option>
+            <option value="Autre">Autre</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-form-field" style="margin-top:16px">
+        <label>Échéance</label>
+        <input type="date" id="t-echeance">
+      </div>
+      <div class="modal-form-field">
+        <label>Description (optionnel)</label>
+        <textarea id="t-desc" placeholder="Détails, instructions, contexte..."></textarea>
+      </div>
+      <div class="modal-form-btns">
+        <button class="btn-cancel" onclick="closeModalTache()">Annuler</button>
+        <button class="btn-submit" id="btn-submit-tache" onclick="submitTache()">
+          <span>Créer la tâche</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL QUICK ADD -->
   <div class="modal-overlay" id="modal-quick" onclick="closeModal('modal-quick')">
     <div class="modal" onclick="event.stopPropagation()">
@@ -1370,8 +1810,8 @@ import { getAuth, signInWithEmailAndPassword,
          onAuthStateChanged, createUserWithEmailAndPassword,
          updateProfile }                           from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc,
-         collection, getDocs, updateDoc,
-         serverTimestamp, query, orderBy }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+         collection, getDocs, updateDoc, addDoc,
+         serverTimestamp, query, orderBy, where }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes,
          getDownloadURL }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
@@ -1763,6 +2203,387 @@ setTimeout(() => {
 document.getElementById('login-pwd').addEventListener('keypress', e => {
   if (e.key === 'Enter') handleLogin();
 });
+
+/* ════════════════════════════════════════════════════════════════
+   MODULE TACHES — Session 2
+   ════════════════════════════════════════════════════════════════ */
+
+let allTaches      = [];     // cache local
+let tachesFiltrees = [];
+let currentTacheId = null;   // tâche ouverte en détail
+let tacheEditId    = null;   // null = nouvelle, sinon = édition
+let currentFilter  = 'toutes';
+let membresCache   = [];     // liste membres pour le select
+
+/* ── Navigation centralisée ────────────────────────────────────── */
+window.goTo = function(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + screen);
+  if (el) { setTimeout(() => el.classList.add('active'), 10); }
+  // mettre à jour bottom-nav actif
+  if (screen === 'taches') loadTaches();
+  if (screen === 'admin')  loadAdminMembers();
+};
+
+/* ── Mise à jour switchNav ─────────────────────────────────────── */
+window.switchNav = function(el, screen) {
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  goTo(screen === 'tasks-screen' ? 'taches' :
+       screen === 'chat-screen'  ? 'chat'   : screen);
+};
+
+/* ── Charger les tâches depuis Firestore ───────────────────────── */
+async function loadTaches() {
+  const body    = document.getElementById('taches-body');
+  const countEl = document.getElementById('taches-count-label');
+  if (!currentUser || !currentProfile) return;
+
+  body.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏳</div><div class="empty-state-title">Chargement...</div></div>';
+
+  try {
+    // Bureau → toutes les tâches | Membres → seulement les leurs
+    let q;
+    if (currentProfile.niveau === 1) {
+      q = query(collection(db, 'taches'), orderBy('createdAt', 'desc'));
+      document.getElementById('btn-new-tache').style.display = 'flex';
+    } else {
+      q = query(
+        collection(db, 'taches'),
+        where('assigneeId', '==', currentUser.uid),
+        orderBy('createdAt', 'desc')
+      );
+    }
+    const snap = await getDocs(q);
+    allTaches = [];
+    snap.forEach(d => allTaches.push({ id: d.id, ...d.data() }));
+    applyFilter(currentFilter);
+
+    const total = allTaches.length;
+    if (countEl) countEl.textContent = `${total} tâche${total !== 1 ? 's' : ''} au total`;
+  } catch(e) {
+    body.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Erreur de chargement</div><div class="empty-state-body">' + e.message + '</div></div>';
+  }
+}
+
+/* ── Filtrer ───────────────────────────────────────────────────── */
+window.filterTaches = function(el, filtre) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = filtre;
+  applyFilter(filtre);
+};
+
+function applyFilter(filtre) {
+  if (filtre === 'toutes')   tachesFiltrees = [...allTaches];
+  else if (filtre === 'afaire')  tachesFiltrees = allTaches.filter(t => !t.statut || t.statut === 'A faire');
+  else if (filtre === 'encours') tachesFiltrees = allTaches.filter(t => t.statut === 'En cours');
+  else if (filtre === 'urgente') tachesFiltrees = allTaches.filter(t => t.type === 'Urgente');
+  else if (filtre === 'termine') tachesFiltrees = allTaches.filter(t => t.statut === 'Terminée');
+  renderTaches(tachesFiltrees);
+}
+
+/* ── Render liste ──────────────────────────────────────────────── */
+function renderTaches(list) {
+  const body = document.getElementById('taches-body');
+  if (!list.length) {
+    body.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><div class="empty-state-title">Aucune tâche ici</div><div class="empty-state-body">Rien dans cette catégorie pour l'instant.</div></div>';
+    return;
+  }
+
+  body.innerHTML = list.map(t => {
+    const prioClass = t.priorite === 'Haute' ? 'haute' : t.priorite === 'Basse' ? 'basse' : t.type === 'Urgente' ? 'urgente' : 'moyenne';
+    const typeClass  = t.type === 'Urgente' ? 'urgente' : t.type === 'Récurrente' ? 'recur' : t.type === 'Test' ? 'test' : 'ponct';
+    const typeLabel  = t.type || 'Ponctuelle';
+    const statut     = t.statut || 'A faire';
+    const assignName = t.assigneeNom || '—';
+    const initial    = assignName.charAt(0).toUpperCase();
+    const echeance   = t.echeance ? new Date(t.echeance).toLocaleDateString('fr-FR', {day:'2-digit',month:'short'}) : '—';
+    const isRetard   = t.echeance && new Date(t.echeance) < new Date() && statut !== 'Terminée';
+
+    // Boutons d'action selon le statut et le niveau
+    let actions = '';
+    if (currentProfile.niveau === 1) {
+      // Bureau : peut tout faire
+      if (statut === 'A faire') {
+        actions = `<button class="tache-action-btn en-cours" onclick="quickStatut('${t.id}','En cours',event)">⚡ Démarrer</button>`;
+      } else if (statut === 'En cours') {
+        actions = `<button class="tache-action-btn terminer" onclick="quickStatut('${t.id}','Terminée',event)">✅ Terminer</button>`;
+      } else {
+        actions = `<button class="tache-action-btn confirmer" style="opacity:.6;pointer-events:none">✅ Terminée</button>`;
+      }
+      actions += `<button class="tache-action-btn detail" onclick="ouvrirDetail('${t.id}')">Détail ›</button>`;
+    } else {
+      // Membre : confirmer ou mettre à jour
+      if (statut === 'A faire') {
+        actions = `<button class="tache-action-btn confirmer" onclick="quickStatut('${t.id}','En cours',event)">✅ Confirmer réception</button>`;
+      } else if (statut === 'En cours') {
+        actions = `<button class="tache-action-btn terminer" onclick="quickStatut('${t.id}','Terminée',event)">✅ Marquer terminée</button>`;
+      } else {
+        actions = `<button class="tache-action-btn confirmer" style="opacity:.6;pointer-events:none">✅ Terminée</button>`;
+      }
+      actions += `<button class="tache-action-btn detail" onclick="ouvrirDetail('${t.id}')">Détail ›</button>`;
+    }
+
+    return `
+    <div class="tache-card" id="tcard-${t.id}">
+      <div class="tache-card-top">
+        <div class="tache-priority-bar ${prioClass}"></div>
+        <div class="tache-info">
+          <div class="tache-nom">${t.nom || '—'}</div>
+          <div class="tache-assignee">
+            <div class="tache-assignee-dot">${initial}</div>
+            ${assignName}
+          </div>
+        </div>
+        <div class="tache-type-badge ${typeClass}">${typeLabel}</div>
+      </div>
+      <div class="tache-card-meta">
+        <div class="tache-meta-item">📅 <strong style="${isRetard ? 'color:#C0392B' : ''}">${echeance}</strong>${isRetard ? ' ⚠️ Retard' : ''}</div>
+        <div class="tache-meta-item">📋 <strong>${t.cat || '—'}</strong></div>
+        <div class="tache-meta-item task-badge ${statut === 'Terminée' ? 'done' : statut === 'En cours' ? 'encours' : 'afaire'}" style="padding:2px 8px;border-radius:10px">${statut}</div>
+      </div>
+      <div class="tache-card-actions">${actions}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Mise à jour rapide du statut ──────────────────────────────── */
+window.quickStatut = async function(id, newStatut, e) {
+  if(e) e.stopPropagation();
+  try {
+    await updateDoc(doc(db, 'taches', id), {
+      statut: newStatut,
+      updatedAt: serverTimestamp(),
+      updatedBy: currentUser.uid,
+    });
+    // Journaliser
+    await addDoc(collection(db, 'journal'), {
+      type: 'statut_tache', tacheId: id, newStatut,
+      par: currentProfile.nom, parId: currentUser.uid,
+      at: serverTimestamp(),
+    });
+    // Mettre à jour le cache local
+    const t = allTaches.find(t => t.id === id);
+    if (t) t.statut = newStatut;
+    applyFilter(currentFilter);
+    showToast(newStatut === 'En cours' ? '⚡ Tâche démarrée' : '✅ Tâche terminée');
+    // Mettre à jour score si membre complète
+    if (newStatut === 'Terminée' && currentProfile.niveau !== 1) {
+      await updateDoc(doc(db, 'users', currentUser.uid), {
+        score: (currentProfile.score || 0) + 10,
+      });
+      currentProfile.score = (currentProfile.score || 0) + 10;
+      showToast('✅ Tâche terminée +10 pts !');
+    }
+  } catch(e) { showToast('Erreur : ' + e.message); }
+};
+
+/* ── Ouvrir détail ─────────────────────────────────────────────── */
+window.ouvrirDetail = async function(id) {
+  currentTacheId = id;
+  const t = allTaches.find(t => t.id === id);
+  if (!t) return;
+
+  document.getElementById('detail-tache-nom').textContent   = t.nom || '—';
+  document.getElementById('detail-assignee').textContent    = t.assigneeNom || '—';
+  document.getElementById('detail-type').textContent        = t.type || '—';
+  document.getElementById('detail-priorite').textContent    = t.priorite || '—';
+  document.getElementById('detail-cat').textContent         = t.cat || '—';
+  document.getElementById('detail-canal').textContent       = t.canal || '—';
+  document.getElementById('detail-statut').textContent      = t.statut || 'A faire';
+  document.getElementById('detail-ref').textContent         = t.ref || id.substring(0,8).toUpperCase();
+  document.getElementById('detail-echeance').textContent    = t.echeance
+    ? new Date(t.echeance).toLocaleDateString('fr-FR', {weekday:'long',day:'2-digit',month:'long',year:'numeric'})
+    : 'Non définie';
+
+  // Marquer statut sélectionné
+  document.querySelectorAll('.statut-btn').forEach(b => b.classList.remove('selected'));
+  const st = t.statut || 'A faire';
+  const map = { 'A faire': 0, 'En cours': 1, 'Terminée': 2 };
+  const btns = document.querySelectorAll('.statut-btn');
+  if (btns[map[st]]) btns[map[st]].classList.add('selected');
+
+  // Charger commentaires
+  loadComments(id);
+
+  goTo('tache-detail');
+};
+
+/* ── Mettre à jour statut depuis détail ────────────────────────── */
+window.updateStatutTache = async function(newStatut) {
+  if (!currentTacheId) return;
+  await quickStatut(currentTacheId, newStatut, null);
+  // Mettre à jour l'affichage
+  document.getElementById('detail-statut').textContent = newStatut;
+  document.querySelectorAll('.statut-btn').forEach(b => b.classList.remove('selected'));
+  const map = { 'A faire': 0, 'En cours': 1, 'Terminée': 2 };
+  const btns = document.querySelectorAll('.statut-btn');
+  if (btns[map[newStatut]]) btns[map[newStatut]].classList.add('selected');
+};
+
+/* ── Commentaires ──────────────────────────────────────────────── */
+async function loadComments(tacheId) {
+  const listEl = document.getElementById('comments-list');
+  try {
+    const q = query(
+      collection(db, 'taches', tacheId, 'commentaires'),
+      orderBy('createdAt', 'asc')
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      listEl.innerHTML = '<div class="empty-state" style="padding:16px"><div class="empty-state-body">Aucun commentaire. Sois le premier !</div></div>';
+      return;
+    }
+    listEl.innerHTML = '';
+    snap.forEach(d => {
+      const c = d.data();
+      const time = c.createdAt?.toDate ? c.createdAt.toDate().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+      const initial = (c.auteurNom || '?').charAt(0).toUpperCase();
+      const photoEl = c.auteurPhoto
+        ? `<img src="${c.auteurPhoto}" alt="">`
+        : `<span style="font-size:12px;font-weight:700;color:#fff">${initial}</span>`;
+      listEl.innerHTML += `
+        <div class="comment-item">
+          <div class="comment-av">${photoEl}</div>
+          <div class="comment-body">
+            <div class="comment-top">
+              <span class="comment-author">${c.auteurNom || '—'}</span>
+              <span class="comment-time">${time}</span>
+            </div>
+            <div class="comment-text">${c.texte}</div>
+          </div>
+        </div>`;
+    });
+  } catch(e) { listEl.innerHTML = '<div style="padding:16px;color:var(--text-3);font-size:13px">Impossible de charger les commentaires.</div>'; }
+}
+
+window.sendComment = async function() {
+  const input = document.getElementById('comment-input');
+  const texte = input.value.trim();
+  if (!texte || !currentTacheId || !currentUser) return;
+  input.value = '';
+  try {
+    await addDoc(collection(db, 'taches', currentTacheId, 'commentaires'), {
+      texte,
+      auteurId:    currentUser.uid,
+      auteurNom:   currentProfile.nom || currentUser.email,
+      auteurPhoto: currentProfile.photo || '',
+      createdAt:   serverTimestamp(),
+    });
+    loadComments(currentTacheId);
+    showToast('Commentaire envoyé');
+  } catch(e) { showToast('Erreur : ' + e.message); }
+};
+
+/* ── Modal Nouvelle Tâche ──────────────────────────────────────── */
+window.openModalTache = async function(id = null) {
+  if (currentProfile?.niveau !== 1) { showToast('Réservé au bureau'); return; }
+  tacheEditId = id;
+  document.getElementById('modal-tache-title').textContent = id ? 'Modifier la tâche' : 'Nouvelle tâche';
+  document.getElementById('btn-submit-tache').querySelector('span').textContent = id ? 'Enregistrer' : 'Créer la tâche';
+
+  // Charger les membres dans le select
+  const select = document.getElementById('t-assignee');
+  select.innerHTML = '<option value="">— Choisir un membre —</option>';
+  if (!membresCache.length) {
+    const snap = await getDocs(collection(db, 'users'));
+    snap.forEach(d => membresCache.push({ id: d.id, ...d.data() }));
+  }
+  membresCache.forEach(m => {
+    select.innerHTML += `<option value="${m.uid}">${m.nom} (${m.role || 'Membre'})</option>`;
+  });
+
+  // Si édition, remplir les champs
+  if (id) {
+    const t = allTaches.find(t => t.id === id);
+    if (t) {
+      document.getElementById('t-nom').value      = t.nom || '';
+      document.getElementById('t-assignee').value = t.assigneeId || '';
+      document.getElementById('t-type').value     = t.type || 'Ponctuelle';
+      document.getElementById('t-priorite').value = t.priorite || 'Haute';
+      document.getElementById('t-cat').value      = t.cat || 'Administration';
+      document.getElementById('t-canal').value    = t.canal || 'App';
+      document.getElementById('t-echeance').value = t.echeance || '';
+      document.getElementById('t-desc').value     = t.description || '';
+    }
+  } else {
+    // Reset
+    ['t-nom','t-desc','t-echeance'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('t-type').value     = 'Ponctuelle';
+    document.getElementById('t-priorite').value = 'Haute';
+    document.getElementById('t-cat').value      = 'Administration';
+    document.getElementById('t-canal').value    = 'App';
+  }
+
+  document.getElementById('modal-tache').classList.add('show');
+};
+
+window.closeModalTache = function() {
+  document.getElementById('modal-tache').classList.remove('show');
+};
+
+window.submitTache = async function() {
+  const nom      = document.getElementById('t-nom').value.trim();
+  const assigneeId = document.getElementById('t-assignee').value;
+  const type     = document.getElementById('t-type').value;
+  const priorite = document.getElementById('t-priorite').value;
+  const cat      = document.getElementById('t-cat').value;
+  const canal    = document.getElementById('t-canal').value;
+  const echeance = document.getElementById('t-echeance').value;
+  const desc     = document.getElementById('t-desc').value.trim();
+
+  if (!nom)        { showToast('Le titre est obligatoire'); return; }
+  if (!assigneeId) { showToast('Choisis un membre à assigner'); return; }
+
+  const membre = membresCache.find(m => m.uid === assigneeId);
+  const assigneeNom = membre ? membre.nom : assigneeId;
+
+  // Générer une référence unique
+  const code    = membre?.role?.substring(0,3).toUpperCase() || 'MEM';
+  const annee   = new Date().getFullYear();
+  const num     = String(allTaches.length + 1).padStart(3, '0');
+  const ref     = `AS-${annee}-${code}-${num}`;
+
+  const btn = document.getElementById('btn-submit-tache');
+  btn.disabled = true;
+  btn.querySelector('span').textContent = 'Enregistrement...';
+
+  try {
+    const data = {
+      nom, assigneeId, assigneeNom, type, priorite, cat, canal,
+      echeance: echeance || null, description: desc,
+      statut: 'A faire', ref,
+      createdBy: currentUser.uid,
+      createdByNom: currentProfile.nom,
+      updatedAt: serverTimestamp(),
+    };
+
+    if (tacheEditId) {
+      await updateDoc(doc(db, 'taches', tacheEditId), data);
+      showToast('✅ Tâche mise à jour');
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db, 'taches'), data);
+      showToast('✅ Tâche créée — ' + assigneeNom + ' notifié');
+    }
+
+    closeModalTache();
+    loadTaches();
+  } catch(e) {
+    showToast('Erreur : ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.querySelector('span').textContent = tacheEditId ? 'Enregistrer' : 'Créer la tâche';
+  }
+};
+
+/* Entrée commentaire au clavier */
+document.addEventListener('DOMContentLoaded', () => {
+  const ci = document.getElementById('comment-input');
+  if (ci) ci.addEventListener('keypress', e => { if(e.key==='Enter') sendComment(); });
+});
+
 </script>
 
 </body>
