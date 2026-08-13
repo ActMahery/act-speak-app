@@ -1276,6 +1276,7 @@
     <div class="login-form-wrap">
       <div class="login-title">Connexion</div>
       <div class="login-hint">Accès réservé aux membres autorisés par l'administration.</div>
+      <div id="firebase-status" style="font-size:11px;color:var(--text-3);text-align:center;margin-bottom:8px"></div>
       <div class="field">
         <label>Adresse e-mail</label>
         <input type="email" id="login-email" placeholder="ton.email@gmail.com" autocomplete="email">
@@ -1869,27 +1870,51 @@ const QUICK_ACTIONS = {
 
 /* ── AUTH STATE ──────────────────────────────────────────────────── */
 onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUser = user;
-    const profile = await loadProfile(user.uid);
-    if (profile && profile.statut !== 'bloque') {
+  try {
+    if (user) {
+      currentUser = user;
+      let profile = null;
+      try {
+        profile = await loadProfile(user.uid);
+      } catch(profileErr) {
+        console.warn('Profile load error:', profileErr);
+      }
+
+      if (profile && profile.statut === 'bloque') {
+        await signOut(auth);
+        showScreen('login');
+        showError("Votre accès a été suspendu. Contactez l'administrateur.");
+        return;
+      }
+
+      if (!profile) {
+        // Créer profil de base si inexistant
+        try {
+          await createBasicProfile(user);
+          profile = await loadProfile(user.uid);
+        } catch(e) {
+          // En cas d'erreur Firestore, créer un profil local minimal
+          profile = {
+            uid: user.uid, email: user.email,
+            nom: user.displayName || user.email.split('@')[0],
+            prenom: (user.displayName || user.email).split(' ').pop(),
+            role: 'Membre', niveau: 3, statut: 'actif', score: 0,
+            badges: ['⚡'], photo: user.photoURL || ''
+          };
+        }
+      }
+
       currentProfile = profile;
       populateDashboard(profile, user);
-      await showScreen('dashboard');
-    } else if (profile && profile.statut === 'bloque') {
-      await signOut(auth);
-      showError("Votre accès a été suspendu. Contactez l'administrateur.");
-      showScreen('login');
+      setTimeout(() => showScreen('dashboard'), 50);
+
     } else {
-      // Nouveau compte sans profil → créer profil basique
-      await createBasicProfile(user);
-      currentProfile = await loadProfile(user.uid);
-      populateDashboard(currentProfile, user);
-      await showScreen('dashboard');
+      currentUser    = null;
+      currentProfile = null;
+      showScreen('login');
     }
-  } else {
-    currentUser = null;
-    currentProfile = null;
+  } catch(err) {
+    console.error('Auth error:', err);
     showScreen('login');
   }
 });
@@ -2157,13 +2182,13 @@ window.toggleTheme = function() {
 };
 
 /* ── SCREENS ─────────────────────────────────────────────────────── */
-window.showScreen = async function(id) {
+window.showScreen = function(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const target = document.getElementById('screen-' + id);
   if (target) {
-    await new Promise(r => setTimeout(r, 10));
     target.classList.add('active');
-    if (id === 'admin') loadAdminMembers();
+    if (id === 'admin')  loadAdminMembers();
+    if (id === 'taches') loadTaches();
   }
 };
 
@@ -2201,9 +2226,13 @@ window.showToast = function(msg) {
 };
 
 /* ── SPLASH → LOGIN ──────────────────────────────────────────────── */
+// Forcer le passage au login après 2.5s maximum
 setTimeout(() => {
-  if (!auth.currentUser) showScreen('login');
-}, 1200);
+  const splash = document.getElementById('screen-splash');
+  if (splash && splash.classList.contains('active')) {
+    showScreen('login');
+  }
+}, 2500);
 
 /* ── KEYBOARD ────────────────────────────────────────────────────── */
 document.getElementById('login-pwd').addEventListener('keypress', e => {
@@ -2223,12 +2252,7 @@ let membresCache   = [];     // liste membres pour le select
 
 /* ── Navigation centralisée ────────────────────────────────────── */
 window.goTo = function(screen) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById('screen-' + screen);
-  if (el) { setTimeout(() => el.classList.add('active'), 10); }
-  // mettre à jour bottom-nav actif
-  if (screen === 'taches') loadTaches();
-  if (screen === 'admin')  loadAdminMembers();
+  showScreen(screen);
 };
 
 /* ── Mise à jour switchNav ─────────────────────────────────────── */
