@@ -10,8 +10,14 @@
   <title>ACT & SPEAK</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon-192.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <!-- Fonts avec display=swap pour ne pas bloquer le rendu -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com">
+  <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"></noscript>
 
   <style>
     /* ── TOKENS ─────────────────────────────────────────────────── */
@@ -2197,7 +2203,7 @@ window.showToast = function(msg) {
 /* ── SPLASH → LOGIN ──────────────────────────────────────────────── */
 setTimeout(() => {
   if (!auth.currentUser) showScreen('login');
-}, 2000);
+}, 1200);
 
 /* ── KEYBOARD ────────────────────────────────────────────────────── */
 document.getElementById('login-pwd').addEventListener('keypress', e => {
@@ -2586,5 +2592,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </script>
 
+
+  <script>
+    // Service Worker pour cache et chargement rapide
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>
