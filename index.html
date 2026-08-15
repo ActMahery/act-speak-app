@@ -1006,30 +1006,49 @@ function navTo(btn, screen) {
 
 // ── AUTH ──────────────────────────────────────────────────────────
 auth.onAuthStateChanged(async user => {
+  // Annuler le splash timeout si Firebase répond à temps
+  if (window._splashTimer) { clearTimeout(window._splashTimer); window._splashTimer = null; }
+
   if (user) {
     CU = user;
+    // Profil minimal immédiat (affichage rapide)
+    CP = {
+      uid:user.uid, email:user.email,
+      nom:user.displayName||user.email.split('@')[0],
+      prenom:(user.displayName||'Membre').split(' ').pop(),
+      role:'Membre', niveau:1, statut:'actif', score:0, photo:user.photoURL||''
+    };
+    fillDash();
+    go('dash');
+
+    // Charger le vrai profil Firestore en arrière-plan
     try {
       const snap = await db.collection('users').doc(user.uid).get();
       if (snap.exists) {
-        CP = snap.data();
-        if (CP.statut === 'bloque') { auth.signOut(); showErr('Accès suspendu.'); go('login'); return; }
+        const data = snap.data();
+        if (data.statut === 'bloque') { auth.signOut(); go('login'); showErr('Accès suspendu.'); return; }
+        CP = data;
+        fillDash(); // Re-remplir avec les vraies données
       } else {
-        CP = { uid:user.uid, email:user.email, nom:user.displayName||user.email.split('@')[0], prenom:(user.displayName||'Membre').split(' ').pop(), role:'Membre', niveau:3, statut:'actif', score:0, badges:['⚡'], photo:'' };
-        await db.collection('users').doc(user.uid).set({ ...CP, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        // Créer le profil si inexistant
+        await db.collection('users').doc(user.uid).set({
+          ...CP, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
       }
-      fillDash();
-      go('dash');
     } catch(e) {
-      // Firestore inaccessible — profil minimal
-      CP = { uid:user.uid, email:user.email, nom:user.displayName||user.email.split('@')[0], prenom:(user.displayName||'Membre').split(' ').pop(), role:'Membre', niveau:1, statut:'actif', score:0, photo:'' };
-      fillDash();
-      go('dash');
+      console.warn('Firestore profil:', e.message);
+      // On reste avec le profil minimal, l'app fonctionne quand même
     }
   } else {
     CU = null; CP = null;
     go('login');
   }
 });
+
+// Stocker le timer pour pouvoir l'annuler
+window._splashTimer = setTimeout(() => {
+  if (document.getElementById('s-splash').classList.contains('on')) go('login');
+}, 2500);
 
 // ── LOGIN ─────────────────────────────────────────────────────────
 function doLogin() {
@@ -1458,11 +1477,7 @@ function toast(msg) {
 }
 
 // ── SPLASH ────────────────────────────────────────────────────────
-// Le splash disparaît dès que Firebase répond (via onAuthStateChanged)
-// ou après 4s maximum comme fallback
-setTimeout(() => {
-  if (document.getElementById('s-splash').classList.contains('on')) go('login');
-}, 4000);
+// Splash géré dans onAuthStateChanged
 
 // ── SERVICE WORKER ────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
