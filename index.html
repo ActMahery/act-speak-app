@@ -500,7 +500,7 @@ input,select,textarea{font-family:inherit}
 <div id="app">
 
 <!-- SPLASH -->
-<div id="s-splash" class="scr on">
+<div id="s-splash" class="scr" style="display:none">
   <img src="logo.png" class="splash-logo" alt="ACT&SPEAK">
   <div class="splash-name">ACT & SPEAK</div>
   <div class="splash-tag">Espace membres</div>
@@ -508,7 +508,7 @@ input,select,textarea{font-family:inherit}
 </div>
 
 <!-- LOGIN -->
-<div id="s-login" class="scr">
+<div id="s-login" class="scr on">
   <div class="login-hero">
     <img src="logo.png" class="login-logo" alt="ACT&SPEAK">
     <div class="login-name">ACT & SPEAK</div>
@@ -954,14 +954,23 @@ input,select,textarea{font-family:inherit}
 
 <div id="toast"></div>
 
-<!-- FIREBASE SDK compat v10 -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<!-- FIREBASE SDK compat v10 — chargement non-bloquant -->
 <script>
-// ── INIT ─────────────────────────────────────────────────────────
-firebase.initializeApp({
+// Afficher login immédiatement sans attendre Firebase
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById('s-login').classList.add('on');
+});
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js" defer></script>
+<script>
+window.addEventListener("load", function() {
+// ── INIT ──────────────────────────────────────────────────────
+try { firebase.app(); } catch(e) {
+  firebase.initializeApp({
   apiKey:"AIzaSyCg0iChSrt3yLXn0yd-RFPUy8YmKy0hX8Y",
   authDomain:"act-speak.firebaseapp.com",
   projectId:"act-speak",
@@ -1006,9 +1015,6 @@ function navTo(btn, screen) {
 
 // ── AUTH ──────────────────────────────────────────────────────────
 auth.onAuthStateChanged(async user => {
-  // Annuler le splash timeout si Firebase répond à temps
-  if (window._splashTimer) { clearTimeout(window._splashTimer); window._splashTimer = null; }
-
   if (user) {
     CU = user;
     // Profil minimal immédiat (affichage rapide)
@@ -1045,10 +1051,7 @@ auth.onAuthStateChanged(async user => {
   }
 });
 
-// Stocker le timer pour pouvoir l'annuler
-window._splashTimer = setTimeout(() => {
-  if (document.getElementById('s-splash').classList.contains('on')) go('login');
-}, 2500);
+// Splash désactivé — login direct
 
 // ── LOGIN ─────────────────────────────────────────────────────────
 function doLogin() {
@@ -2226,6 +2229,7 @@ window.go = function(screen) {
   if (screen === 'reunion') loadReunions();
 };
 
+}); // fin window.addEventListener load
 </script>
 </body>
 </html>
