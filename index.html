@@ -311,6 +311,86 @@ input,select,textarea{font-family:inherit}
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--navy-deep);color:#fff;font-size:13px;font-weight:500;padding:11px 18px;border-radius:30px;box-shadow:0 4px 20px rgba(0,0,0,.25);opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap;z-index:9999}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 [data-dark] #toast{background:var(--surface3)}
+
+/* ── CHAT ────────────────────────────────────────────────────── */
+#s-chat{background:var(--bg)}
+.chat-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 20px 16px}
+.chat-hd-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:14px}
+.chat-tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chat-tabs::-webkit-scrollbar{display:none}
+.ctab{flex-shrink:0;height:32px;padding:0 16px;border-radius:20px;font-size:12px;font-weight:500;background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);transition:background var(--tr);white-space:nowrap;position:relative}
+.ctab.on{background:var(--gold);color:#fff;font-weight:600}
+.ctab-badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#C0392B;border-radius:50%;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;display:none}
+.ctab-badge.on{display:flex}
+
+/* Liste canaux */
+.canal-list{padding:14px 14px 90px;display:flex;flex-direction:column;gap:10px}
+.canal-item{background:var(--surface);border-radius:var(--r14);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh);cursor:pointer;transition:transform var(--tr)}
+.canal-item:active{transform:scale(.98)}
+.canal-ic{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.canal-info{flex:1;min-width:0}
+.canal-name{font-size:15px;font-weight:600;color:var(--t1);margin-bottom:3px}
+.canal-last{font-size:12px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.canal-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.canal-time{font-size:10px;color:var(--t3)}
+.canal-unread{width:20px;height:20px;background:var(--gold);border-radius:50%;font-size:10px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center}
+
+/* Membres privés */
+.mem-chat-item{background:var(--surface);border-radius:var(--r14);padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh);cursor:pointer;transition:transform var(--tr)}
+.mem-chat-item:active{transform:scale(.98)}
+.mem-chat-av{width:44px;height:44px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;position:relative}
+.mem-chat-av img{width:100%;height:100%;object-fit:cover}
+.online-dot{position:absolute;bottom:1px;right:1px;width:10px;height:10px;background:#27AE60;border-radius:50%;border:2px solid var(--surface)}
+
+/* Conversation */
+#s-conv{background:var(--bg)}
+.conv-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 16px 14px;display:flex;align-items:center;gap:12px}
+.conv-back{font-size:22px;color:rgba(255,255,255,.6);cursor:pointer;flex-shrink:0}
+.conv-av{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden}
+.conv-av img{width:100%;height:100%;object-fit:cover}
+.conv-info{flex:1;min-width:0}
+.conv-name{font-size:15px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:1px}
+
+/* Messages */
+.msgs-wrap{flex:1;overflow-y:auto;padding:14px 14px 10px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.msg-group{display:flex;flex-direction:column;gap:3px}
+.msg-group.mine{align-items:flex-end}
+.msg-group.theirs{align-items:flex-start}
+.msg-author{font-size:11px;font-weight:600;color:var(--t3);padding:0 10px;margin-bottom:2px}
+.msg-bubble{max-width:78%;padding:10px 13px;border-radius:18px;font-size:14px;line-height:1.45;word-wrap:break-word;position:relative}
+.msg-group.mine .msg-bubble{background:var(--navy);color:#fff;border-bottom-right-radius:6px}
+.msg-group.theirs .msg-bubble{background:var(--surface);color:var(--t1);border-bottom-left-radius:6px;box-shadow:var(--sh)}
+[data-dark] .msg-group.theirs .msg-bubble{background:var(--surface3)}
+.msg-time{font-size:10px;color:var(--t3);padding:0 10px}
+.msg-group.mine .msg-time{text-align:right}
+.msg-img{max-width:200px;border-radius:12px;cursor:pointer;display:block}
+
+/* Réactions */
+.msg-reactions{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.reaction-btn{font-size:14px;background:var(--surface2);border-radius:20px;padding:3px 8px;cursor:pointer;transition:transform var(--tr);border:1px solid var(--surface3)}
+.reaction-btn:active{transform:scale(.9)}
+.reaction-btn.active{background:rgba(201,160,48,.15);border-color:var(--gold)}
+
+/* Input */
+.conv-input-area{padding:10px 12px;background:var(--surface);border-top:1px solid var(--surface3);display:flex;align-items:flex-end;gap:8px;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.conv-input{flex:1;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:22px;padding:10px 16px;font-size:14px;color:var(--t1);outline:none;resize:none;max-height:100px;line-height:1.4;font-family:inherit}
+.conv-input:focus{border-color:var(--navy)}
+[data-dark] .conv-input:focus{border-color:var(--gold)}
+.conv-attach{width:36px;height:36px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;flex-shrink:0;transition:background var(--tr)}
+.conv-attach:active{background:var(--surface3)}
+.conv-send{width:40px;height:40px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;flex-shrink:0;transition:transform var(--tr),opacity var(--tr)}
+.conv-send:active{transform:scale(.9)}
+.conv-send:disabled{opacity:.4}
+
+/* Date separator */
+.date-sep{text-align:center;font-size:11px;color:var(--t3);margin:6px 0;position:relative}
+.date-sep::before,.date-sep::after{content:'';position:absolute;top:50%;width:30%;height:1px;background:var(--surface3)}
+.date-sep::before{left:0}.date-sep::after{right:0}
+
+/* Loader messages */
+.msgs-loading{display:flex;align-items:center;justify-content:center;padding:20px;color:var(--t3);font-size:13px;gap:8px}
+
 </style>
 </head>
 <body>
@@ -396,7 +476,7 @@ input,select,textarea{font-family:inherit}
     <button class="ni on" id="ni-dash" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
     <button class="ni" id="ni-taches" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
     <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" id="ni-chat" onclick="toast('Chat — Session 3 🚀')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" id="ni-chat" onclick="navTo(this,'chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
     <button class="ni" id="ni-profil" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
@@ -421,7 +501,7 @@ input,select,textarea{font-family:inherit}
     <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
     <button class="ni on"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
     <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="toast('Chat — Session 3')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
     <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
@@ -500,7 +580,7 @@ input,select,textarea{font-family:inherit}
     <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
     <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
     <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="toast('Chat — Session 3')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
     <button class="ni on"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
@@ -532,6 +612,92 @@ input,select,textarea{font-family:inherit}
     <div id="mem-list" style="display:flex;flex-direction:column;gap:10px">
       <div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>
     </div>
+  </div>
+</div>
+
+
+<!-- ══ CHAT ══ -->
+<div id="s-chat" class="scr">
+  <div class="chat-hd">
+    <div class="chat-hd-title">Messages</div>
+    <div class="chat-tabs">
+      <button class="ctab on" id="ctab-canaux" onclick="switchChatTab(this,'canaux')">💬 Canaux</button>
+      <button class="ctab" id="ctab-prives" onclick="switchChatTab(this,'prives')">👤 Privés</button>
+    </div>
+  </div>
+
+  <!-- Canaux publics -->
+  <div id="chat-canaux" class="canal-list">
+    <div class="canal-item" onclick="openConv('general','🌐 Général','Tous les membres','general')">
+      <div class="canal-ic" style="background:#EFF6FF">🌐</div>
+      <div class="canal-info">
+        <div class="canal-name">Général</div>
+        <div class="canal-last" id="last-general">Canal de tous les membres</div>
+      </div>
+      <div class="canal-meta">
+        <div class="canal-time" id="time-general"></div>
+        <div class="canal-unread" id="unread-general" style="display:none">0</div>
+      </div>
+    </div>
+    <div class="canal-item" id="canal-bureau-item" style="display:none" onclick="openConv('bureau','⚙️ Bureau','Bureau Exécutif uniquement','bureau')">
+      <div class="canal-ic" style="background:#FFF3CD">⚙️</div>
+      <div class="canal-info">
+        <div class="canal-name">Bureau</div>
+        <div class="canal-last" id="last-bureau">Canal réservé au Bureau Exécutif</div>
+      </div>
+      <div class="canal-meta">
+        <div class="canal-time" id="time-bureau"></div>
+        <div class="canal-unread" id="unread-bureau" style="display:none">0</div>
+      </div>
+    </div>
+    <div class="canal-item" onclick="openConv('annonces','📢 Annonces','Annonces officielles','annonces')">
+      <div class="canal-ic" style="background:#F0FDF4">📢</div>
+      <div class="canal-info">
+        <div class="canal-name">Annonces</div>
+        <div class="canal-last" id="last-annonces">Annonces officielles du bureau</div>
+      </div>
+      <div class="canal-meta">
+        <div class="canal-time" id="time-annonces"></div>
+        <div class="canal-unread" id="unread-annonces" style="display:none">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages privés -->
+  <div id="chat-prives" class="canal-list" style="display:none">
+    <div id="prives-list">
+      <div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>
+    </div>
+  </div>
+
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni on"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- ══ CONVERSATION ══ -->
+<div id="s-conv" class="scr" style="display:flex;flex-direction:column">
+  <div class="conv-hd">
+    <div class="conv-back" onclick="go('chat')">‹</div>
+    <div class="conv-av" id="conv-av"><span id="conv-av-i">?</span></div>
+    <div class="conv-info">
+      <div class="conv-name" id="conv-name">—</div>
+      <div class="conv-sub" id="conv-sub">—</div>
+    </div>
+  </div>
+  <div class="msgs-wrap" id="msgs-wrap">
+    <div class="msgs-loading">⏳ Chargement des messages...</div>
+  </div>
+  <div class="conv-input-area">
+    <div class="conv-attach" onclick="sendPhoto()">📎</div>
+    <textarea class="conv-input" id="conv-inp" placeholder="Écrire un message..." rows="1"
+      oninput="autoResize(this)"
+      onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
+    <button class="conv-send" id="conv-send-btn" onclick="sendMsg()">➤</button>
   </div>
 </div>
 
@@ -1075,6 +1241,338 @@ setTimeout(() => {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
+
+/* ════════════════════════════════════════════════════════════════
+   MODULE CHAT — Session 3
+   ════════════════════════════════════════════════════════════════ */
+
+let curConvId   = null;   // ID canal ou "priv_UID1_UID2"
+let curConvName = null;
+let msgsListener = null;  // Firestore real-time listener
+let chatTab = 'canaux';
+
+const CANAL_ICONS = { general:'🌐', bureau:'⚙️', annonces:'📢' };
+const REACTIONS = ['👍','✅','👀','❤️','😂'];
+
+/* ── Onglets chat ────────────────────────────────────────────────── */
+window.switchChatTab = function(el, tab) {
+  chatTab = tab;
+  document.querySelectorAll('.ctab').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('chat-canaux').style.display = tab === 'canaux' ? 'flex' : 'none';
+  document.getElementById('chat-prives').style.display = tab === 'prives' ? 'flex' : 'none';
+  if (tab === 'prives') loadPrives();
+};
+
+/* ── Ouvrir une conversation ────────────────────────────────────── */
+window.openConv = function(canalId, name, sub, type) {
+  // Vérif accès bureau
+  if (canalId === 'bureau' && CP?.niveau !== 1) { toast('Réservé au Bureau'); return; }
+  // Annonces : seul le bureau peut écrire
+  curConvId   = canalId;
+  curConvName = name;
+
+  // Header
+  document.getElementById('conv-name').textContent = name;
+  document.getElementById('conv-sub').textContent  = sub;
+  const avEl = document.getElementById('conv-av');
+  const icon = CANAL_ICONS[canalId] || name.charAt(0);
+  avEl.innerHTML = `<span id="conv-av-i" style="font-size:18px">${icon}</span>`;
+
+  // Désactiver input pour Annonces si pas bureau
+  const inp = document.getElementById('conv-inp');
+  const btn = document.getElementById('conv-send-btn');
+  if (canalId === 'annonces' && CP?.niveau !== 1) {
+    inp.disabled = true;
+    inp.placeholder = 'Seul le bureau peut publier ici.';
+    btn.disabled = true;
+  } else {
+    inp.disabled = false;
+    inp.placeholder = 'Écrire un message...';
+    btn.disabled = false;
+  }
+
+  go('conv');
+  loadMsgs(canalId, false);
+};
+
+window.openPrivConv = function(uid, nom, photo) {
+  // ID conversation privée : tri alphabétique des UIDs
+  const ids = [CU.uid, uid].sort();
+  const convId = 'priv_' + ids.join('_');
+  curConvId   = convId;
+  curConvName = nom;
+
+  document.getElementById('conv-name').textContent = nom;
+  document.getElementById('conv-sub').textContent  = 'Message privé';
+  const avEl = document.getElementById('conv-av');
+  avEl.innerHTML = photo
+    ? `<img src="${photo}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+    : `<span id="conv-av-i">${nom.charAt(0).toUpperCase()}</span>`;
+
+  const inp = document.getElementById('conv-inp');
+  const btn = document.getElementById('conv-send-btn');
+  inp.disabled = false; inp.placeholder = 'Écrire un message...'; btn.disabled = false;
+
+  go('conv');
+  loadMsgs(convId, true);
+};
+
+/* ── Charger les messages (temps réel) ──────────────────────────── */
+function loadMsgs(convId, isPriv) {
+  const wrap = document.getElementById('msgs-wrap');
+  wrap.innerHTML = '<div class="msgs-loading">⏳ Chargement...</div>';
+
+  // Stopper l'ancien listener
+  if (msgsListener) { msgsListener(); msgsListener = null; }
+
+  const col = db.collection('chat').doc(convId).collection('messages').orderBy('createdAt','asc').limitToLast(80);
+
+  msgsListener = col.onSnapshot(snap => {
+    if (snap.empty) {
+      wrap.innerHTML = '<div class="empty" style="margin-top:40px"><div class="empty-ic">💬</div><div class="empty-t">Aucun message</div><div class="empty-b">Sois le premier à écrire !</div></div>';
+      return;
+    }
+
+    let html = '';
+    let lastDate = '';
+    let lastUid  = '';
+
+    snap.forEach(d => {
+      const m    = d.data();
+      const mine = m.auteurId === CU?.uid;
+      const grp  = mine ? 'mine' : 'theirs';
+      const date = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleDateString('fr-FR',{day:'2-digit',month:'long'}) : '';
+      const time = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+      const newGroup = m.auteurId !== lastUid;
+
+      // Séparateur de date
+      if (date && date !== lastDate) {
+        html += `<div class="date-sep">${date}</div>`;
+        lastDate = date;
+      }
+
+      // Réactions existantes
+      const reacts = m.reactions || {};
+      let reactHtml = '';
+      Object.entries(reacts).forEach(([emoji, users]) => {
+        if (users && users.length > 0) {
+          const active = users.includes(CU?.uid) ? ' active' : '';
+          reactHtml += `<button class="reaction-btn${active}" onclick="toggleReaction('${d.id}','${convId}','${emoji}')">${emoji} ${users.length}</button>`;
+        }
+      });
+
+      // Image ou texte
+      let bodyHtml = '';
+      if (m.imageUrl) {
+        bodyHtml = `<img src="${m.imageUrl}" class="msg-img" alt="image" onclick="window.open('${m.imageUrl}')">`;
+      } else {
+        bodyHtml = escHtml(m.texte || '');
+      }
+
+      html += `<div class="msg-group ${grp}" id="msg-${d.id}">
+        ${!mine && newGroup ? `<div class="msg-author">${escHtml(m.auteurNom||'')}</div>` : ''}
+        <div class="msg-bubble" oncontextmenu="showReactions(event,'${d.id}','${convId}')" ontouchend="handleLongPress(event,'${d.id}','${convId}')">${bodyHtml}</div>
+        ${reactHtml ? `<div class="msg-reactions">${reactHtml}</div>` : ''}
+        <div class="msg-time">${time}${mine && m.vu ? ' · Vu ✓' : ''}</div>
+      </div>`;
+
+      lastUid = m.auteurId;
+    });
+
+    wrap.innerHTML = html;
+    // Scroll en bas
+    setTimeout(() => { wrap.scrollTop = wrap.scrollHeight; }, 50);
+
+    // Marquer comme vu
+    markVu(convId);
+  }, err => {
+    wrap.innerHTML = '<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-b">'+err.message+'</div></div>';
+  });
+}
+
+/* ── Envoyer un message ─────────────────────────────────────────── */
+window.sendMsg = async function() {
+  const inp = document.getElementById('conv-inp');
+  const txt = inp.value.trim();
+  if (!txt || !curConvId || !CU) return;
+  inp.value = ''; inp.style.height = 'auto';
+
+  try {
+    await db.collection('chat').doc(curConvId).collection('messages').add({
+      texte: txt,
+      auteurId:    CU.uid,
+      auteurNom:   CP?.nom || CU.email,
+      auteurPhoto: CP?.photo || '',
+      createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+      reactions:   {},
+      vu:          false,
+    });
+    // Mettre à jour le dernier message du canal
+    await db.collection('chat').doc(curConvId).set({
+      lastMsg:  txt,
+      lastTime: firebase.firestore.FieldValue.serverTimestamp(),
+      lastBy:   CP?.nom || '',
+    }, { merge: true });
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Envoyer une photo ──────────────────────────────────────────── */
+window.sendPhoto = function() {
+  if (!curConvId || !CU) return;
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    toast('Envoi de la photo...');
+    try {
+      const ref = storage.ref('chat/' + curConvId + '/' + Date.now() + '_' + file.name);
+      await ref.put(file);
+      const url = await ref.getDownloadURL();
+      await db.collection('chat').doc(curConvId).collection('messages').add({
+        texte: '',
+        imageUrl: url,
+        auteurId:    CU.uid,
+        auteurNom:   CP?.nom || CU.email,
+        auteurPhoto: CP?.photo || '',
+        createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+        reactions:   {},
+        vu:          false,
+      });
+      await db.collection('chat').doc(curConvId).set({
+        lastMsg:'📷 Photo', lastTime:firebase.firestore.FieldValue.serverTimestamp(), lastBy:CP?.nom||''
+      },{ merge:true });
+    } catch(e) { toast('Erreur upload : ' + e.message); }
+  };
+  inp.click();
+};
+
+/* ── Réactions ──────────────────────────────────────────────────── */
+let longPressTimer = null;
+
+window.handleLongPress = function(e, msgId, convId) {
+  clearTimeout(longPressTimer);
+  longPressTimer = setTimeout(() => showReactions(e, msgId, convId), 500);
+};
+
+window.showReactions = function(e, msgId, convId) {
+  e.preventDefault();
+  // Supprimer ancien picker
+  document.getElementById('react-picker')?.remove();
+  const picker = document.createElement('div');
+  picker.id = 'react-picker';
+  picker.style.cssText = `position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:var(--surface);border-radius:30px;padding:10px 14px;box-shadow:0 4px 24px rgba(0,0,0,.2);display:flex;gap:10px;z-index:999;`;
+  picker.innerHTML = REACTIONS.map(r =>
+    `<button style="font-size:22px;cursor:pointer;transition:transform .15s" onclick="toggleReaction('${msgId}','${convId}','${r}');this.parentNode.remove()" onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform=''">${r}</button>`
+  ).join('');
+  document.body.appendChild(picker);
+  setTimeout(() => picker.remove(), 4000);
+};
+
+window.toggleReaction = async function(msgId, convId, emoji) {
+  document.getElementById('react-picker')?.remove();
+  if (!CU) return;
+  try {
+    const ref  = db.collection('chat').doc(convId).collection('messages').doc(msgId);
+    const snap = await ref.get();
+    const data = snap.data();
+    const reacts = data.reactions || {};
+    const users  = reacts[emoji] || [];
+    const idx    = users.indexOf(CU.uid);
+    if (idx > -1) users.splice(idx, 1);
+    else users.push(CU.uid);
+    reacts[emoji] = users;
+    await ref.update({ reactions: reacts });
+  } catch(e) { toast('Erreur réaction'); }
+};
+
+/* ── Marquer vu ─────────────────────────────────────────────────── */
+async function markVu(convId) {
+  if (!CU) return;
+  try {
+    // Marquer les messages non lus comme vus
+    const snap = await db.collection('chat').doc(convId).collection('messages')
+      .where('auteurId','!=',CU.uid).where('vu','==',false).limit(20).get();
+    const batch = db.batch();
+    snap.forEach(d => batch.update(d.ref, { vu: true }));
+    await batch.commit();
+  } catch(e) {}
+}
+
+/* ── Charger les membres pour messages privés ───────────────────── */
+async function loadPrives() {
+  const list = document.getElementById('prives-list');
+  list.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+  try {
+    const snap = await db.collection('users').get();
+    let html = '';
+    snap.forEach(d => {
+      const m = d.data();
+      if (m.uid === CU?.uid) return; // pas soi-même
+      const init = (m.nom||'?').charAt(0).toUpperCase();
+      html += `<div class="mem-chat-item" onclick="openPrivConv('${m.uid}','${escHtml(m.nom||m.email)}','${m.photo||''}')">
+        <div class="mem-chat-av">
+          ${m.photo ? `<img src="${m.photo}" alt="">` : `<span style="font-size:17px;font-weight:700;color:#fff">${init}</span>`}
+        </div>
+        <div class="mem-info">
+          <div class="mem-name">${escHtml(m.nom||m.email)}</div>
+          <div class="mem-role">${m.role||'Membre'} · ${LVL[m.niveau]||'Adhérent'}</div>
+        </div>
+        <div style="font-size:12px;color:var(--gold);font-weight:500">Écrire ›</div>
+      </div>`;
+    });
+    list.innerHTML = html || '<div class="empty"><div class="empty-t">Aucun membre trouvé</div></div>';
+  } catch(e) {
+    list.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>';
+  }
+}
+
+/* ── Charger aperçu des derniers messages des canaux ────────────── */
+async function loadCanalPreviews() {
+  ['general','bureau','annonces'].forEach(async id => {
+    try {
+      const snap = await db.collection('chat').doc(id).get();
+      if (snap.exists) {
+        const d = snap.data();
+        const el = document.getElementById('last-'+id);
+        if (el && d.lastMsg) el.textContent = (d.lastBy ? d.lastBy + ' : ' : '') + d.lastMsg;
+        const tel = document.getElementById('time-'+id);
+        if (tel && d.lastTime) {
+          tel.textContent = d.lastTime.toDate().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        }
+      }
+    } catch(e) {}
+  });
+}
+
+/* ── Auto-resize textarea ───────────────────────────────────────── */
+window.autoResize = function(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+};
+
+/* ── Utils ──────────────────────────────────────────────────────── */
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Nettoyage listener quand on quitte le chat ─────────────────── */
+const origGo = window.go;
+window.go = function(screen) {
+  if (screen !== 'conv' && msgsListener) {
+    msgsListener();
+    msgsListener = null;
+  }
+  origGo(screen);
+  if (screen === 'chat') {
+    // Afficher canal bureau si niveau 1
+    const bureauItem = document.getElementById('canal-bureau-item');
+    if (bureauItem) bureauItem.style.display = CP?.niveau === 1 ? 'flex' : 'none';
+    loadCanalPreviews();
+  }
+};
+
 </script>
 </body>
 </html>
