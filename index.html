@@ -391,6 +391,109 @@ input,select,textarea{font-family:inherit}
 /* Loader messages */
 .msgs-loading{display:flex;align-items:center;justify-content:center;padding:20px;color:var(--t3);font-size:13px;gap:8px}
 
+
+/* ── RÉUNIONS ───────────────────────────────────────────────── */
+#s-reunion{background:var(--bg)}
+.reun-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 20px 16px}
+.reun-hd-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.reun-title{font-size:22px;font-weight:700;color:#fff}
+.reun-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px}
+.btn-new-reun{height:36px;padding:0 14px;background:var(--gold);color:#fff;border-radius:10px;font-size:13px;font-weight:600;display:none;align-items:center;gap:5px}
+.reun-tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.reun-tabs::-webkit-scrollbar{display:none}
+.rtab{flex-shrink:0;height:30px;padding:0 14px;border-radius:20px;font-size:12px;font-weight:500;background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);white-space:nowrap;transition:background var(--tr)}
+.rtab.on{background:var(--gold);color:#fff;font-weight:600}
+.reun-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+
+/* Carte réunion */
+.reun-card{background:var(--surface);border-radius:var(--r22);box-shadow:var(--sh);overflow:hidden;cursor:pointer;transition:transform var(--tr)}
+.reun-card:active{transform:scale(.99)}
+.reun-card-top{padding:14px 16px 10px;display:flex;align-items:flex-start;gap:12px}
+.reun-date-box{width:48px;flex-shrink:0;text-align:center;background:var(--navy);border-radius:10px;padding:6px 4px}
+.reun-date-day{font-size:20px;font-weight:700;color:#fff;line-height:1}
+.reun-date-mon{font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em}
+.reun-info{flex:1;min-width:0}
+.reun-nom{font-size:15px;font-weight:600;color:var(--t1);margin-bottom:4px;line-height:1.3}
+.reun-lieu{font-size:12px;color:var(--t3);display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.reun-heure{font-size:12px;color:var(--navy);font-weight:500}
+[data-dark] .reun-heure{color:var(--gold)}
+.reun-type-badge{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;flex-shrink:0;align-self:flex-start}
+.reun-type-badge.ord{background:#EFF6FF;color:#1C3557}
+.reun-type-badge.urg{background:#FDE8E8;color:#C0392B}
+.reun-type-badge.ext{background:#F0FDF4;color:#0F6E56}
+[data-dark] .reun-type-badge.ord{background:rgba(28,53,87,.4);color:#93C5FD}
+.reun-card-foot{padding:10px 16px 14px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--surface2)}
+.reun-presences{display:flex;align-items:center;gap:6px}
+.reun-pres-avs{display:flex}
+.reun-pres-av{width:24px;height:24px;border-radius:50%;background:var(--navy);border:2px solid var(--surface);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-left:-6px;overflow:hidden}
+.reun-pres-av:first-child{margin-left:0}
+.reun-pres-av img{width:100%;height:100%;object-fit:cover}
+.reun-pres-count{font-size:12px;color:var(--t3)}
+.btn-presence{height:32px;padding:0 14px;border-radius:20px;font-size:12px;font-weight:600;transition:all var(--tr)}
+.btn-presence.oui{background:#D4EDDA;color:#155724}
+.btn-presence.non{background:#FDE8E8;color:#C0392B}
+.btn-presence.attente{background:var(--surface2);color:var(--t2)}
+[data-dark] .btn-presence.oui{background:rgba(21,87,36,.35);color:#6EE7B7}
+[data-dark] .btn-presence.non{background:rgba(192,57,43,.25);color:#FCA5A5}
+
+/* Détail réunion */
+#s-reun-detail{background:var(--bg)}
+.rd-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 16px 20px}
+.rd-back{font-size:14px;color:rgba(255,255,255,.55);margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.rd-title{font-size:19px;font-weight:700;color:#fff;line-height:1.3}
+.rd-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+.rd-card{background:var(--surface);border-radius:var(--r22);box-shadow:var(--sh);overflow:hidden}
+.rd-card-t{font-size:11px;font-weight:600;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;padding:13px 16px 0}
+.rd-row{display:flex;justify-content:space-between;align-items:flex-start;padding:11px 16px;border-bottom:1px solid var(--surface2);font-size:13px}
+.rd-row:last-child{border-bottom:none}
+.rd-row-l{color:var(--t3);font-weight:500;flex-shrink:0;margin-right:12px}
+.rd-row-v{color:var(--t1);font-weight:500;text-align:right;flex:1}
+.od-item{padding:10px 16px;border-bottom:1px solid var(--surface2);display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--t1)}
+.od-item:last-child{border-bottom:none}
+.od-num{width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.pres-item{padding:10px 16px;border-bottom:1px solid var(--surface2);display:flex;align-items:center;gap:10px}
+.pres-item:last-child{border-bottom:none}
+.pres-av-s{width:36px;height:36px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden}
+.pres-av-s img{width:100%;height:100%;object-fit:cover}
+.pres-name{flex:1;font-size:13px;font-weight:500;color:var(--t1)}
+.pres-stt{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
+.pres-stt.o{background:#D4EDDA;color:#155724}
+.pres-stt.n{background:#FDE8E8;color:#C0392B}
+.pres-stt.a{background:var(--surface2);color:var(--t3)}
+
+/* PV */
+.pv-area{width:100%;min-height:160px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:13px;font-size:14px;color:var(--t1);outline:none;resize:none;line-height:1.6;font-family:inherit}
+.pv-area:focus{border-color:var(--navy)}
+[data-dark] .pv-area:focus{border-color:var(--gold)}
+.pv-btns{display:flex;gap:8px;padding:0 16px 14px}
+.btn-pv{flex:1;height:42px;border-radius:var(--r8);font-size:13px;font-weight:600;transition:opacity var(--tr)}
+.btn-pv:active{opacity:.8}
+.btn-pv.save{background:var(--navy);color:#fff}
+.btn-pv.share{background:#D4EDDA;color:#155724}
+
+/* Calendrier */
+.cal-wrap{background:var(--surface);border-radius:var(--r22);box-shadow:var(--sh);overflow:hidden;margin-bottom:14px}
+.cal-hd{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--surface2)}
+.cal-month{font-size:15px;font-weight:600;color:var(--t1)}
+.cal-nav{font-size:20px;color:var(--t2);cursor:pointer;padding:4px 8px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:10px 12px}
+.cal-day-label{text-align:center;font-size:10px;font-weight:600;color:var(--t3);padding:6px 0;text-transform:uppercase}
+.cal-day{text-align:center;padding:7px 2px;font-size:13px;color:var(--t1);cursor:pointer;border-radius:8px;position:relative;transition:background var(--tr)}
+.cal-day:active{background:var(--surface2)}
+.cal-day.today{background:var(--navy);color:#fff;font-weight:700}
+.cal-day.today[data-dark]{background:var(--gold)}
+.cal-day.has-event::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--gold)}
+.cal-day.today::after{background:#fff}
+.cal-day.empty{pointer-events:none}
+.cal-day.other-month{color:var(--t3)}
+.cal-events{padding:0 14px 14px;display:flex;flex-direction:column;gap:6px}
+.cal-ev-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:var(--r8);font-size:13px;cursor:pointer;transition:background var(--tr)}
+.cal-ev-item:active{background:var(--surface3)}
+.cal-ev-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.cal-ev-info{flex:1;min-width:0}
+.cal-ev-nom{font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-ev-time{font-size:11px;color:var(--t3);margin-top:1px}
+
 </style>
 </head>
 <body>
@@ -701,6 +804,130 @@ input,select,textarea{font-family:inherit}
   </div>
 </div>
 
+
+<!-- ══ RÉUNIONS ══ -->
+<div id="s-reunion" class="scr">
+  <div class="reun-hd">
+    <div class="reun-hd-top">
+      <div><div class="reun-title">Réunions</div><div class="reun-sub" id="reun-count">—</div></div>
+      <button class="btn-new-reun" id="btn-new-reun" onclick="openModalReunion()">📅 Nouvelle</button>
+    </div>
+    <div class="reun-tabs">
+      <button class="rtab on" onclick="switchReunTab(this,'agenda')">📅 Agenda</button>
+      <button class="rtab" onclick="switchReunTab(this,'calendrier')">🗓️ Calendrier</button>
+      <button class="rtab" onclick="switchReunTab(this,'archives')">🗄️ Archives</button>
+    </div>
+  </div>
+
+  <div id="reun-agenda" class="reun-body" style="display:flex"></div>
+  <div id="reun-calendrier" class="reun-body" style="display:none">
+    <div class="cal-wrap">
+      <div class="cal-hd">
+        <div class="cal-nav" onclick="calNav(-1)">‹</div>
+        <div class="cal-month" id="cal-month-label">—</div>
+        <div class="cal-nav" onclick="calNav(1)">›</div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div class="sec-title" style="padding:0 2px">Événements du jour</div>
+    <div id="cal-events-day"></div>
+  </div>
+  <div id="reun-archives" class="reun-body" style="display:none">
+    <div class="empty"><div class="empty-ic">🗄️</div><div class="empty-t">Archives</div><div class="empty-b">Les réunions terminées apparaîtront ici.</div></div>
+  </div>
+
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- ══ DÉTAIL RÉUNION ══ -->
+<div id="s-reun-detail" class="scr">
+  <div class="rd-hd">
+    <div class="rd-back" onclick="go('reunion')">‹ Retour</div>
+    <div class="rd-title" id="rd-title">—</div>
+  </div>
+  <div class="rd-body">
+
+    <!-- Présence rapide (si à venir) -->
+    <div class="rd-card" id="rd-presence-card">
+      <div class="rd-card-t">Ma présence</div>
+      <div style="padding:13px 16px;display:flex;gap:10px">
+        <button class="btn-presence oui" style="flex:1;height:44px;border-radius:var(--r8);font-size:13px" onclick="setPresence('oui')">✅ Je serai là</button>
+        <button class="btn-presence non" style="flex:1;height:44px;border-radius:var(--r8);font-size:13px" onclick="setPresence('non')">❌ Absent</button>
+      </div>
+    </div>
+
+    <!-- Infos -->
+    <div class="rd-card">
+      <div class="rd-card-t">Informations</div>
+      <div class="rd-row"><span class="rd-row-l">Date</span><span class="rd-row-v" id="rd-date">—</span></div>
+      <div class="rd-row"><span class="rd-row-l">Heure</span><span class="rd-row-v" id="rd-heure">—</span></div>
+      <div class="rd-row"><span class="rd-row-l">Lieu</span><span class="rd-row-v" id="rd-lieu">—</span></div>
+      <div class="rd-row"><span class="rd-row-l">Type</span><span class="rd-row-v" id="rd-type">—</span></div>
+      <div class="rd-row"><span class="rd-row-l">Organisateur</span><span class="rd-row-v" id="rd-org">—</span></div>
+    </div>
+
+    <!-- Ordre du jour -->
+    <div class="rd-card">
+      <div class="rd-card-t">Ordre du jour</div>
+      <div id="rd-od"></div>
+    </div>
+
+    <!-- Présences -->
+    <div class="rd-card">
+      <div class="rd-card-t">Présences (<span id="rd-pres-count">0</span>)</div>
+      <div id="rd-pres-list"></div>
+    </div>
+
+    <!-- PV -->
+    <div class="rd-card" id="rd-pv-card" style="display:none">
+      <div class="rd-card-t">Procès-Verbal</div>
+      <div style="padding:13px 16px 8px">
+        <textarea class="pv-area" id="pv-textarea" placeholder="Rédigez le PV de la réunion ici...&#10;&#10;Points abordés :&#10;1. ...&#10;&#10;Décisions prises :&#10;...&#10;&#10;Actions à suivre :&#10;..."></textarea>
+      </div>
+      <div class="pv-btns">
+        <button class="btn-pv save" onclick="savePV()">💾 Enregistrer</button>
+        <button class="btn-pv share" onclick="sharePV()">📤 Partager</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ MODAL NOUVELLE RÉUNION ══ -->
+<div class="overlay" id="ov-reun" onclick="closeOverlay('ov-reun')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouvelle réunion</div>
+    <div class="mfield"><label>Titre *</label><input type="text" id="r-nom" placeholder="Ex: Réunion mensuelle du Bureau"></div>
+    <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>Date *</label><input type="date" id="r-date"></div>
+      <div class="mfield" style="margin-bottom:0"><label>Heure *</label><input type="time" id="r-heure" value="09:00"></div>
+    </div>
+    <div class="mfield" style="margin-top:14px"><label>Lieu</label><input type="text" id="r-lieu" placeholder="Ex: Salle de réunion / Zoom"></div>
+    <div class="mfield"><label>Type</label>
+      <select id="r-type">
+        <option value="Ordinaire">Réunion ordinaire</option>
+        <option value="Extraordinaire">Réunion extraordinaire</option>
+        <option value="Urgente">Réunion urgente</option>
+      </select>
+    </div>
+    <div class="mfield"><label>Ordre du jour</label>
+      <textarea id="r-od" style="min-height:90px;width:100%;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:11px 13px;font-size:14px;color:var(--t1);outline:none;resize:none;font-family:inherit" placeholder="1. Adoption de l'ordre du jour&#10;2. ...&#10;3. Questions diverses"></textarea>
+    </div>
+    <div class="mfield"><label>Description (optionnel)</label><textarea id="r-desc" placeholder="Informations complémentaires..."></textarea></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-reun')">Annuler</button>
+      <button class="bsub" id="r-sub" onclick="submitReunion()"><span>Convoquer</span></button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NOUVELLE TACHE -->
 <div class="overlay" id="ov-task" onclick="closeOverlay('ov-task')">
   <div class="modal" onclick="event.stopPropagation()">
@@ -756,9 +983,9 @@ let curFilter = 'toutes';
 
 const LVL = {1:'Bureau Exécutif', 2:'Membre actif', 3:'Adhérent'};
 const QA = {
-  1:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📢',lb:'Annonce',bg:'#FFF7ED',fn:"toast('Annonces — bientôt')"},{ic:'📅',lb:'Réunion',bg:'#F0FDF4',fn:"toast('Réunions — Session 4')"},{ic:'💰',lb:'Dépense',bg:'#F5F3FF',fn:"toast('Trésorerie — Session 5')"}],
-  2:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"toast('Agenda — Session 4')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"toast('Chat — Session 3')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"toast('Sondages — Session 6')"}],
-  3:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"toast('Actualités — bientôt')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"toast('Agenda — Session 4')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"toast('Annuaire — Session 6')"},{ic:'⬆️',lb:'Rejoindre',bg:'#F5F3FF',fn:"toast('Demande envoyée !')"}]
+  1:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📢',lb:'Annonce',bg:'#FFF7ED',fn:"toast('Annonces — bientôt')"},{ic:'📅',lb:'Réunion',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💰',lb:'Dépense',bg:'#F5F3FF',fn:"toast('Trésorerie — Session 5')"}],
+  2:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"toast('Chat — Session 3')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"toast('Sondages — Session 6')"}],
+  3:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"toast('Actualités — bientôt')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"toast('Annuaire — Session 6')"},{ic:'⬆️',lb:'Rejoindre',bg:'#F5F3FF',fn:"toast('Demande envoyée !')"}]
 };
 
 // ── NAVIGATION ────────────────────────────────────────────────────
@@ -1571,6 +1798,417 @@ window.go = function(screen) {
     if (bureauItem) bureauItem.style.display = CP?.niveau === 1 ? 'flex' : 'none';
     loadCanalPreviews();
   }
+};
+
+
+/* ════════════════════════════════════════════════════════════════
+   MODULE RÉUNIONS + CALENDRIER — Session 4
+   ════════════════════════════════════════════════════════════════ */
+
+let allReunions  = [];
+let curReunId    = null;
+let curReunData  = null;
+let calDate      = new Date();
+let curReunTab   = 'agenda';
+
+/* ── Onglets réunions ───────────────────────────────────────────── */
+window.switchReunTab = function(el, tab) {
+  curReunTab = tab;
+  document.querySelectorAll('.rtab').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  ['agenda','calendrier','archives'].forEach(t => {
+    document.getElementById('reun-'+t).style.display = t === tab ? 'flex' : 'none';
+  });
+  if (tab === 'calendrier') renderCalendar();
+  if (tab === 'archives')   loadArchivesReunions();
+};
+
+/* ── Charger les réunions ───────────────────────────────────────── */
+async function loadReunions() {
+  const body = document.getElementById('reun-agenda');
+  body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+  if (!CU) return;
+
+  if (CP?.niveau === 1) document.getElementById('btn-new-reun').style.display = 'flex';
+
+  try {
+    const snap = await db.collection('reunions')
+      .where('statut','!=','Archive')
+      .orderBy('statut')
+      .orderBy('date','asc')
+      .get();
+
+    allReunions = [];
+    snap.forEach(d => allReunions.push({ id:d.id, ...d.data() }));
+    const count = allReunions.length;
+    document.getElementById('reun-count').textContent = count + ' réunion' + (count!==1?'s':'')+' à venir';
+    renderReunions(allReunions);
+  } catch(e) {
+    // Fallback sans filtre si index manquant
+    try {
+      const snap2 = await db.collection('reunions').orderBy('date','asc').get();
+      allReunions = [];
+      snap2.forEach(d => {
+        const d2 = d.data();
+        if (d2.statut !== 'Archive') allReunions.push({ id:d.id, ...d2 });
+      });
+      renderReunions(allReunions);
+    } catch(e2) {
+      body.innerHTML = '<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-b">'+e2.message+'</div></div>';
+    }
+  }
+}
+
+function renderReunions(list) {
+  const body = document.getElementById('reun-agenda');
+  if (!list.length) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-t">Aucune réunion prévue</div><div class="empty-b">Le bureau n'a pas encore planifié de réunion.</div></div>';
+    return;
+  }
+
+  const now = new Date();
+  body.innerHTML = list.map(r => {
+    const dateObj = r.date?.toDate ? r.date.toDate() : new Date(r.date);
+    const day     = dateObj.toLocaleDateString('fr-FR',{day:'2-digit'});
+    const mon     = dateObj.toLocaleDateString('fr-FR',{month:'short'}).toUpperCase();
+    const heure   = r.heure || '—';
+    const isPast  = dateObj < now;
+    const typeC   = r.type === 'Urgente' ? 'urg' : r.type === 'Extraordinaire' ? 'ext' : 'ord';
+
+    // Présences
+    const presences = r.presences || {};
+    const oui = Object.values(presences).filter(v => v === 'oui');
+    const myPres = presences[CU?.uid];
+    const btnC = myPres === 'oui' ? 'oui' : myPres === 'non' ? 'non' : 'attente';
+    const btnL = myPres === 'oui' ? '✅ Présent' : myPres === 'non' ? '❌ Absent' : '⏳ Répondre';
+
+    const avsHtml = oui.slice(0,4).map((_,i) =>
+      `<div class="reun-pres-av">${String.fromCharCode(65+i)}</div>`
+    ).join('');
+
+    return `<div class="reun-card" ${isPast?'style="opacity:.7"':''}>
+      <div class="reun-card-top" onclick="openReunDetail('${r.id}')">
+        <div class="reun-date-box">
+          <div class="reun-date-day">${day}</div>
+          <div class="reun-date-mon">${mon}</div>
+        </div>
+        <div class="reun-info">
+          <div class="reun-nom">${r.nom||'—'}</div>
+          <div class="reun-lieu">📍 ${r.lieu||'Non défini'}</div>
+          <div class="reun-heure">🕐 ${heure}</div>
+        </div>
+        <div class="reun-type-badge ${typeC}">${r.type||'Ordinaire'}</div>
+      </div>
+      <div class="reun-card-foot">
+        <div class="reun-presences">
+          <div class="reun-pres-avs">${avsHtml}</div>
+          <div class="reun-pres-count">${oui.length} présent${oui.length!==1?'s':''}</div>
+        </div>
+        ${!isPast ? `<button class="btn-presence ${btnC}" onclick="quickPresence(event,'${r.id}','${myPres||''}')">${btnL}</button>` : `<span style="font-size:11px;color:var(--t3)">Terminée</span>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Présence rapide (depuis la liste) ──────────────────────────── */
+window.quickPresence = async function(e, reunId, curPres) {
+  e.stopPropagation();
+  if (!CU) return;
+  const newPres = curPres === 'oui' ? 'non' : 'oui';
+  try {
+    await db.collection('reunions').doc(reunId).update({
+      [`presences.${CU.uid}`]: newPres,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    const r = allReunions.find(r => r.id === reunId);
+    if (r) {
+      if (!r.presences) r.presences = {};
+      r.presences[CU.uid] = newPres;
+    }
+    renderReunions(allReunions);
+    toast(newPres === 'oui' ? '✅ Présence confirmée' : '❌ Absence enregistrée');
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Ouvrir détail réunion ──────────────────────────────────────── */
+window.openReunDetail = async function(id) {
+  curReunId = id;
+  let r = allReunions.find(r => r.id === id);
+  if (!r) {
+    const snap = await db.collection('reunions').doc(id).get();
+    r = { id, ...snap.data() };
+  }
+  curReunData = r;
+
+  document.getElementById('rd-title').textContent = r.nom || '—';
+  const dateObj = r.date?.toDate ? r.date.toDate() : new Date(r.date);
+  document.getElementById('rd-date').textContent  = dateObj.toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('rd-heure').textContent = r.heure || '—';
+  document.getElementById('rd-lieu').textContent  = r.lieu || 'Non défini';
+  document.getElementById('rd-type').textContent  = r.type || 'Ordinaire';
+  document.getElementById('rd-org').textContent   = r.organisateur || '—';
+
+  // Ordre du jour
+  const odEl = document.getElementById('rd-od');
+  const points = (r.ordreJour || '').split('
+').filter(l => l.trim());
+  if (points.length) {
+    odEl.innerHTML = points.map((p,i) =>
+      `<div class="od-item"><div class="od-num">${i+1}</div><div>${escHtml(p.replace(/^\d+\.\s*/,''))}</div></div>`
+    ).join('');
+  } else {
+    odEl.innerHTML = '<div style="padding:13px 16px;font-size:13px;color:var(--t3)">Ordre du jour non défini</div>';
+  }
+
+  // Présences
+  const presences = r.presences || {};
+  const presEl    = document.getElementById('rd-pres-list');
+  const countEl   = document.getElementById('rd-pres-count');
+  const oui = Object.entries(presences).filter(([,v]) => v === 'oui').length;
+  countEl.textContent = oui;
+
+  // Charger les noms des membres
+  try {
+    const snap = await db.collection('users').get();
+    let presHtml = '';
+    snap.forEach(d => {
+      const m = d.data();
+      const p = presences[m.uid];
+      if (!p) return;
+      const stC = p === 'oui' ? 'o' : p === 'non' ? 'n' : 'a';
+      const stL = p === 'oui' ? '✅ Présent' : p === 'non' ? '❌ Absent' : '⏳ En attente';
+      const init = (m.nom||'?').charAt(0).toUpperCase();
+      presHtml += `<div class="pres-item">
+        <div class="pres-av-s">${m.photo?`<img src="${m.photo}">`:`<span>${init}</span>`}</div>
+        <div class="pres-name">${m.nom||m.email}</div>
+        <div class="pres-stt ${stC}">${stL}</div>
+      </div>`;
+    });
+    presEl.innerHTML = presHtml || '<div style="padding:13px 16px;font-size:13px;color:var(--t3)">Aucune réponse encore.</div>';
+  } catch(e) { presEl.innerHTML = '<div style="padding:13px;font-size:13px;color:var(--t3)">Erreur chargement présences.</div>'; }
+
+  // Ma présence
+  const myPres = presences[CU?.uid];
+  const presCard = document.getElementById('rd-presence-card');
+  const isPast = dateObj < new Date();
+  presCard.style.display = isPast ? 'none' : 'block';
+
+  // PV (bureau seulement)
+  const pvCard = document.getElementById('rd-pv-card');
+  if (CP?.niveau === 1) {
+    pvCard.style.display = 'block';
+    document.getElementById('pv-textarea').value = r.pv || '';
+  } else {
+    pvCard.style.display = 'none';
+  }
+
+  go('reun-detail');
+};
+
+/* ── Présence depuis détail ─────────────────────────────────────── */
+window.setPresence = async function(val) {
+  if (!curReunId || !CU) return;
+  try {
+    await db.collection('reunions').doc(curReunId).update({
+      [`presences.${CU.uid}`]: val,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast(val === 'oui' ? '✅ Présence confirmée' : '❌ Absence enregistrée');
+    // Rafraîchir
+    openReunDetail(curReunId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Sauvegarder le PV ──────────────────────────────────────────── */
+window.savePV = async function() {
+  const txt = document.getElementById('pv-textarea').value.trim();
+  if (!curReunId) return;
+  try {
+    await db.collection('reunions').doc(curReunId).update({
+      pv: txt,
+      pvUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      pvAuteur: CP?.nom || '',
+    });
+    toast('✅ PV enregistré');
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Partager le PV ─────────────────────────────────────────────── */
+window.sharePV = function() {
+  const r   = curReunData;
+  const pv  = document.getElementById('pv-textarea').value.trim();
+  const txt = `PROCÈS-VERBAL\n${r?.nom||'Réunion'}\n${r?.date?.toDate?.().toLocaleDateString('fr-FR')||''}\n\n${pv}`;
+  if (navigator.share) {
+    navigator.share({ title: 'PV — ' + (r?.nom||'Réunion'), text: txt });
+  } else {
+    navigator.clipboard.writeText(txt).then(() => toast('PV copié dans le presse-papiers'));
+  }
+};
+
+/* ── Modal nouvelle réunion ─────────────────────────────────────── */
+window.openModalReunion = function() {
+  if (CP?.niveau !== 1) { toast('Réservé au Bureau'); return; }
+  ['r-nom','r-lieu','r-od','r-desc'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('r-date').value  = new Date().toISOString().split('T')[0];
+  document.getElementById('r-heure').value = '09:00';
+  document.getElementById('ov-reun').classList.add('on');
+};
+
+window.submitReunion = async function() {
+  const nom   = document.getElementById('r-nom').value.trim();
+  const date  = document.getElementById('r-date').value;
+  const heure = document.getElementById('r-heure').value;
+  if (!nom)  { toast('Le titre est obligatoire'); return; }
+  if (!date) { toast('La date est obligatoire'); return; }
+
+  const btn = document.getElementById('r-sub');
+  btn.disabled = true; btn.querySelector('span').textContent = '...';
+
+  try {
+    // Charger tous les membres pour initialiser les présences
+    const snap = await db.collection('users').get();
+    const presences = {};
+    snap.forEach(d => { presences[d.id] = 'attente'; });
+
+    await db.collection('reunions').add({
+      nom,
+      date:      firebase.firestore.Timestamp.fromDate(new Date(date + 'T' + heure)),
+      heure,
+      lieu:      document.getElementById('r-lieu').value.trim() || 'À définir',
+      type:      document.getElementById('r-type').value,
+      ordreJour: document.getElementById('r-od').value.trim(),
+      description: document.getElementById('r-desc').value.trim(),
+      organisateur: CP?.nom || '',
+      organisateurId: CU.uid,
+      presences,
+      statut:    'Planifiée',
+      pv:        '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+
+    closeOverlay('ov-reun');
+    loadReunions();
+    toast('✅ Réunion créée — ' + snap.size + ' membres convoqués');
+  } catch(e) { toast('Erreur : ' + e.message); }
+  finally { btn.disabled = false; btn.querySelector('span').textContent = 'Convoquer'; }
+};
+
+/* ── Archives réunions ──────────────────────────────────────────── */
+async function loadArchivesReunions() {
+  const body = document.getElementById('reun-archives');
+  try {
+    const snap = await db.collection('reunions').where('statut','==','Archive').orderBy('date','desc').get();
+    if (snap.empty) {
+      body.innerHTML = '<div class="empty"><div class="empty-ic">🗄️</div><div class="empty-t">Aucune archive</div></div>';
+      return;
+    }
+    body.innerHTML = '';
+    snap.forEach(d => {
+      const r = d.data();
+      const dateObj = r.date?.toDate ? r.date.toDate() : new Date(r.date);
+      body.innerHTML += `<div class="reun-card" style="opacity:.75" onclick="openReunDetail('${d.id}')">
+        <div class="reun-card-top">
+          <div class="reun-date-box" style="background:var(--t3)">
+            <div class="reun-date-day">${dateObj.toLocaleDateString('fr-FR',{day:'2-digit'})}</div>
+            <div class="reun-date-mon">${dateObj.toLocaleDateString('fr-FR',{month:'short'}).toUpperCase()}</div>
+          </div>
+          <div class="reun-info">
+            <div class="reun-nom">${r.nom||'—'}</div>
+            <div class="reun-lieu">📍 ${r.lieu||'—'}</div>
+          </div>
+          <div style="font-size:11px;color:var(--t3)">Archivée</div>
+        </div>
+      </div>`;
+    });
+  } catch(e) { body.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>'; }
+}
+
+/* ════ CALENDRIER ════════════════════════════════════════════════ */
+window.calNav = function(dir) {
+  calDate = new Date(calDate.getFullYear(), calDate.getMonth() + dir, 1);
+  renderCalendar();
+};
+
+async function renderCalendar() {
+  const year  = calDate.getFullYear();
+  const month = calDate.getMonth();
+  const label = new Date(year, month, 1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  document.getElementById('cal-month-label').textContent = label.charAt(0).toUpperCase() + label.slice(1);
+
+  // Jours avec événements
+  const eventDays = new Set();
+  const eventMap  = {};
+  try {
+    const start = new Date(year, month, 1);
+    const end   = new Date(year, month + 1, 0, 23, 59);
+    const rSnap = await db.collection('reunions')
+      .where('date','>=', firebase.firestore.Timestamp.fromDate(start))
+      .where('date','<=', firebase.firestore.Timestamp.fromDate(end))
+      .get();
+    rSnap.forEach(d => {
+      const r = d.data();
+      const dt = r.date?.toDate ? r.date.toDate() : new Date(r.date);
+      const k = dt.getDate();
+      eventDays.add(k);
+      if (!eventMap[k]) eventMap[k] = [];
+      eventMap[k].push({ id:d.id, nom:r.nom, heure:r.heure, type:'reunion' });
+    });
+    const tSnap = await db.collection('taches')
+      .where('echeance','>=', start.toISOString().split('T')[0])
+      .where('echeance','<=', end.toISOString().split('T')[0])
+      .get();
+    tSnap.forEach(d => {
+      const t = d.data();
+      if (!t.echeance) return;
+      const k = parseInt(t.echeance.split('-')[2]);
+      eventDays.add(k);
+      if (!eventMap[k]) eventMap[k] = [];
+      eventMap[k].push({ id:d.id, nom:t.nom, type:'tache' });
+    });
+  } catch(e) {}
+
+  // Construire la grille
+  const firstDay = (new Date(year, month, 1).getDay() + 6) % 7; // Lundi = 0
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  const todayDay = today.getFullYear()===year && today.getMonth()===month ? today.getDate() : -1;
+
+  let grid = '<div class="cal-day-label">Lu</div><div class="cal-day-label">Ma</div><div class="cal-day-label">Me</div><div class="cal-day-label">Je</div><div class="cal-day-label">Ve</div><div class="cal-day-label">Sa</div><div class="cal-day-label">Di</div>';
+  for (let i = 0; i < firstDay; i++) grid += '<div class="cal-day empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === todayDay;
+    const hasEv   = eventDays.has(d);
+    grid += `<div class="cal-day${isToday?' today':''}${hasEv?' has-event':''}" onclick="showCalDay(${d},${year},${month},${JSON.stringify(eventMap[d]||[]).replace(/"/g,"'")})">${d}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = grid;
+  showCalDay(today.getDate(), year, month, eventMap[today.getDate()] || []);
+}
+
+window.showCalDay = function(day, year, month, events) {
+  const el = document.getElementById('cal-events-day');
+  if (!events || !events.length) {
+    el.innerHTML = '<div class="empty" style="padding:14px"><div class="empty-b">Aucun événement ce jour.</div></div>';
+    return;
+  }
+  el.innerHTML = events.map(ev => {
+    const dotColor = ev.type === 'reunion' ? 'var(--navy)' : 'var(--gold)';
+    const icon     = ev.type === 'reunion' ? '📅' : '✅';
+    return `<div class="cal-ev-item" onclick="${ev.type==='reunion'?`openReunDetail('${ev.id}')`:`openDetail('${ev.id}')`}">
+      <div class="cal-ev-dot" style="background:${dotColor}"></div>
+      <div class="cal-ev-info">
+        <div class="cal-ev-nom">${icon} ${escHtml(ev.nom)}</div>
+        <div class="cal-ev-time">${ev.heure||'Toute la journée'}</div>
+      </div>
+      <div style="font-size:13px;color:var(--t3)">›</div>
+    </div>`;
+  }).join('');
+};
+
+/* ── Patch go() pour réunions ───────────────────────────────────── */
+const _goOrig = window.go;
+window.go = function(screen) {
+  _goOrig(screen);
+  if (screen === 'reunion') loadReunions();
 };
 
 </script>
