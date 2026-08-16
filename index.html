@@ -1968,8 +1968,7 @@ window.openReunDetail = async function(id) {
 
   // Ordre du jour
   const odEl = document.getElementById('rd-od');
-  const points = (r.ordreJour || '').split('
-').filter(l => l.trim());
+  const points = (r.ordreJour || '').split('\n').filter(function(l) { return l.trim(); });
   if (points.length) {
     odEl.innerHTML = points.map((p,i) =>
       `<div class="od-item"><div class="od-num">${i+1}</div><div>${escHtml(p.replace(/^\d+\.\s*/,''))}</div></div>`
@@ -2196,12 +2195,14 @@ async function renderCalendar() {
   for (let d = 1; d <= daysInMonth; d++) {
     const isToday = d === todayDay;
     const hasEv   = eventDays.has(d);
-    grid += `<div class="cal-day${isToday?' today':''}${hasEv?' has-event':''}" onclick="showCalDay(${d},${year},${month},${JSON.stringify(eventMap[d]||[]).replace(/"/g,"'")})">${d}</div>`;
+    window._calEventMap = window._calEventMap || {}; var _ev = eventMap[d]||[]; var _cls = 'cal-day' + (isToday?' today':'') + (hasEv?' has-event':''); grid += '<div class="' + _cls + '" onclick="_cc(' + d + ',' + year + ',' + month + ')">' + d + '</div>';
   }
+  window._cem = eventMap;
   document.getElementById('cal-grid').innerHTML = grid;
   showCalDay(today.getDate(), year, month, eventMap[today.getDate()] || []);
 }
 
+window._cc = function(d,y,m) { showCalDay(d,y,m,(window._cem&&window._cem[d])||[]); };
 window.showCalDay = function(day, year, month, events) {
   const el = document.getElementById('cal-events-day');
   if (!events || !events.length) {
