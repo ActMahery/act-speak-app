@@ -968,7 +968,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <script>
 // ── INIT ──────────────────────────────────────────────────────
-try { firebase.app(); } catch(e) {
+if (!firebase.apps.length) {
   firebase.initializeApp({
   apiKey:"AIzaSyCg0iChSrt3yLXn0yd-RFPUy8YmKy0hX8Y",
   authDomain:"act-speak.firebaseapp.com",
@@ -977,6 +977,7 @@ try { firebase.app(); } catch(e) {
   messagingSenderId:"126056935392",
   appId:"1:126056935392:web:5eb731a61b08e8197f8585"
 });
+}
 const auth    = firebase.auth();
 const db      = firebase.firestore();
 const storage = firebase.storage();
@@ -1879,7 +1880,7 @@ async function loadReunions() {
 function renderReunions(list) {
   const body = document.getElementById('reun-agenda');
   if (!list.length) {
-    body.innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-t">Aucune réunion prévue</div><div class="empty-b">Le bureau n'a pas encore planifié de réunion.</div></div>';
+    body.innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-t">Aucune réunion prévue</div><div class="empty-b">Le bureau n&apos;a pas encore planifi&eacute; de r&eacute;union.</div></div>';
     return;
   }
 
