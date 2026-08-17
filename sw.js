@@ -1,5 +1,5 @@
-// ACT & SPEAK — Service Worker v2
-const CACHE = 'act-speak-v2';
+// ACT & SPEAK — Service Worker v5
+const CACHE = 'act-speak-v5';
 const STATIC = [
   './',
   './index.html',
@@ -25,11 +25,8 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  // Firebase et Google → réseau direct
   if (url.hostname.includes('firebase') || url.hostname.includes('google') ||
       url.hostname.includes('googleapis') || url.hostname.includes('gstatic')) return;
-
-  // Statiques → Cache First
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
