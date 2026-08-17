@@ -494,6 +494,111 @@ input,select,textarea{font-family:inherit}
 .cal-ev-nom{font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cal-ev-time{font-size:11px;color:var(--t3);margin-top:1px}
 
+
+/* ══ PROJETS ══════════════════════════════════════════════════ */
+#s-projets{background:var(--bg)}
+.proj-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 20px 16px}
+.proj-hd-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.proj-title{font-size:22px;font-weight:700;color:#fff}
+.proj-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px}
+.btn-new-proj{height:36px;padding:0 14px;background:var(--gold);color:#fff;border-radius:10px;font-size:13px;font-weight:600;display:none;align-items:center;gap:5px}
+.proj-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+
+/* Carte projet */
+.proj-card{background:var(--surface);border-radius:var(--r22);box-shadow:var(--sh);overflow:hidden;cursor:pointer;transition:transform var(--tr)}
+.proj-card:active{transform:scale(.99)}
+.proj-card-top{padding:14px 16px 10px}
+.proj-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.proj-nom{font-size:15px;font-weight:700;color:var(--t1);line-height:1.3}
+.proj-badge{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;flex-shrink:0;margin-left:8px}
+.proj-badge.actif{background:#D4EDDA;color:#155724}
+.proj-badge.pause{background:#FFF3CD;color:#856404}
+.proj-badge.termine{background:#EFF6FF;color:#1C3557}
+.proj-desc{font-size:12px;color:var(--t3);line-height:1.5;margin-bottom:10px}
+.proj-progress-wrap{margin-bottom:4px}
+.proj-progress-top{display:flex;justify-content:space-between;font-size:11px;color:var(--t3);margin-bottom:5px}
+.proj-progress-pct{font-weight:600;color:var(--navy)}
+[data-dark] .proj-progress-pct{color:var(--gold)}
+.proj-progress-bg{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.proj-progress-fill{height:100%;background:linear-gradient(90deg,var(--navy),var(--gold));border-radius:3px;transition:width .8s ease}
+.proj-card-foot{padding:10px 16px 14px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--surface2)}
+.proj-meta-item{font-size:11px;color:var(--t3);display:flex;align-items:center;gap:4px}
+.proj-meta-item strong{color:var(--t2)}
+
+/* Détail projet */
+#s-proj-detail{background:var(--bg)}
+.pd-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 16px 20px}
+.pd-back{font-size:14px;color:rgba(255,255,255,.55);margin-bottom:12px;cursor:pointer}
+.pd-title{font-size:19px;font-weight:700;color:#fff;line-height:1.3}
+.pd-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+.pd-card{background:var(--surface);border-radius:var(--r22);box-shadow:var(--sh);overflow:hidden}
+.pd-card-t{font-size:11px;font-weight:600;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;padding:13px 16px 0}
+
+/* Kanban */
+.kanban-wrap{display:flex;gap:10px;overflow-x:auto;padding:13px 16px 16px;scrollbar-width:none}
+.kanban-wrap::-webkit-scrollbar{display:none}
+.kanban-col{flex-shrink:0;width:200px;background:var(--surface2);border-radius:var(--r14);overflow:hidden}
+.kanban-col-hd{padding:10px 12px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.kanban-col-hd.af{background:#EFF6FF;color:#1C3557}
+.kanban-col-hd.ec{background:#FFF3CD;color:#856404}
+.kanban-col-hd.te{background:#D4EDDA;color:#155724}
+[data-dark] .kanban-col-hd.af{background:rgba(28,53,87,.4);color:#93C5FD}
+[data-dark] .kanban-col-hd.ec{background:rgba(133,100,4,.4);color:#FCD34D}
+[data-dark] .kanban-col-hd.te{background:rgba(21,87,36,.4);color:#6EE7B7}
+.kanban-items{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:60px}
+.kanban-item{background:var(--surface);border-radius:10px;padding:10px 12px;box-shadow:var(--sh);cursor:pointer;transition:transform var(--tr)}
+.kanban-item:active{transform:scale(.97)}
+.kanban-item-nom{font-size:13px;font-weight:500;color:var(--t1);margin-bottom:4px;line-height:1.3}
+.kanban-item-who{font-size:11px;color:var(--t3)}
+.kanban-empty{padding:12px;font-size:12px;color:var(--t3);text-align:center;font-style:italic}
+
+/* ══ TRÉSORERIE ════════════════════════════════════════════════ */
+#s-treso{background:var(--bg)}
+.treso-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 20px 20px}
+.treso-hd-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.treso-title{font-size:22px;font-weight:700;color:#fff}
+.solde-box{background:rgba(255,255,255,.08);border-radius:var(--r14);padding:16px;text-align:center;margin-bottom:4px}
+.solde-label{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.solde-amount{font-size:34px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.solde-amount.pos{color:#6EE7B7}
+.solde-amount.neg{color:#FCA5A5}
+.solde-month{font-size:11px;color:rgba(255,255,255,.35);margin-top:4px}
+.treso-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+
+/* Boutons entrée/dépense */
+.treso-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.treso-btn{height:54px;border-radius:var(--r14);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--sh);transition:transform var(--tr)}
+.treso-btn:active{transform:scale(.97)}
+.treso-btn.entree{background:#D4EDDA;color:#155724}
+.treso-btn.depense{background:#FDE8E8;color:#C0392B}
+[data-dark] .treso-btn.entree{background:rgba(21,87,36,.4);color:#6EE7B7}
+[data-dark] .treso-btn.depense{background:rgba(192,57,43,.3);color:#FCA5A5}
+
+/* Transactions */
+.tx-item{padding:12px 16px;border-bottom:1px solid var(--surface2);display:flex;align-items:center;gap:12px}
+.tx-item:last-child{border-bottom:none}
+.tx-ic{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.tx-ic.e{background:#D4EDDA}
+.tx-ic.d{background:#FDE8E8}
+[data-dark] .tx-ic.e{background:rgba(21,87,36,.3)}
+[data-dark] .tx-ic.d{background:rgba(192,57,43,.2)}
+.tx-info{flex:1;min-width:0}
+.tx-nom{font-size:14px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-meta{font-size:11px;color:var(--t3);margin-top:2px}
+.tx-amount{font-size:15px;font-weight:700;flex-shrink:0}
+.tx-amount.e{color:#155724}
+.tx-amount.d{color:#C0392B}
+[data-dark] .tx-amount.e{color:#6EE7B7}
+[data-dark] .tx-amount.d{color:#FCA5A5}
+
+/* Graphique simple */
+.treso-chart{padding:14px 16px;display:flex;align-items:flex-end;gap:6px;height:80px}
+.chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.chart-bar{width:100%;border-radius:4px 4px 0 0;transition:height .6s ease;min-height:4px}
+.chart-bar.e{background:rgba(21,87,36,.6)}
+.chart-bar.d{background:rgba(192,57,43,.5)}
+.chart-bar-label{font-size:9px;color:var(--t3);text-align:center}
+
 </style>
 </head>
 <body>
@@ -669,6 +774,10 @@ input,select,textarea{font-family:inherit}
         <div class="prow-l"><div class="prow-ic" style="background:#F5F3FF">🌙</div><div><div class="prow-lbl">Mode nuit</div><div class="prow-sub">Thème sombre</div></div></div>
         <div class="tog" id="theme-tog" onclick="toggleTheme()"><div class="tog-dot"></div></div>
       </div>
+    </div>
+    <div class="pcard" id="treso-btn" style="display:none">
+      <div class="pcard-t">Finances</div>
+      <div class="prow" onclick="go('treso')"><div class="prow-l"><div class="prow-ic" style="background:#D4EDDA">💰</div><div><div class="prow-lbl">Trésorerie</div><div class="prow-sub">Solde, entrées, dépenses</div></div></div><div class="prow-r">›</div></div>
     </div>
     <div class="pcard" id="admin-btn" style="display:none">
       <div class="pcard-t">Administration</div>
@@ -928,6 +1037,179 @@ input,select,textarea{font-family:inherit}
   </div>
 </div>
 
+
+<!-- ══ PROJETS ══ -->
+<div id="s-projets" class="scr">
+  <div class="proj-hd">
+    <div class="proj-hd-top">
+      <div><div class="proj-title">Projets</div><div class="proj-sub" id="proj-count">—</div></div>
+      <button class="btn-new-proj" id="btn-new-proj" onclick="openModalProjet()">➕ Nouveau</button>
+    </div>
+  </div>
+  <div class="proj-body" id="proj-body">
+    <div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- ══ DÉTAIL PROJET ══ -->
+<div id="s-proj-detail" class="scr">
+  <div class="pd-hd">
+    <div class="pd-back" onclick="go('projets')">‹ Retour</div>
+    <div class="pd-title" id="pd-title">—</div>
+  </div>
+  <div class="pd-body">
+    <div class="pd-card">
+      <div class="pd-card-t">Avancement</div>
+      <div style="padding:14px 16px">
+        <div class="proj-progress-top"><span id="pd-pct-label">0%</span><span id="pd-tasks-count" style="color:var(--t3);font-size:11px">0 tâches</span></div>
+        <div class="proj-progress-bg"><div class="proj-progress-fill" id="pd-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="pd-card">
+      <div class="pd-card-t">Informations</div>
+      <div class="det-row"><span class="det-row-l">Responsable</span><span class="det-row-v" id="pd-resp">—</span></div>
+      <div class="det-row"><span class="det-row-l">Échéance</span><span class="det-row-v" id="pd-ech">—</span></div>
+      <div class="det-row"><span class="det-row-l">Budget</span><span class="det-row-v" id="pd-budget">—</span></div>
+      <div class="det-row"><span class="det-row-l">Statut</span><span class="det-row-v" id="pd-statut">—</span></div>
+    </div>
+    <div class="pd-card">
+      <div class="pd-card-t" style="padding:13px 16px">Tâches du projet (Kanban)</div>
+      <div class="kanban-wrap">
+        <div class="kanban-col">
+          <div class="kanban-col-hd af">📋 À faire</div>
+          <div class="kanban-items" id="kb-afaire"></div>
+        </div>
+        <div class="kanban-col">
+          <div class="kanban-col-hd ec">⚡ En cours</div>
+          <div class="kanban-items" id="kb-encours"></div>
+        </div>
+        <div class="kanban-col">
+          <div class="kanban-col-hd te">✅ Terminé</div>
+          <div class="kanban-items" id="kb-termine"></div>
+        </div>
+      </div>
+    </div>
+    <div class="pd-card" id="pd-add-task-card" style="display:none">
+      <div class="pd-card-t">Ajouter une tâche au projet</div>
+      <div style="padding:13px 16px 16px;display:flex;gap:8px">
+        <select id="pd-task-sel" style="flex:1;height:44px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:0 12px;font-size:13px;color:var(--t1);outline:none">
+          <option value="">— Choisir une tâche existante —</option>
+        </select>
+        <button onclick="linkTaskToProjet()" style="height:44px;padding:0 14px;background:var(--navy);color:#fff;border-radius:var(--r8);font-size:13px;font-weight:600">Lier</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TRÉSORERIE ══ -->
+<div id="s-treso" class="scr">
+  <div class="treso-hd">
+    <div class="treso-hd-top">
+      <div><div class="treso-title">Trésorerie</div></div>
+    </div>
+    <div class="solde-box">
+      <div class="solde-label">Solde actuel</div>
+      <div class="solde-amount" id="solde-amount">0 Ar</div>
+      <div class="solde-month" id="solde-month">—</div>
+    </div>
+  </div>
+  <div class="treso-body">
+    <div class="treso-actions">
+      <button class="treso-btn entree" onclick="openModalTx('entree')">📈 Entrée</button>
+      <button class="treso-btn depense" onclick="openModalTx('depense')">📉 Dépense</button>
+    </div>
+    <div>
+      <div class="sec-title">Ce mois</div>
+      <div class="card" style="overflow:hidden">
+        <div style="display:grid;grid-template-columns:1fr 1fr;padding:14px 16px;gap:10px;border-bottom:1px solid var(--surface2)">
+          <div style="text-align:center">
+            <div style="font-size:11px;color:var(--t3);margin-bottom:4px">ENTRÉES</div>
+            <div style="font-size:18px;font-weight:700;color:#155724" id="total-entrees">0 Ar</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:11px;color:var(--t3);margin-bottom:4px">DÉPENSES</div>
+            <div style="font-size:18px;font-weight:700;color:#C0392B" id="total-depenses">0 Ar</div>
+          </div>
+        </div>
+        <div class="treso-chart" id="treso-chart"></div>
+      </div>
+    </div>
+    <div>
+      <div class="sec-title">Transactions récentes</div>
+      <div class="card" id="tx-list">
+        <div class="empty"><div class="empty-ic">💰</div><div class="empty-t">Aucune transaction</div></div>
+      </div>
+    </div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- MODAL NOUVEAU PROJET -->
+<div class="overlay" id="ov-proj" onclick="closeOverlay('ov-proj')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouveau projet</div>
+    <div class="mfield"><label>Nom du projet *</label><input type="text" id="p-nom" placeholder="Ex: Journée portes ouvertes 2026"></div>
+    <div class="mfield"><label>Description</label><textarea id="p-desc" placeholder="Objectifs, contexte..."></textarea></div>
+    <div class="mfield"><label>Responsable</label><select id="p-resp"><option value="">— Choisir —</option></select></div>
+    <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>Échéance</label><input type="date" id="p-ech"></div>
+      <div class="mfield" style="margin-bottom:0"><label>Budget (Ar)</label><input type="number" id="p-budget" placeholder="0"></div>
+    </div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-proj')">Annuler</button>
+      <button class="bsub" id="p-sub" onclick="submitProjet()"><span>Créer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TRANSACTION -->
+<div class="overlay" id="ov-tx" onclick="closeOverlay('ov-tx')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="tx-modal-title">Nouvelle entrée</div>
+    <div class="mfield"><label>Montant (Ar) *</label><input type="number" id="tx-montant" placeholder="0" min="0"></div>
+    <div class="mfield"><label>Description *</label><input type="text" id="tx-desc" placeholder="Ex: Cotisation mensuelle"></div>
+    <div class="mfield"><label>Catégorie</label>
+      <select id="tx-cat">
+        <option>Cotisation</option>
+        <option>Don</option>
+        <option>Activité</option>
+        <option>Subvention</option>
+        <option>Fournitures</option>
+        <option>Transport</option>
+        <option>Communication</option>
+        <option>Événement</option>
+        <option>Autre</option>
+      </select>
+    </div>
+    <div class="mfield"><label>Justificatif (photo)</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="tx-justif-name" placeholder="Aucun fichier" readonly style="flex:1">
+        <button onclick="uploadJustif()" style="height:44px;padding:0 14px;background:var(--surface2);color:var(--t2);border-radius:var(--r8);font-size:13px;font-weight:500">📷</button>
+      </div>
+      <input type="file" id="tx-justif-file" accept="image/*" style="display:none" onchange="previewJustif(this)">
+    </div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-tx')">Annuler</button>
+      <button class="bsub" id="tx-sub" onclick="submitTransaction()"><span>Enregistrer</span></button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NOUVELLE TACHE -->
 <div class="overlay" id="ov-task" onclick="closeOverlay('ov-task')">
   <div class="modal" onclick="event.stopPropagation()">
@@ -992,7 +1274,7 @@ let curFilter = 'toutes';
 
 const LVL = {1:'Bureau Exécutif', 2:'Membre actif', 3:'Adhérent'};
 const QA = {
-  1:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📢',lb:'Annonce',bg:'#FFF7ED',fn:"toast('Annonces — bientôt')"},{ic:'📅',lb:'Réunion',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💰',lb:'Dépense',bg:'#F5F3FF',fn:"toast('Trésorerie — Session 5')"}],
+  1:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📢',lb:'Annonce',bg:'#FFF7ED',fn:"toast('Annonces — bientôt')"},{ic:'📅',lb:'Réunion',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💰',lb:'Tréso',bg:'#F5F3FF',fn:"go('treso')"}],
   2:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"toast('Chat — Session 3')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"toast('Sondages — Session 6')"}],
   3:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"toast('Actualités — bientôt')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"toast('Annuaire — Session 6')"},{ic:'⬆️',lb:'Rejoindre',bg:'#F5F3FF',fn:"toast('Demande envoyée !')"}]
 };
@@ -1131,6 +1413,8 @@ function fillDash() {
   if (niveau === 1) {
     document.getElementById('btn-new').style.display    = 'flex';
     document.getElementById('admin-btn').style.display  = 'block';
+    var tresoBtnEl = document.getElementById('treso-btn');
+    if (tresoBtnEl) tresoBtnEl.style.display = 'block';
   }
   if (localStorage.getItem('theme') === 'dark') {
     document.documentElement.setAttribute('data-dark','');
@@ -2228,6 +2512,405 @@ const _goOrig = window.go;
 window.go = function(screen) {
   _goOrig(screen);
   if (screen === 'reunion') loadReunions();
+};
+
+
+/* ════════════════════════════════════════════════════════════════
+   SESSION 5 — PROJETS + TRÉSORERIE
+   Règle : jamais d apostrophe dans strings JS inline onclick
+   Toujours passer par window._x pour les données complexes
+   ════════════════════════════════════════════════════════════════ */
+
+let allProjets   = [];
+let curProjId    = null;
+let curTxType    = 'entree';
+let txJustifUrl  = '';
+let allTx        = [];
+
+/* ══ PROJETS ════════════════════════════════════════════════════ */
+
+async function loadProjets() {
+  var body = document.getElementById('proj-body');
+  if (!body || !CU) return;
+  body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+
+  if (CP && CP.niveau === 1) {
+    var btn = document.getElementById('btn-new-proj');
+    if (btn) btn.style.display = 'flex';
+  }
+
+  try {
+    var snap = await db.collection('projets').orderBy('createdAt','desc').get();
+    allProjets = [];
+    snap.forEach(function(d) { allProjets.push(Object.assign({id:d.id}, d.data())); });
+    var c = allProjets.length;
+    var el = document.getElementById('proj-count');
+    if (el) el.textContent = c + ' projet' + (c !== 1 ? 's' : '');
+    renderProjets(allProjets);
+  } catch(e) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-b">' + e.message + '</div></div>';
+  }
+}
+
+function renderProjets(list) {
+  var body = document.getElementById('proj-body');
+  if (!list.length) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">🚀</div><div class="empty-t">Aucun projet</div><div class="empty-b">Le bureau n&apos;a pas encore lancé de projet.</div></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < list.length; i++) {
+    var p = list[i];
+    var pct = p.avancement || 0;
+    var stC = p.statut === 'Terminé' ? 'termine' : p.statut === 'En pause' ? 'pause' : 'actif';
+    var ech = p.echeance ? new Date(p.echeance).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : 'Non définie';
+    var budget = p.budget ? Number(p.budget).toLocaleString('fr-FR') + ' Ar' : '—';
+    var pid = p.id;
+    html += '<div class="proj-card" onclick="openProjDetail('' + pid + '')">';
+    html += '<div class="proj-card-top">';
+    html += '<div class="proj-card-header">';
+    html += '<div class="proj-nom">' + escHtml(p.nom || '—') + '</div>';
+    html += '<div class="proj-badge ' + stC + '">' + (p.statut || 'Actif') + '</div>';
+    html += '</div>';
+    if (p.description) html += '<div class="proj-desc">' + escHtml(p.description.substring(0,80)) + (p.description.length > 80 ? '…' : '') + '</div>';
+    html += '<div class="proj-progress-wrap">';
+    html += '<div class="proj-progress-top"><span>Avancement</span><span class="proj-progress-pct">' + pct + '%</span></div>';
+    html += '<div class="proj-progress-bg"><div class="proj-progress-fill" style="width:' + pct + '%"></div></div>';
+    html += '</div></div>';
+    html += '<div class="proj-card-foot">';
+    html += '<div class="proj-meta-item">📅 <strong>' + ech + '</strong></div>';
+    html += '<div class="proj-meta-item">💰 <strong>' + budget + '</strong></div>';
+    html += '</div></div>';
+  }
+  body.innerHTML = html;
+}
+
+async function openProjDetail(id) {
+  curProjId = id;
+  var p = null;
+  for (var i = 0; i < allProjets.length; i++) {
+    if (allProjets[i].id === id) { p = allProjets[i]; break; }
+  }
+  if (!p) {
+    var snap = await db.collection('projets').doc(id).get();
+    p = Object.assign({id:id}, snap.data());
+  }
+
+  document.getElementById('pd-title').textContent  = p.nom || '—';
+  document.getElementById('pd-resp').textContent   = p.responsable || '—';
+  document.getElementById('pd-statut').textContent = p.statut || 'Actif';
+  document.getElementById('pd-budget').textContent = p.budget ? Number(p.budget).toLocaleString('fr-FR') + ' Ar' : '—';
+  document.getElementById('pd-ech').textContent    = p.echeance
+    ? new Date(p.echeance).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
+    : 'Non définie';
+
+  // Charger les tâches liées au projet
+  try {
+    var snap = await db.collection('taches').where('projetId','==',id).get();
+    var tasks = [];
+    snap.forEach(function(d) { tasks.push(Object.assign({id:d.id}, d.data())); });
+
+    var total = tasks.length;
+    var done  = tasks.filter(function(t) { return t.statut === 'Terminée'; }).length;
+    var pct   = total > 0 ? Math.round((done / total) * 100) : (p.avancement || 0);
+
+    document.getElementById('pd-pct-label').textContent   = pct + '%';
+    document.getElementById('pd-tasks-count').textContent = total + ' tâche' + (total !== 1 ? 's' : '');
+    document.getElementById('pd-bar').style.width         = pct + '%';
+
+    // Mettre à jour l'avancement dans Firestore
+    if (total > 0) {
+      await db.collection('projets').doc(id).update({ avancement: pct });
+    }
+
+    // Kanban
+    var kbAf = document.getElementById('kb-afaire');
+    var kbEc = document.getElementById('kb-encours');
+    var kbTe = document.getElementById('kb-termine');
+    kbAf.innerHTML = ''; kbEc.innerHTML = ''; kbTe.innerHTML = '';
+
+    if (tasks.length === 0) {
+      kbAf.innerHTML = '<div class="kanban-empty">Aucune tâche</div>';
+      kbEc.innerHTML = '<div class="kanban-empty">—</div>';
+      kbTe.innerHTML = '<div class="kanban-empty">—</div>';
+    } else {
+      for (var j = 0; j < tasks.length; j++) {
+        var t = tasks[j];
+        var st = t.statut || 'A faire';
+        var who = t.assigneeNom || '—';
+        var item = '<div class="kanban-item" onclick="ouvrirDetail('' + t.id + '')">';
+        item += '<div class="kanban-item-nom">' + escHtml(t.nom || '—') + '</div>';
+        item += '<div class="kanban-item-who">👤 ' + escHtml(who) + '</div>';
+        item += '</div>';
+        if (st === 'Terminée') kbTe.innerHTML += item;
+        else if (st === 'En cours') kbEc.innerHTML += item;
+        else kbAf.innerHTML += item;
+      }
+      if (!kbAf.innerHTML) kbAf.innerHTML = '<div class="kanban-empty">—</div>';
+      if (!kbEc.innerHTML) kbEc.innerHTML = '<div class="kanban-empty">—</div>';
+      if (!kbTe.innerHTML) kbTe.innerHTML = '<div class="kanban-empty">—</div>';
+    }
+
+    // Select pour lier une tâche (bureau uniquement)
+    var addCard = document.getElementById('pd-add-task-card');
+    if (CP && CP.niveau === 1) {
+      addCard.style.display = 'block';
+      var sel = document.getElementById('pd-task-sel');
+      sel.innerHTML = '<option value="">— Choisir une tâche existante —</option>';
+      var allSnap = await db.collection('taches').get();
+      allSnap.forEach(function(d) {
+        var td = d.data();
+        if (!td.projetId) {
+          sel.innerHTML += '<option value="' + d.id + '">' + escHtml(td.nom || '—') + ' (' + escHtml(td.assigneeNom || '—') + ')</option>';
+        }
+      });
+    } else {
+      addCard.style.display = 'none';
+    }
+  } catch(e) {
+    document.getElementById('kb-afaire').innerHTML = '<div class="kanban-empty">' + e.message + '</div>';
+  }
+
+  go('proj-detail');
+}
+
+window.linkTaskToProjet = async function() {
+  var sel = document.getElementById('pd-task-sel');
+  var tid = sel.value;
+  if (!tid || !curProjId) { toast('Choisis une tâche'); return; }
+  try {
+    await db.collection('taches').doc(tid).update({ projetId: curProjId });
+    toast('Tâche liée au projet ✅');
+    sel.value = '';
+    openProjDetail(curProjId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+window.openModalProjet = async function() {
+  if (!CP || CP.niveau !== 1) { toast('Réservé au Bureau'); return; }
+  document.getElementById('p-nom').value   = '';
+  document.getElementById('p-desc').value  = '';
+  document.getElementById('p-ech').value   = '';
+  document.getElementById('p-budget').value = '';
+
+  var sel = document.getElementById('p-resp');
+  sel.innerHTML = '<option value="">— Choisir —</option>';
+  if (!memsCache.length) {
+    var snap = await db.collection('users').get();
+    snap.forEach(function(d) { memsCache.push(d.data()); });
+  }
+  for (var i = 0; i < memsCache.length; i++) {
+    var m = memsCache[i];
+    sel.innerHTML += '<option value="' + escHtml(m.nom || '') + '">' + escHtml(m.nom || m.email) + '</option>';
+  }
+  document.getElementById('ov-proj').classList.add('on');
+};
+
+window.submitProjet = async function() {
+  var nom  = document.getElementById('p-nom').value.trim();
+  var desc = document.getElementById('p-desc').value.trim();
+  var resp = document.getElementById('p-resp').value;
+  var ech  = document.getElementById('p-ech').value;
+  var bud  = document.getElementById('p-budget').value;
+  if (!nom) { toast('Le nom est obligatoire'); return; }
+
+  var btn = document.getElementById('p-sub');
+  btn.disabled = true; btn.querySelector('span').textContent = '...';
+  try {
+    await db.collection('projets').add({
+      nom: nom, description: desc, responsable: resp,
+      echeance: ech || null, budget: bud ? Number(bud) : 0,
+      statut: 'Actif', avancement: 0,
+      createdBy: CU.uid, createdByNom: CP.nom,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-proj');
+    loadProjets();
+    toast('Projet créé ✅');
+  } catch(e) { toast('Erreur : ' + e.message); }
+  finally { btn.disabled = false; btn.querySelector('span').textContent = 'Créer'; }
+};
+
+/* ══ TRÉSORERIE ══════════════════════════════════════════════════ */
+
+async function loadTreso() {
+  if (!CU || !CP || CP.niveau !== 1) {
+    go('dash');
+    toast('Accès réservé au Bureau');
+    return;
+  }
+
+  try {
+    var now   = new Date();
+    var start = new Date(now.getFullYear(), now.getMonth(), 1);
+    var label = now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    var el = document.getElementById('solde-month');
+    if (el) el.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+
+    var snap = await db.collection('tresorerie').orderBy('createdAt','desc').get();
+    allTx = [];
+    snap.forEach(function(d) { allTx.push(Object.assign({id:d.id}, d.data())); });
+
+    // Calcul solde total
+    var solde = 0;
+    var totalE = 0; var totalD = 0;
+    for (var i = 0; i < allTx.length; i++) {
+      var tx = allTx[i];
+      if (tx.type === 'entree')  { solde += tx.montant; totalE += tx.montant; }
+      if (tx.type === 'depense') { solde -= tx.montant; totalD += tx.montant; }
+    }
+
+    var sa = document.getElementById('solde-amount');
+    if (sa) {
+      sa.textContent = solde.toLocaleString('fr-FR') + ' Ar';
+      sa.className   = 'solde-amount ' + (solde >= 0 ? 'pos' : 'neg');
+    }
+    var te = document.getElementById('total-entrees');
+    var td = document.getElementById('total-depenses');
+    if (te) te.textContent = totalE.toLocaleString('fr-FR') + ' Ar';
+    if (td) td.textContent = totalD.toLocaleString('fr-FR') + ' Ar';
+
+    // Liste transactions
+    renderTransactions(allTx.slice(0, 20));
+
+    // Mini graphique 6 derniers mois
+    renderChart();
+  } catch(e) {
+    toast('Erreur trésorerie : ' + e.message);
+  }
+}
+
+function renderTransactions(list) {
+  var el = document.getElementById('tx-list');
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-ic">💰</div><div class="empty-t">Aucune transaction</div></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < list.length; i++) {
+    var tx   = list[i];
+    var isE  = tx.type === 'entree';
+    var sign = isE ? '+' : '-';
+    var date = tx.createdAt && tx.createdAt.toDate
+      ? tx.createdAt.toDate().toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})
+      : '—';
+    html += '<div class="tx-item">';
+    html += '<div class="tx-ic ' + (isE ? 'e' : 'd') + '">' + (isE ? '📈' : '📉') + '</div>';
+    html += '<div class="tx-info">';
+    html += '<div class="tx-nom">' + escHtml(tx.description || '—') + '</div>';
+    html += '<div class="tx-meta">' + escHtml(tx.categorie || '—') + ' · ' + date + '</div>';
+    html += '</div>';
+    html += '<div class="tx-amount ' + (isE ? 'e' : 'd') + '">' + sign + Number(tx.montant).toLocaleString('fr-FR') + ' Ar</div>';
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function renderChart() {
+  var el = document.getElementById('treso-chart');
+  if (!el) return;
+  var months = [];
+  var now = new Date();
+  for (var i = 5; i >= 0; i--) {
+    var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      label: d.toLocaleDateString('fr-FR',{month:'short'}),
+      year: d.getFullYear(), month: d.getMonth(),
+      e: 0, d: 0
+    });
+  }
+  for (var j = 0; j < allTx.length; j++) {
+    var tx = allTx[j];
+    if (!tx.createdAt || !tx.createdAt.toDate) continue;
+    var txDate = tx.createdAt.toDate();
+    for (var k = 0; k < months.length; k++) {
+      if (txDate.getFullYear() === months[k].year && txDate.getMonth() === months[k].month) {
+        if (tx.type === 'entree')  months[k].e += tx.montant;
+        if (tx.type === 'depense') months[k].d += tx.montant;
+      }
+    }
+  }
+  var maxVal = 1;
+  for (var l = 0; l < months.length; l++) {
+    if (months[l].e > maxVal) maxVal = months[l].e;
+    if (months[l].d > maxVal) maxVal = months[l].d;
+  }
+  var html = '';
+  for (var m = 0; m < months.length; m++) {
+    var mo = months[m];
+    var hE = Math.round((mo.e / maxVal) * 50);
+    var hD = Math.round((mo.d / maxVal) * 50);
+    html += '<div class="chart-bar-wrap">';
+    html += '<div style="display:flex;gap:2px;align-items:flex-end;height:54px">';
+    html += '<div class="chart-bar e" style="height:' + (hE || 2) + 'px;flex:1"></div>';
+    html += '<div class="chart-bar d" style="height:' + (hD || 2) + 'px;flex:1"></div>';
+    html += '</div>';
+    html += '<div class="chart-bar-label">' + mo.label + '</div>';
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+
+/* ── Modal Transaction ─────────────────────────────────────────── */
+window.openModalTx = function(type) {
+  curTxType = type;
+  txJustifUrl = '';
+  var titleEl = document.getElementById('tx-modal-title');
+  if (titleEl) titleEl.textContent = type === 'entree' ? 'Nouvelle entrée' : 'Nouvelle dépense';
+  document.getElementById('tx-montant').value = '';
+  document.getElementById('tx-desc').value    = '';
+  document.getElementById('tx-justif-name').value = '';
+  document.getElementById('ov-tx').classList.add('on');
+};
+
+window.uploadJustif = function() {
+  document.getElementById('tx-justif-file').click();
+};
+
+window.previewJustif = async function(input) {
+  var file = input.files[0];
+  if (!file) return;
+  document.getElementById('tx-justif-name').value = file.name;
+  toast('Upload du justificatif...');
+  try {
+    var ref = storage.ref('justificatifs/' + Date.now() + '_' + file.name);
+    await ref.put(file);
+    txJustifUrl = await ref.getDownloadURL();
+    toast('Justificatif ajouté ✅');
+  } catch(e) { toast('Erreur upload : ' + e.message); }
+};
+
+window.submitTransaction = async function() {
+  var montant = parseFloat(document.getElementById('tx-montant').value);
+  var desc    = document.getElementById('tx-desc').value.trim();
+  var cat     = document.getElementById('tx-cat').value;
+  if (!montant || montant <= 0) { toast('Montant invalide'); return; }
+  if (!desc) { toast('Description obligatoire'); return; }
+
+  var btn = document.getElementById('tx-sub');
+  btn.disabled = true; btn.querySelector('span').textContent = '...';
+  try {
+    await db.collection('tresorerie').add({
+      type: curTxType, montant: montant,
+      description: desc, categorie: cat,
+      justificatif: txJustifUrl || '',
+      auteurId: CU.uid, auteurNom: CP.nom || '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-tx');
+    loadTreso();
+    toast((curTxType === 'entree' ? 'Entrée' : 'Dépense') + ' enregistrée ✅');
+  } catch(e) { toast('Erreur : ' + e.message); }
+  finally { btn.disabled = false; btn.querySelector('span').textContent = 'Enregistrer'; }
+};
+
+/* ── Patch go() pour S5 ────────────────────────────────────────── */
+var _goS4 = window.go;
+window.go = function(screen) {
+  _goS4(screen);
+  if (screen === 'projets') loadProjets();
+  if (screen === 'treso')   loadTreso();
 };
 
 </script>
