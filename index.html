@@ -2567,7 +2567,7 @@ function renderProjets(list) {
     var ech = p.echeance ? new Date(p.echeance).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : 'Non définie';
     var budget = p.budget ? Number(p.budget).toLocaleString('fr-FR') + ' Ar' : '—';
     var pid = p.id;
-    html += '<div class="proj-card" onclick="openProjDetail('' + pid + '')">';
+    html += '<div class="proj-card" data-pid="' + pid + '">' + '\n';
     html += '<div class="proj-card-top">';
     html += '<div class="proj-card-header">';
     html += '<div class="proj-nom">' + escHtml(p.nom || '—') + '</div>';
@@ -2584,6 +2584,13 @@ function renderProjets(list) {
     html += '</div></div>';
   }
   body.innerHTML = html;
+  // Attacher les clicks sur les cartes projet
+  var cards = body.querySelectorAll('.proj-card');
+  for (var ci = 0; ci < cards.length; ci++) {
+    cards[ci].addEventListener('click', function() {
+      openProjDetail(this.getAttribute('data-pid'));
+    });
+  }
 }
 
 async function openProjDetail(id) {
