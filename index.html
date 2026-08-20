@@ -2646,7 +2646,7 @@ async function openProjDetail(id) {
         var t = tasks[j];
         var st = t.statut || 'A faire';
         var who = t.assigneeNom || '—';
-        var item = '<div class="kanban-item" onclick="ouvrirDetail('' + t.id + '')">';
+        var item = '<div class="kanban-item" data-tid="' + t.id + '">' + '\n';
         item += '<div class="kanban-item-nom">' + escHtml(t.nom || '—') + '</div>';
         item += '<div class="kanban-item-who">👤 ' + escHtml(who) + '</div>';
         item += '</div>';
@@ -2657,6 +2657,13 @@ async function openProjDetail(id) {
       if (!kbAf.innerHTML) kbAf.innerHTML = '<div class="kanban-empty">—</div>';
       if (!kbEc.innerHTML) kbEc.innerHTML = '<div class="kanban-empty">—</div>';
       if (!kbTe.innerHTML) kbTe.innerHTML = '<div class="kanban-empty">—</div>';
+      // Attacher les clicks sur les items kanban
+      var kitems = document.querySelectorAll('.kanban-item[data-tid]');
+      for (var ki = 0; ki < kitems.length; ki++) {
+        kitems[ki].addEventListener('click', function() {
+          ouvrirDetail(this.getAttribute('data-tid'));
+        });
+      }
     }
 
     // Select pour lier une tâche (bureau uniquement)
