@@ -599,6 +599,86 @@ input,select,textarea{font-family:inherit}
 .chart-bar.d{background:rgba(192,57,43,.5)}
 .chart-bar-label{font-size:9px;color:var(--t3);text-align:center}
 
+
+/* ══ ANNUAIRE ══════════════════════════════════════════════════ */
+#s-annuaire{background:var(--bg)}
+.ann-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 20px 16px}
+.ann-hd-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:12px}
+.ann-search{width:100%;height:42px;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.2);border-radius:22px;padding:0 16px;font-size:14px;color:#fff;outline:none}
+.ann-search::placeholder{color:rgba(255,255,255,.4)}
+.ann-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:10px}
+.ann-item{background:var(--surface);border-radius:var(--r14);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh);cursor:pointer;transition:transform var(--tr)}
+.ann-item:active{transform:scale(.98)}
+.ann-av{width:48px;height:48px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden;position:relative}
+.ann-av img{width:100%;height:100%;object-fit:cover}
+.ann-info{flex:1;min-width:0}
+.ann-nom{font-size:14px;font-weight:600;color:var(--t1);margin-bottom:2px}
+.ann-role{font-size:12px;color:var(--t3)}
+.ann-score{font-size:11px;color:var(--gold);font-weight:600;margin-top:2px}
+.ann-lvl{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;flex-shrink:0}
+.ann-lvl.b{background:#FFF3CD;color:#856404}
+.ann-lvl.m{background:#EFF6FF;color:#1C3557}
+.ann-lvl.a{background:var(--surface2);color:var(--t3)}
+[data-dark] .ann-lvl.b{background:rgba(133,100,4,.4);color:#FCD34D}
+[data-dark] .ann-lvl.m{background:rgba(28,53,87,.4);color:#93C5FD}
+
+/* ══ SONDAGES ══════════════════════════════════════════════════ */
+#s-sondages{background:var(--bg)}
+.sond-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 20px 16px}
+.sond-hd-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px}
+.sond-title{font-size:22px;font-weight:700;color:#fff}
+.btn-new-sond{height:36px;padding:0 14px;background:var(--gold);color:#fff;border-radius:10px;font-size:13px;font-weight:600;display:none;align-items:center;gap:5px}
+.sond-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+.sond-card{background:var(--surface);border-radius:var(--r22);box-shadow:var(--sh);overflow:hidden}
+.sond-card-top{padding:14px 16px 10px}
+.sond-question{font-size:15px;font-weight:600;color:var(--t1);margin-bottom:4px;line-height:1.35}
+.sond-meta{font-size:11px;color:var(--t3);margin-bottom:12px}
+.sond-option{margin:0 16px 8px;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;border:1.5px solid var(--surface3);transition:border-color var(--tr)}
+.sond-option:active{opacity:.8}
+.sond-option.voted{border-color:var(--navy)}
+[data-dark] .sond-option.voted{border-color:var(--gold)}
+.sond-option-fill{position:absolute;top:0;left:0;height:100%;background:rgba(28,53,87,.08);border-radius:8px;transition:width .6s ease}
+[data-dark] .sond-option-fill{background:rgba(201,160,48,.1)}
+.sond-option-content{position:relative;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.sond-option-label{font-size:13px;font-weight:500;color:var(--t1)}
+.sond-option-pct{font-size:12px;font-weight:600;color:var(--navy)}
+[data-dark] .sond-option-pct{color:var(--gold)}
+.sond-foot{padding:10px 16px 14px;border-top:1px solid var(--surface2);display:flex;align-items:center;justify-content:space-between}
+.sond-votes{font-size:12px;color:var(--t3)}
+.sond-status{font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
+.sond-status.open{background:#D4EDDA;color:#155724}
+.sond-status.closed{background:var(--surface2);color:var(--t3)}
+
+/* ══ STATS ══════════════════════════════════════════════════════ */
+#s-stats{background:var(--bg)}
+.stats-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 20px 20px}
+.stats-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:14px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+.stat-box{background:rgba(255,255,255,.08);border-radius:var(--r14);padding:14px;text-align:center}
+.stat-box-num{font-size:28px;font-weight:700;color:#fff;line-height:1}
+.stat-box-lbl{font-size:10px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+.stats-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:14px}
+.stats-card{background:var(--surface);border-radius:var(--r22);box-shadow:var(--sh);overflow:hidden}
+.stats-card-t{font-size:11px;font-weight:600;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;padding:13px 16px 10px}
+.member-stat-row{padding:10px 16px;border-bottom:1px solid var(--surface2);display:flex;align-items:center;gap:10px}
+.member-stat-row:last-child{border-bottom:none}
+.ms-av{width:34px;height:34px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden}
+.ms-av img{width:100%;height:100%;object-fit:cover}
+.ms-info{flex:1;min-width:0}
+.ms-nom{font-size:13px;font-weight:500;color:var(--t1)}
+.ms-role{font-size:11px;color:var(--t3)}
+.ms-score-wrap{text-align:right}
+.ms-score{font-size:15px;font-weight:700;color:var(--navy)}
+[data-dark] .ms-score{color:var(--gold)}
+.ms-score-lbl{font-size:10px;color:var(--t3)}
+.progress-row{padding:10px 16px;border-bottom:1px solid var(--surface2)}
+.progress-row:last-child{border-bottom:none}
+.progress-row-top{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px}
+.progress-row-lbl{color:var(--t2);font-weight:500}
+.progress-row-val{color:var(--t1);font-weight:600}
+.prog-bg{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;transition:width .8s ease}
+
 </style>
 </head>
 <body>
@@ -774,6 +854,12 @@ input,select,textarea{font-family:inherit}
         <div class="prow-l"><div class="prow-ic" style="background:#F5F3FF">🌙</div><div><div class="prow-lbl">Mode nuit</div><div class="prow-sub">Thème sombre</div></div></div>
         <div class="tog" id="theme-tog" onclick="toggleTheme()"><div class="tog-dot"></div></div>
       </div>
+    </div>
+    <div class="pcard" id="stats-btn" style="display:none">
+      <div class="pcard-t">Bureau</div>
+      <div class="prow" onclick="go('stats')"><div class="prow-l"><div class="prow-ic" style="background:#EFF6FF">📊</div><div><div class="prow-lbl">Statistiques</div><div class="prow-sub">Taux, classement, avancement</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('annuaire')"><div class="prow-l"><div class="prow-ic" style="background:#F0FDF4">👥</div><div><div class="prow-lbl">Annuaire</div><div class="prow-sub">Tous les membres</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('sondages')"><div class="prow-l"><div class="prow-ic" style="background:#FFF3CD">🗳️</div><div><div class="prow-lbl">Sondages</div><div class="prow-sub">Votes et résultats</div></div></div><div class="prow-r">›</div></div>
     </div>
     <div class="pcard" id="treso-btn" style="display:none">
       <div class="pcard-t">Finances</div>
@@ -1210,6 +1296,85 @@ input,select,textarea{font-family:inherit}
   </div>
 </div>
 
+
+<!-- ══ ANNUAIRE ══ -->
+<div id="s-annuaire" class="scr">
+  <div class="ann-hd">
+    <div class="ann-hd-title">Annuaire</div>
+    <input class="ann-search" id="ann-search" type="text" placeholder="Rechercher un membre..." oninput="filterAnnuaire(this.value)">
+  </div>
+  <div class="ann-body" id="ann-body">
+    <div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- ══ SONDAGES ══ -->
+<div id="s-sondages" class="scr">
+  <div class="sond-hd">
+    <div class="sond-hd-top">
+      <div><div class="sond-title">Sondages</div></div>
+      <button class="btn-new-sond" id="btn-new-sond" onclick="openModalSondage()">🗳️ Nouveau</button>
+    </div>
+  </div>
+  <div class="sond-body" id="sond-body">
+    <div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- ══ STATISTIQUES ══ -->
+<div id="s-stats" class="scr">
+  <div class="stats-hd">
+    <div class="stats-title">Statistiques</div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-box-num" id="st-membres">—</div><div class="stat-box-lbl">Membres</div></div>
+      <div class="stat-box"><div class="stat-box-num" id="st-taches">—</div><div class="stat-box-lbl">Tâches total</div></div>
+      <div class="stat-box"><div class="stat-box-num" id="st-taux">—</div><div class="stat-box-lbl">Taux complétion</div></div>
+      <div class="stat-box"><div class="stat-box-num" id="st-reunions">—</div><div class="stat-box-lbl">Réunions</div></div>
+    </div>
+  </div>
+  <div class="stats-body">
+    <div class="stats-card">
+      <div class="stats-card-t">Classement membres</div>
+      <div id="st-classement"></div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-t">Tâches par statut</div>
+      <div id="st-taches-statut"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SONDAGE -->
+<div class="overlay" id="ov-sond" onclick="closeOverlay('ov-sond')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouveau sondage</div>
+    <div class="mfield"><label>Question *</label><input type="text" id="sond-q" placeholder="Ex: Quelle date pour la prochaine réunion ?"></div>
+    <div class="mfield"><label>Option 1 *</label><input type="text" id="sond-o1" placeholder="Option 1"></div>
+    <div class="mfield"><label>Option 2 *</label><input type="text" id="sond-o2" placeholder="Option 2"></div>
+    <div class="mfield"><label>Option 3 (optionnel)</label><input type="text" id="sond-o3" placeholder="Option 3"></div>
+    <div class="mfield"><label>Option 4 (optionnel)</label><input type="text" id="sond-o4" placeholder="Option 4"></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-sond')">Annuler</button>
+      <button class="bsub" id="sond-sub" onclick="submitSondage()"><span>Lancer</span></button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NOUVELLE TACHE -->
 <div class="overlay" id="ov-task" onclick="closeOverlay('ov-task')">
   <div class="modal" onclick="event.stopPropagation()">
@@ -1276,8 +1441,8 @@ let curFilter = 'toutes';
 const LVL = {1:'Bureau Exécutif', 2:'Membre actif', 3:'Adhérent'};
 const QA = {
   1:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🚀',lb:'Projets',bg:'#FFF7ED',fn:"go('projets')"},{ic:'📅',lb:'Réunion',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💰',lb:'Tréso',bg:'#F5F3FF',fn:"go('treso')"}],
-  2:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"toast('Sondages — Session 6')"}],
-  3:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"toast('Actualités — bientôt')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"toast('Annuaire — Session 6')"},{ic:'⬆️',lb:'Rejoindre',bg:'#F5F3FF',fn:"toast('Demande envoyée !')"}]
+  2:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"}],
+  3:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'⬆️',lb:'Rejoindre',bg:'#F5F3FF',fn:"toast('Demande envoyée !')"}]
 };
 
 // ── NAVIGATION ────────────────────────────────────────────────────
@@ -1416,6 +1581,8 @@ function fillDash() {
     document.getElementById('admin-btn').style.display  = 'block';
     var tresoBtnEl = document.getElementById('treso-btn');
     if (tresoBtnEl) tresoBtnEl.style.display = 'block';
+    var statsBtnEl = document.getElementById('stats-btn');
+    if (statsBtnEl) statsBtnEl.style.display = 'block';
   }
   if (localStorage.getItem('theme') === 'dark') {
     document.documentElement.setAttribute('data-dark','');
@@ -2926,6 +3093,343 @@ window.go = function(screen) {
   _goS4(screen);
   if (screen === 'projets') loadProjets();
   if (screen === 'treso')   loadTreso();
+};
+
+
+/* ════════════════════════════════════════════════════════════════
+   SESSION 6 — ANNUAIRE + SONDAGES + STATISTIQUES + BADGES
+   Règle : data-id + addEventListener — jamais onclick inline avec variables
+   ════════════════════════════════════════════════════════════════ */
+
+var allMembres  = [];
+var allSondages = [];
+
+/* ══ BADGES — attribution automatique ═══════════════════════════ */
+var BADGES_DEF = [
+  {id:'premier_login',   ic:'⚡', label:'Premier pas',      cond:function(p,s) { return true; }},
+  {id:'first_task',      ic:'✅', label:'Première tâche',   cond:function(p,s) { return s.tasksDone >= 1; }},
+  {id:'task_10',         ic:'🏆', label:'10 tâches',        cond:function(p,s) { return s.tasksDone >= 10; }},
+  {id:'task_5',          ic:'🥇', label:'5 tâches',         cond:function(p,s) { return s.tasksDone >= 5; }},
+  {id:'reunion',         ic:'🤝', label:'Présent',          cond:function(p,s) { return s.reunions >= 1; }},
+  {id:'score_50',        ic:'🌟', label:'50 pts',           cond:function(p,s) { return (p.score||0) >= 50; }},
+  {id:'score_100',       ic:'💎', label:'100 pts',          cond:function(p,s) { return (p.score||0) >= 100; }},
+  {id:'fondateur',       ic:'🏅', label:'Fondateur',        cond:function(p,s) { return p.niveau === 1; }},
+];
+
+async function checkBadges(uid, profile) {
+  try {
+    var tSnap = await db.collection('taches').where('assigneeId','==',uid).get();
+    var tasksDone = 0;
+    tSnap.forEach(function(d) { if (d.data().statut === 'Terminée') tasksDone++; });
+    var rSnap = await db.collection('reunions').get();
+    var reunions = 0;
+    rSnap.forEach(function(d) {
+      var pres = d.data().presences || {};
+      if (pres[uid] === 'oui') reunions++;
+    });
+    var stats = {tasksDone:tasksDone, reunions:reunions};
+    var currentBadges = profile.badges || [];
+    var newBadges = [];
+    for (var i = 0; i < BADGES_DEF.length; i++) {
+      var b = BADGES_DEF[i];
+      if (currentBadges.indexOf(b.ic) === -1 && b.cond(profile, stats)) {
+        newBadges.push(b.ic);
+      }
+    }
+    if (newBadges.length > 0) {
+      var merged = currentBadges.concat(newBadges);
+      await db.collection('users').doc(uid).update({badges: merged});
+      if (uid === CU.uid) {
+        CP.badges = merged;
+        toast('Nouveau badge : ' + newBadges.join(' '));
+      }
+    }
+  } catch(e) {}
+}
+
+/* ══ ANNUAIRE ═══════════════════════════════════════════════════ */
+async function loadAnnuaire() {
+  var body = document.getElementById('ann-body');
+  if (!body || !CU) return;
+  body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+  try {
+    var snap = await db.collection('users').get();
+    allMembres = [];
+    snap.forEach(function(d) { allMembres.push(Object.assign({id:d.id}, d.data())); });
+    allMembres.sort(function(a,b) { return (b.score||0) - (a.score||0); });
+    renderAnnuaire(allMembres);
+    // Vérifier badges pour l'utilisateur connecté
+    if (CP) checkBadges(CU.uid, CP);
+  } catch(e) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-b">' + e.message + '</div></div>';
+  }
+}
+
+function renderAnnuaire(list) {
+  var body = document.getElementById('ann-body');
+  if (!list.length) {
+    body.innerHTML = '<div class="empty"><div class="empty-t">Aucun membre trouvé</div></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < list.length; i++) {
+    var m  = list[i];
+    var init = (m.nom || m.email || '?').charAt(0).toUpperCase();
+    var lvlC = m.niveau === 1 ? 'b' : m.niveau === 2 ? 'm' : 'a';
+    var lvlL = m.niveau === 1 ? 'Bureau' : m.niveau === 2 ? 'Membre' : 'Adhérent';
+    var badges = (m.badges || []).slice(0,3).join(' ');
+    var isSelf = m.uid === (CU && CU.uid);
+    html += '<div class="ann-item" data-uid="' + (m.uid || m.id) + '" data-email="' + escHtml(m.email||'') + '">';
+    html += '<div class="ann-av">' + (m.photo ? '<img src="' + m.photo + '" alt="">' : '<span>' + init + '</span>') + '</div>';
+    html += '<div class="ann-info">';
+    html += '<div class="ann-nom">' + escHtml(m.nom || m.email) + (isSelf ? ' (moi)' : '') + '</div>';
+    html += '<div class="ann-role">' + escHtml(m.role || 'Membre') + '</div>';
+    html += '<div class="ann-score">' + (m.score||0) + ' pts ' + badges + '</div>';
+    html += '</div>';
+    html += '<div class="ann-lvl ' + lvlC + '">' + lvlL + '</div>';
+    html += '</div>';
+  }
+  body.innerHTML = html;
+  // Event listeners — pas de onclick inline
+  var items = body.querySelectorAll('.ann-item');
+  for (var j = 0; j < items.length; j++) {
+    items[j].addEventListener('click', function() {
+      var uid   = this.getAttribute('data-uid');
+      var email = this.getAttribute('data-email');
+      var m2    = null;
+      for (var k = 0; k < allMembres.length; k++) {
+        if ((allMembres[k].uid || allMembres[k].id) === uid) { m2 = allMembres[k]; break; }
+      }
+      if (!m2 || uid === (CU && CU.uid)) return;
+      openPrivConv(uid, m2.nom || email, m2.photo || '');
+    });
+  }
+}
+
+window.filterAnnuaire = function(q) {
+  if (!q) { renderAnnuaire(allMembres); return; }
+  var ql = q.toLowerCase();
+  var filtered = allMembres.filter(function(m) {
+    return (m.nom||'').toLowerCase().indexOf(ql) > -1 ||
+           (m.role||'').toLowerCase().indexOf(ql) > -1 ||
+           (m.email||'').toLowerCase().indexOf(ql) > -1;
+  });
+  renderAnnuaire(filtered);
+};
+
+/* ══ SONDAGES ═══════════════════════════════════════════════════ */
+async function loadSondages() {
+  var body = document.getElementById('sond-body');
+  if (!body || !CU) return;
+  body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+  if (CP && CP.niveau === 1) {
+    var btn = document.getElementById('btn-new-sond');
+    if (btn) btn.style.display = 'flex';
+  }
+  try {
+    var snap = await db.collection('sondages').orderBy('createdAt','desc').get();
+    allSondages = [];
+    snap.forEach(function(d) { allSondages.push(Object.assign({id:d.id}, d.data())); });
+    if (!allSondages.length) {
+      body.innerHTML = '<div class="empty"><div class="empty-ic">🗳️</div><div class="empty-t">Aucun sondage</div><div class="empty-b">Le bureau n&apos;a pas encore lancé de sondage.</div></div>';
+      return;
+    }
+    renderSondages(allSondages);
+  } catch(e) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-b">' + e.message + '</div></div>';
+  }
+}
+
+function renderSondages(list) {
+  var body = document.getElementById('sond-body');
+  var html = '';
+  for (var i = 0; i < list.length; i++) {
+    var s     = list[i];
+    var votes = s.votes || {};
+    var totalVotes = 0;
+    var myVote = votes[CU && CU.uid] || null;
+    var options = s.options || [];
+    // Compter les votes par option
+    var voteCounts = {};
+    for (var uid in votes) {
+      var v = votes[uid];
+      voteCounts[v] = (voteCounts[v] || 0) + 1;
+      totalVotes++;
+    }
+    var isOpen   = s.statut !== 'Fermé';
+    var dateStr  = s.createdAt && s.createdAt.toDate ? s.createdAt.toDate().toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '—';
+    html += '<div class="sond-card">';
+    html += '<div class="sond-card-top">';
+    html += '<div class="sond-question">' + escHtml(s.question || '—') + '</div>';
+    html += '<div class="sond-meta">Lancé par ' + escHtml(s.auteur || '—') + ' · ' + dateStr + '</div>';
+    for (var j = 0; j < options.length; j++) {
+      var opt    = options[j];
+      var optCnt = voteCounts[opt] || 0;
+      var pct    = totalVotes > 0 ? Math.round((optCnt / totalVotes) * 100) : 0;
+      var voted  = myVote === opt ? ' voted' : '';
+      html += '<div class="sond-option' + voted + '" data-sid="' + s.id + '" data-opt="' + escHtml(opt) + '">';
+      html += '<div class="sond-option-fill" style="width:' + pct + '%"></div>';
+      html += '<div class="sond-option-content">';
+      html += '<span class="sond-option-label">' + escHtml(opt) + (myVote === opt ? ' ✓' : '') + '</span>';
+      html += '<span class="sond-option-pct">' + (myVote || !isOpen ? pct + '%' : '') + '</span>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+    html += '<div class="sond-foot">';
+    html += '<div class="sond-votes">' + totalVotes + ' vote' + (totalVotes !== 1 ? 's' : '') + '</div>';
+    html += '<div class="sond-status ' + (isOpen ? 'open' : 'closed') + '">' + (isOpen ? 'Ouvert' : 'Fermé') + '</div>';
+    html += '</div></div>';
+  }
+  body.innerHTML = html;
+  // Event listeners sur les options — pas de onclick inline
+  var opts = body.querySelectorAll('.sond-option');
+  for (var k = 0; k < opts.length; k++) {
+    opts[k].addEventListener('click', function() {
+      voterSondage(this.getAttribute('data-sid'), this.getAttribute('data-opt'));
+    });
+  }
+}
+
+async function voterSondage(sondId, option) {
+  if (!CU) return;
+  var s = null;
+  for (var i = 0; i < allSondages.length; i++) {
+    if (allSondages[i].id === sondId) { s = allSondages[i]; break; }
+  }
+  if (!s) return;
+  if (s.statut === 'Fermé') { toast('Ce sondage est fermé'); return; }
+  var votes = s.votes || {};
+  if (votes[CU.uid]) { toast('Vous avez déjà voté'); return; }
+  try {
+    var update = {};
+    update['votes.' + CU.uid] = option;
+    await db.collection('sondages').doc(sondId).update(update);
+    s.votes = votes;
+    s.votes[CU.uid] = option;
+    renderSondages(allSondages);
+    toast('Vote enregistré : ' + option);
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+
+window.openModalSondage = function() {
+  if (!CP || CP.niveau !== 1) { toast('Réservé au Bureau'); return; }
+  ['sond-q','sond-o1','sond-o2','sond-o3','sond-o4'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('ov-sond').classList.add('on');
+};
+
+window.submitSondage = async function() {
+  var q  = document.getElementById('sond-q').value.trim();
+  var o1 = document.getElementById('sond-o1').value.trim();
+  var o2 = document.getElementById('sond-o2').value.trim();
+  var o3 = document.getElementById('sond-o3').value.trim();
+  var o4 = document.getElementById('sond-o4').value.trim();
+  if (!q || !o1 || !o2) { toast('Question et 2 options minimum'); return; }
+  var options = [o1, o2];
+  if (o3) options.push(o3);
+  if (o4) options.push(o4);
+  var btn = document.getElementById('sond-sub');
+  btn.disabled = true; btn.querySelector('span').textContent = '...';
+  try {
+    await db.collection('sondages').add({
+      question: q, options: options, votes: {},
+      auteur: CP.nom || '', auteurId: CU.uid,
+      statut: 'Ouvert',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-sond');
+    loadSondages();
+    toast('Sondage lancé ✅');
+  } catch(e) { toast('Erreur : ' + e.message); }
+  finally { btn.disabled = false; btn.querySelector('span').textContent = 'Lancer'; }
+};
+
+/* ══ STATISTIQUES ════════════════════════════════════════════════ */
+async function loadStats() {
+  if (!CU || !CP || CP.niveau !== 1) { toast('Réservé au Bureau'); go('dash'); return; }
+  try {
+    // Membres
+    var mSnap = await db.collection('users').get();
+    var nbMem = mSnap.size;
+    document.getElementById('st-membres').textContent = nbMem;
+    // Tâches
+    var tSnap = await db.collection('taches').get();
+    var nbTaches = tSnap.size;
+    var done = 0;
+    var statusCount = {};
+    tSnap.forEach(function(d) {
+      var st = d.data().statut || 'A faire';
+      statusCount[st] = (statusCount[st] || 0) + 1;
+      if (st === 'Terminée') done++;
+    });
+    document.getElementById('st-taches').textContent = nbTaches;
+    var taux = nbTaches > 0 ? Math.round((done/nbTaches)*100) : 0;
+    document.getElementById('st-taux').textContent = taux + '%';
+    // Réunions
+    var rSnap = await db.collection('reunions').get();
+    document.getElementById('st-reunions').textContent = rSnap.size;
+    // Classement membres
+    var membres = [];
+    mSnap.forEach(function(d) { membres.push(d.data()); });
+    membres.sort(function(a,b) { return (b.score||0) - (a.score||0); });
+    var clHtml = '';
+    for (var i = 0; i < Math.min(membres.length, 10); i++) {
+      var m = membres[i];
+      var init = (m.nom||'?').charAt(0).toUpperCase();
+      clHtml += '<div class="member-stat-row">';
+      clHtml += '<div style="font-size:16px;font-weight:700;color:var(--t3);width:24px;text-align:center">' + (i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)) + '</div>';
+      clHtml += '<div class="ms-av">' + (m.photo ? '<img src="' + m.photo + '" alt="">' : '<span>' + init + '</span>') + '</div>';
+      clHtml += '<div class="ms-info"><div class="ms-nom">' + escHtml(m.nom||m.email) + '</div><div class="ms-role">' + escHtml(m.role||'Membre') + '</div></div>';
+      clHtml += '<div class="ms-score-wrap"><div class="ms-score">' + (m.score||0) + '</div><div class="ms-score-lbl">pts</div></div>';
+      clHtml += '</div>';
+    }
+    document.getElementById('st-classement').innerHTML = clHtml || '<div style="padding:14px;color:var(--t3);font-size:13px">Aucun membre</div>';
+    // Tâches par statut
+    var statuts = ['A faire','En cours','Terminée','En retard','Annulee'];
+    var colors  = ['#1C3557','#856404','#155724','#C0392B','#6c757d'];
+    var stHtml  = '';
+    for (var j = 0; j < statuts.length; j++) {
+      var st  = statuts[j];
+      var cnt = statusCount[st] || 0;
+      var pct = nbTaches > 0 ? Math.round((cnt/nbTaches)*100) : 0;
+      stHtml += '<div class="progress-row">';
+      stHtml += '<div class="progress-row-top"><span class="progress-row-lbl">' + st + '</span><span class="progress-row-val">' + cnt + ' (' + pct + '%)</span></div>';
+      stHtml += '<div class="prog-bg"><div class="prog-fill" style="width:' + pct + '%;background:' + colors[j] + '"></div></div>';
+      stHtml += '</div>';
+    }
+    document.getElementById('st-taches-statut').innerHTML = stHtml;
+  } catch(e) { toast('Erreur stats : ' + e.message); }
+}
+
+/* ══ Mise à jour QA + navigation ═══════════════════════════════ */
+var _goS5 = window.go;
+window.go = function(screen) {
+  _goS5(screen);
+  if (screen === 'annuaire') loadAnnuaire();
+  if (screen === 'sondages') loadSondages();
+  if (screen === 'stats')    loadStats();
+};
+
+/* ══ Mise à jour fillDash pour S6 ══════════════════════════════ */
+var _fillDashOrig = fillDash;
+fillDash = function() {
+  _fillDashOrig();
+  // Ajouter badges sur le profil
+  if (CP && CP.badges && CP.badges.length) {
+    var bEl = document.getElementById('p-av');
+    if (bEl) {
+      var bStr = '<div style="font-size:11px;color:var(--gold);margin-top:6px;text-align:center">' + CP.badges.slice(0,5).join(' ') + '</div>';
+      var rEl = document.getElementById('p-role');
+      if (rEl && !document.getElementById('p-badges-row')) {
+        var bd = document.createElement('div');
+        bd.id = 'p-badges-row';
+        bd.style.cssText = 'font-size:13px;color:var(--gold);text-align:center;padding:0 16px 6px;letter-spacing:.05em';
+        bd.textContent = (CP.badges || []).slice(0,6).join(' ');
+        rEl.parentNode.insertBefore(bd, rEl.nextSibling);
+      }
+    }
+  }
 };
 
 </script>
