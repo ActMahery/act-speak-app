@@ -1918,18 +1918,28 @@ function fillDash() {
 // ── TACHES ────────────────────────────────────────────────────────
 function loadRecentTasks() {
   if (!CU || !CP) return;
+  const requestUid = CU.uid; // garde-fou anti-flash si le compte change pendant la requête
+  // Pas de orderBy combiné à where() ici — évite d'exiger un index composite Firestore.
+  // Le tri par date se fait côté app une fois les résultats reçus.
   let q = isPresidentOrVP(CP)
     ? db.collection('taches').orderBy('createdAt','desc').limit(3)
-    : db.collection('taches').where('assigneeId','==',CU.uid).orderBy('createdAt','desc').limit(3);
+    : db.collection('taches').where('assigneeId','==',CU.uid).limit(50);
   q.get().then(snap => {
+    if (!CU || CU.uid !== requestUid) return; // le compte a changé entre-temps, on ignore ce résultat
     const list = document.getElementById('d-tasks-list');
-    if (snap.empty) { list.innerHTML = '<div class="empty"><div class="empty-ic">✅</div><div class="empty-t">Aucune tâche active</div></div>'; return; }
+    let docs = [];
+    snap.forEach(d => docs.push({ id:d.id, ...d.data() }));
+    if (!isPresidentOrVP(CP)) {
+      docs.sort((a,b) => (b.createdAt?.toMillis?.()||0) - (a.createdAt?.toMillis?.()||0));
+      docs = docs.slice(0, 3);
+    }
+    document.getElementById('d-tasks').textContent = snap.size;
+    if (!docs.length) { list.innerHTML = '<div class="empty"><div class="empty-ic">✅</div><div class="empty-t">Aucune tâche active</div></div>'; return; }
     let html = '';
-    snap.forEach(d => {
-      const t = d.data();
+    docs.forEach(t => {
       const st = t.statut || 'A faire';
       const stClass = st === 'Terminée' ? 'te' : st === 'En cours' ? 'ec' : 'af';
-      html += `<div style="padding:12px 16px;border-bottom:1px solid var(--surface2);display:flex;align-items:center;gap:10px" data-taskid="${d.id}">
+      html += `<div style="padding:12px 16px;border-bottom:1px solid var(--surface2);display:flex;align-items:center;gap:10px" data-taskid="${t.id}">
         <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.nom||'—'}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">${t.assigneeNom||'—'}</div></div>
         <div class="stt ${stClass}">${st}</div></div>`;
     });
@@ -1938,21 +1948,29 @@ function loadRecentTasks() {
     list.querySelectorAll('[data-taskid]').forEach(el => {
       el.addEventListener('click', () => openDetail(el.getAttribute('data-taskid')));
     });
-    document.getElementById('d-tasks').textContent = snap.size;
-  }).catch(() => {});
+  }).catch(e => {
+    const list = document.getElementById('d-tasks-list');
+    if (list) list.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>';
+  });
 }
 
 async function loadTasks() {
   const body = document.getElementById('t-body');
   body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
   if (!CU || !CP) return;
+  const requestUid = CU.uid; // garde-fou anti-flash si le compte change pendant la requête
   try {
+    // Pas de orderBy combiné à where() ici — évite d'exiger un index composite Firestore.
     let q = isPresidentOrVP(CP)
       ? db.collection('taches').orderBy('createdAt','desc')
-      : db.collection('taches').where('assigneeId','==',CU.uid).orderBy('createdAt','desc');
+      : db.collection('taches').where('assigneeId','==',CU.uid);
     const snap = await q.get();
+    if (!CU || CU.uid !== requestUid) return; // le compte a changé entre-temps, on ignore ce résultat
     allTasks = [];
     snap.forEach(d => allTasks.push({ id:d.id, ...d.data() }));
+    if (!isPresidentOrVP(CP)) {
+      allTasks.sort((a,b) => (b.createdAt?.toMillis?.()||0) - (a.createdAt?.toMillis?.()||0));
+    }
     document.getElementById('t-count').textContent = allTasks.length + ' tâche' + (allTasks.length !== 1 ? 's' : '');
     applyFilter(curFilter);
   } catch(e) {
