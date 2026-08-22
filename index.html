@@ -153,6 +153,9 @@ input,select,textarea{font-family:inherit}
 .taches-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px}
 .btn-new{height:36px;padding:0 14px;background:var(--gold);color:#fff;border-radius:10px;font-size:13px;font-weight:600;display:none;align-items:center;gap:5px}
 .filters{display:flex;gap:8px;overflow-x:auto;padding:0 20px 14px;scrollbar-width:none}
+.t-drill-banner{margin:0 20px 10px;background:#F5F3FF;color:#5B21B6;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+[data-dark] .t-drill-banner{background:rgba(91,33,182,.3);color:#C4B5FD}
+.t-drill-banner button{background:none;border:none;color:inherit;font-size:12px;font-weight:600}
 .filters::-webkit-scrollbar{display:none}
 .chip{flex-shrink:0;height:30px;padding:0 14px;border-radius:20px;font-size:12px;font-weight:500;background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);white-space:nowrap;transition:background var(--tr)}
 .chip.on{background:var(--gold);color:#fff;font-weight:600}
@@ -233,8 +236,27 @@ input,select,textarea{font-family:inherit}
 .sttb.af{background:var(--surface2);color:var(--t2)}
 .sttb.ec{background:#FFF3CD;color:#856404}
 .sttb.te{background:#D4EDDA;color:#155724}
+.sttb.nr{background:#FDE8E8;color:#C0392B}
+.sttb.rp{background:#F5F3FF;color:#5B21B6}
 .sttb.sel{border-color:var(--navy)}
 [data-dark] .sttb.sel{border-color:var(--gold)}
+[data-dark] .sttb.nr{background:rgba(192,57,43,.25)}
+[data-dark] .sttb.rp{background:rgba(91,33,182,.3)}
+.det-raison-tag{background:var(--surface2);border-radius:10px;padding:9px 12px;font-size:12px;color:var(--t2);font-style:italic}
+/* Rappels — v2.0 */
+.btn-rappel-new{font-size:11px;font-weight:600;padding:6px 11px;border-radius:12px;background:var(--gold);color:#fff}
+.rappel-item{padding:11px 16px;border-bottom:1px solid var(--surface2);display:flex;gap:10px;align-items:flex-start}
+.rappel-item:last-child{border-bottom:none}
+.rappel-ic{font-size:16px;flex-shrink:0}
+.rappel-body{flex:1;min-width:0}
+.rappel-msg{font-size:13px;color:var(--t1);line-height:1.4}
+.rappel-meta{font-size:10.5px;color:var(--t3);margin-top:3px}
+.rappel-type-sel{display:flex;gap:8px}
+.rtb{flex:1;height:38px;border-radius:10px;font-size:12px;font-weight:600;border:2px solid transparent;background:var(--surface2);color:var(--t2)}
+.rtb.normal.on{background:#EFF6FF;color:#1C3557;border-color:var(--navy)}
+.rtb.important.on{background:#FFF3CD;color:#856404;border-color:#856404}
+.rtb.urgent.on{background:#FDE8E8;color:#C0392B;border-color:#C0392B}
+[data-dark] .rtb.on{border-color:var(--gold)}
 /* comments */
 .cmt-item{padding:11px 16px;border-bottom:1px solid var(--surface2);display:flex;gap:9px}
 .cmt-item:last-child{border-bottom:none}
@@ -284,6 +306,25 @@ input,select,textarea{font-family:inherit}
 .adm-title{font-size:20px;font-weight:700;color:#fff}
 .adm-sub{font-size:12px;color:rgba(255,255,255,.4);margin-top:2px}
 .adm-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+#s-supervision{background:var(--bg)}
+.sup-global-card{background:var(--surface);border-radius:var(--r22);padding:20px;box-shadow:var(--sh);text-align:center}
+.sup-global-pct{font-size:38px;font-weight:800;color:var(--navy)}
+[data-dark] .sup-global-pct{color:var(--gold)}
+.sup-global-lbl{font-size:12px;color:var(--t3);margin-top:2px}
+.sup-global-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
+.sup-global-n{font-size:17px;font-weight:700;color:var(--t1)}
+.sup-global-l{font-size:10px;color:var(--t3);margin-top:2px}
+.sup-person-item{background:var(--surface);border-radius:var(--r14);padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.sup-person-top{display:flex;align-items:center;gap:10px}
+.sup-person-av{width:34px;height:34px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.sup-person-info{flex:1;min-width:0}
+.sup-person-nom{font-size:13.5px;font-weight:600;color:var(--t1)}
+.sup-person-meta{font-size:11px;color:var(--t3);margin-top:1px}
+.sup-person-pct{font-size:14px;font-weight:700;color:var(--navy);flex-shrink:0}
+[data-dark] .sup-person-pct{color:var(--gold)}
+.sup-person-bar-bg{height:5px;background:var(--surface2);border-radius:4px;margin-top:9px;overflow:hidden}
+.sup-person-bar{height:100%;background:var(--navy);border-radius:4px;transition:width .5s ease}
+[data-dark] .sup-person-bar{background:var(--gold)}
 .inv-card{background:var(--surface);border-radius:var(--r22);padding:16px;box-shadow:var(--sh)}
 .inv-title{font-size:15px;font-weight:600;color:var(--t1);margin-bottom:12px}
 .inv-inp{width:100%;height:44px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:0 13px;font-size:14px;color:var(--t1);outline:none;margin-bottom:8px}
@@ -847,6 +888,10 @@ input,select,textarea{font-family:inherit}
       <button class="chip" onclick="filterT(this,'termine')">Terminées</button>
     </div>
   </div>
+  <div class="t-drill-banner" id="t-drill-banner" style="display:none">
+    <span>—</span>
+    <button onclick="clearDrillFilter()">✕ Retirer</button>
+  </div>
   <div class="taches-body" id="t-body"></div>
   <nav class="bnav">
     <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
@@ -871,9 +916,23 @@ input,select,textarea{font-family:inherit}
         <button class="sttb ec" onclick="majStatut('En cours')">⚡ En cours</button>
         <button class="sttb te" onclick="majStatut('Terminée')">✅ Terminée</button>
       </div>
+      <div class="stt-btns" style="margin-top:8px">
+        <button class="sttb nr" onclick="askRaisonStatut('Non réalisée')">❌ Non réalisée</button>
+        <button class="sttb rp" onclick="askRaisonStatut('Reportée')">⏸ Reportée</button>
+      </div>
+      <div id="det-raison-wrap" style="display:none;padding:0 14px 12px">
+        <div class="det-raison-tag" id="det-raison-tag"></div>
+      </div>
     </div>
     <div class="det-card">
-      <div class="det-card-t">Informations</div>
+      <div class="det-card-t" style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span>Rappels reçus</span>
+        <button class="btn-rappel-new" id="btn-rappel-new" style="display:none" onclick="openRappelModal()">🔔 Envoyer un rappel</button>
+      </div>
+      <div id="rappels-list"><div class="empty" style="padding:16px"><div class="empty-b">Aucun rappel.</div></div></div>
+    </div>
+    <div class="det-card">
+      <div class="det-card-t" style="padding:13px 16px">Informations</div>
       <div class="det-row"><span class="det-row-l">Assigné à</span><span class="det-row-v" id="det-who">—</span></div>
       <div class="det-row"><span class="det-row-l">Type</span><span class="det-row-v" id="det-type">—</span></div>
       <div class="det-row"><span class="det-row-l">Priorité</span><span class="det-row-v" id="det-prio">—</span></div>
@@ -894,6 +953,34 @@ input,select,textarea{font-family:inherit}
     <div class="det-card" id="det-danger-card" style="display:none">
       <button class="btn-danger-full" onclick="deleteTask()">🗑️ Supprimer cette tâche</button>
     </div>
+  </div>
+</div>
+
+<!-- SUPERVISION (Président / VP uniquement) — v2.0 -->
+<div id="s-supervision" class="scr">
+  <div class="adm-hd">
+    <div class="adm-back" onclick="go('profil')">‹ Retour</div>
+    <div class="adm-title">Supervision des tâches</div>
+    <div class="adm-sub" id="sup-count">—</div>
+  </div>
+  <div class="adm-body">
+    <div class="sup-global-card">
+      <div class="sup-global-pct" id="sup-global-pct">—%</div>
+      <div class="sup-global-lbl">de toutes les tâches associatives terminées</div>
+      <div class="sup-global-row">
+        <div><div class="sup-global-n" id="sup-n-total">0</div><div class="sup-global-l">Total</div></div>
+        <div><div class="sup-global-n" id="sup-n-cours">0</div><div class="sup-global-l">En cours</div></div>
+        <div><div class="sup-global-n" id="sup-n-retard">0</div><div class="sup-global-l">En retard</div></div>
+        <div><div class="sup-global-n" id="sup-n-term">0</div><div class="sup-global-l">Terminées</div></div>
+      </div>
+    </div>
+    <div class="filters" id="sup-group-filters" style="margin:14px 0">
+      <button class="chip on" data-group="tous" onclick="filterSupervisionGroup(this,'tous')">Tous</button>
+      <button class="chip" data-group="bureau" onclick="filterSupervisionGroup(this,'bureau')">Bureau</button>
+      <button class="chip" data-group="actif" onclick="filterSupervisionGroup(this,'actif')">Actifs</button>
+      <button class="chip" data-group="benevole" onclick="filterSupervisionGroup(this,'benevole')">Bénévoles</button>
+    </div>
+    <div id="sup-person-list"></div>
   </div>
 </div>
 
@@ -926,6 +1013,10 @@ input,select,textarea{font-family:inherit}
       <div class="prow" onclick="go('stats')"><div class="prow-l"><div class="prow-ic" style="background:#EFF6FF">📊</div><div><div class="prow-lbl">Statistiques</div><div class="prow-sub">Taux, classement, avancement</div></div></div><div class="prow-r">›</div></div>
       <div class="prow" onclick="go('annuaire')"><div class="prow-l"><div class="prow-ic" style="background:#F0FDF4">👥</div><div><div class="prow-lbl">Annuaire</div><div class="prow-sub">Tous les membres</div></div></div><div class="prow-r">›</div></div>
       <div class="prow" onclick="go('sondages')"><div class="prow-l"><div class="prow-ic" style="background:#FFF3CD">🗳️</div><div><div class="prow-lbl">Sondages</div><div class="prow-sub">Votes et résultats</div></div></div><div class="prow-r">›</div></div>
+    </div>
+    <div class="pcard" id="supervision-btn" style="display:none">
+      <div class="pcard-t">Direction</div>
+      <div class="prow" onclick="go('supervision')"><div class="prow-l"><div class="prow-ic" style="background:#F5F3FF">🧭</div><div><div class="prow-lbl">Supervision des tâches</div><div class="prow-sub">Vue globale, par membre, par groupe</div></div></div><div class="prow-r">›</div></div>
     </div>
     <div class="pcard" id="treso-btn" style="display:none">
       <div class="pcard-t">Finances</div>
@@ -1506,6 +1597,46 @@ input,select,textarea{font-family:inherit}
   </div>
 </div>
 
+<!-- MODAL RAISON (Non réalisée / Reportée) — v2.0 -->
+<div class="overlay" id="ov-task-reason" onclick="closeOverlay('ov-task-reason')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="reason-modal-title">Raison</div>
+    <div class="mfield">
+      <label>Explique brièvement *</label>
+      <textarea id="task-reason-inp" placeholder="Ex: Manque de temps, priorité donnée à une urgence..."></textarea>
+    </div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-task-reason')">Annuler</button>
+      <button class="bsub" onclick="confirmStatutAvecRaison()"><span>Confirmer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RAPPEL (Président / VP uniquement) — v2.0 -->
+<div class="overlay" id="ov-rappel" onclick="closeOverlay('ov-rappel')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Envoyer un rappel</div>
+    <div class="mfield">
+      <label>Type de rappel</label>
+      <div class="rappel-type-sel">
+        <button class="rtb normal on" data-type="normal" onclick="pickRappelType(this,'normal')">🔔 Normal</button>
+        <button class="rtb important" data-type="important" onclick="pickRappelType(this,'important')">⚠️ Important</button>
+        <button class="rtb urgent" data-type="urgent" onclick="pickRappelType(this,'urgent')">🚨 Urgent</button>
+      </div>
+    </div>
+    <div class="mfield">
+      <label>Message</label>
+      <textarea id="rappel-msg-inp" placeholder="Ex: N'oublie pas de terminer avant vendredi"></textarea>
+    </div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-rappel')">Annuler</button>
+      <button class="bsub" onclick="sendRappel()"><span>Envoyer</span></button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <!-- FIREBASE SDK compat v10 — chargement non-bloquant -->
@@ -1628,6 +1759,7 @@ function go(screen) {
   if (el) el.classList.add('on');
   if (screen === 'taches') loadTasks();
   if (screen === 'admin')  loadMembers();
+  if (screen === 'supervision') loadSupervision();
 }
 
 function navTo(btn, screen) {
@@ -1759,12 +1891,16 @@ function fillDash() {
     document.getElementById('p-av').innerHTML     = img;
   }
   if (categorie === 'bureau') {
-    document.getElementById('btn-new').style.display    = 'flex';
     document.getElementById('admin-btn').style.display  = 'block';
     var tresoBtnEl = document.getElementById('treso-btn');
     if (tresoBtnEl) tresoBtnEl.style.display = 'block';
     var statsBtnEl = document.getElementById('stats-btn');
     if (statsBtnEl) statsBtnEl.style.display = 'block';
+  }
+  if (isPresidentOrVP(CP)) {
+    document.getElementById('btn-new').style.display = 'flex';
+    var supBtnEl = document.getElementById('supervision-btn');
+    if (supBtnEl) supBtnEl.style.display = 'block';
   }
   if (localStorage.getItem('theme') === 'dark') {
     document.documentElement.setAttribute('data-dark','');
@@ -1782,7 +1918,7 @@ function fillDash() {
 // ── TACHES ────────────────────────────────────────────────────────
 function loadRecentTasks() {
   if (!CU || !CP) return;
-  let q = isBureau(CP)
+  let q = isPresidentOrVP(CP)
     ? db.collection('taches').orderBy('createdAt','desc').limit(3)
     : db.collection('taches').where('assigneeId','==',CU.uid).orderBy('createdAt','desc').limit(3);
   q.get().then(snap => {
@@ -1811,7 +1947,7 @@ async function loadTasks() {
   body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
   if (!CU || !CP) return;
   try {
-    let q = isBureau(CP)
+    let q = isPresidentOrVP(CP)
       ? db.collection('taches').orderBy('createdAt','desc')
       : db.collection('taches').where('assigneeId','==',CU.uid).orderBy('createdAt','desc');
     const snap = await q.get();
@@ -1824,11 +1960,86 @@ async function loadTasks() {
   }
 }
 
+let supervisionDrillUid = null, supervisionDrillNom = '';
+
 function filterT(el, f) {
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
   el.classList.add('on');
   curFilter = f;
   applyFilter(f);
+}
+
+function clearDrillFilter() {
+  supervisionDrillUid = null; supervisionDrillNom = '';
+  applyFilter(curFilter);
+}
+
+/* ── Supervision Président/VP (v2.0) ───────────────────────────────── */
+let supAllTasks = [], supAllMembers = [], supGroupFilter = 'tous';
+async function loadSupervision() {
+  if (!isPresidentOrVP(CP)) { toast('Réservé au Président et au Vice-Président'); go('dash'); return; }
+  try {
+    const [tSnap, uSnap] = await Promise.all([
+      db.collection('taches').get(),
+      db.collection('users').get()
+    ]);
+    supAllTasks = []; tSnap.forEach(d => supAllTasks.push(d.data()));
+    supAllMembers = []; uSnap.forEach(d => supAllMembers.push(d.data()));
+
+    const total = supAllTasks.length;
+    const term  = supAllTasks.filter(t => t.statut === 'Terminée').length;
+    const cours = supAllTasks.filter(t => t.statut === 'En cours').length;
+    const retard = supAllTasks.filter(t => t.echeance && new Date(t.echeance) < new Date() && t.statut !== 'Terminée').length;
+    document.getElementById('sup-global-pct').textContent = total ? Math.round(term/total*100) + '%' : '—%';
+    document.getElementById('sup-n-total').textContent = total;
+    document.getElementById('sup-n-cours').textContent = cours;
+    document.getElementById('sup-n-retard').textContent = retard;
+    document.getElementById('sup-n-term').textContent = term;
+    document.getElementById('sup-count').textContent = supAllMembers.length + ' membres';
+
+    renderSupervisionPersons();
+  } catch(e) { toast('Erreur supervision : ' + e.message); }
+}
+function filterSupervisionGroup(el, group) {
+  document.querySelectorAll('#sup-group-filters .chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  supGroupFilter = group;
+  renderSupervisionPersons();
+}
+function renderSupervisionPersons() {
+  const el = document.getElementById('sup-person-list');
+  let members = supAllMembers.filter(m => m.uid);
+  if (supGroupFilter !== 'tous') members = members.filter(m => getCategorie(m) === supGroupFilter);
+
+  const rows = members.map(m => {
+    const mine = supAllTasks.filter(t => t.assigneeId === m.uid);
+    const term = mine.filter(t => t.statut === 'Terminée').length;
+    const pct  = mine.length ? Math.round(term/mine.length*100) : 0;
+    return { uid:m.uid, nom:m.nom||m.email, cat:getCategorie(m), total:mine.length, pct };
+  }).sort((a,b) => a.pct - b.pct); // ceux en difficulté en premier
+
+  if (!rows.length) { el.innerHTML = '<div class="empty"><div class="empty-t">Aucun membre</div></div>'; return; }
+
+  el.innerHTML = rows.map(r => `
+    <div class="sup-person-item" data-uid="${r.uid}" data-nom="${escHtml(r.nom)}">
+      <div class="sup-person-top">
+        <div class="sup-person-av">${r.nom.charAt(0).toUpperCase()}</div>
+        <div class="sup-person-info">
+          <div class="sup-person-nom">${escHtml(r.nom)}</div>
+          <div class="sup-person-meta">${CAT_SHORT[r.cat]||'—'} · ${r.total} tâche${r.total!==1?'s':''}</div>
+        </div>
+        <div class="sup-person-pct">${r.total ? r.pct+'%' : '—'}</div>
+      </div>
+      <div class="sup-person-bar-bg"><div class="sup-person-bar" style="width:${r.pct}%"></div></div>
+    </div>`).join('');
+
+  el.querySelectorAll('.sup-person-item').forEach(item => {
+    item.addEventListener('click', () => {
+      supervisionDrillUid = item.getAttribute('data-uid');
+      supervisionDrillNom = item.getAttribute('data-nom');
+      go('taches');
+    });
+  });
 }
 
 function applyFilter(f) {
@@ -1837,6 +2048,16 @@ function applyFilter(f) {
   if (f === 'encours') list = list.filter(t => t.statut === 'En cours');
   if (f === 'urgente') list = list.filter(t => t.type === 'Urgente');
   if (f === 'termine') list = list.filter(t => t.statut === 'Terminée');
+  if (supervisionDrillUid) list = list.filter(t => t.assigneeId === supervisionDrillUid);
+  const banner = document.getElementById('t-drill-banner');
+  if (banner) {
+    if (supervisionDrillUid) {
+      banner.style.display = 'flex';
+      banner.querySelector('span').textContent = 'Tâches de ' + supervisionDrillNom;
+    } else {
+      banner.style.display = 'none';
+    }
+  }
   renderTasks(list);
 }
 
@@ -1888,26 +2109,32 @@ function renderTasks(list) {
 }
 
 // Mappe l'ancien champ statut (FR, libre) vers les nouveaux champs v2.0
-const STATUT_TO_DETAIL = { 'A faire':'a_faire', 'En cours':'en_cours', 'Terminée':'terminee', 'En retard':'a_faire' };
-const STATUT_TO_PROGRESSION = { 'A faire':0, 'En cours':50, 'Terminée':100, 'En retard':0 };
+const STATUT_TO_DETAIL = { 'A faire':'a_faire', 'En cours':'en_cours', 'Terminée':'terminee', 'En retard':'a_faire', 'Non réalisée':'non_realisee', 'Reportée':'reportee' };
+const STATUT_TO_PROGRESSION = { 'A faire':0, 'En cours':50, 'Terminée':100, 'En retard':0, 'Non réalisée':0 };
+// 'Reportée' n'est volontairement pas dans cette table : la progression déjà accomplie est conservée.
 
-async function quickStt(e, id, newStt) {
+async function quickStt(e, id, newStt, raison) {
   e.stopPropagation();
   try {
-    await db.collection('taches').doc(id).update({
+    const payload = {
       statut:newStt,
       statutDetail: STATUT_TO_DETAIL[newStt] || 'a_faire',
-      progression: STATUT_TO_PROGRESSION[newStt] != null ? STATUT_TO_PROGRESSION[newStt] : 0,
       updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    });
+    };
+    if (STATUT_TO_PROGRESSION[newStt] != null) payload.progression = STATUT_TO_PROGRESSION[newStt];
+    if (raison !== undefined) payload.raisonEchec = raison || '';
+    if (newStt !== 'Non réalisée' && newStt !== 'Reportée') payload.raisonEchec = firebase.firestore.FieldValue.delete();
+    await db.collection('taches').doc(id).update(payload);
     const t = allTasks.find(t => t.id === id);
-    if (t) t.statut = newStt;
+    if (t) { t.statut = newStt; t.raisonEchec = raison || ''; }
     applyFilter(curFilter);
     if (newStt === 'Terminée' && !isBureau(CP)) {
       const ns = (CP.score||0) + 10;
       await db.collection('users').doc(CU.uid).update({ score:ns });
       CP.score = ns;
       toast('✅ Tâche terminée +10 pts !');
+    } else if (newStt === 'Non réalisée' || newStt === 'Reportée') {
+      toast(newStt === 'Non réalisée' ? '❌ Marquée non réalisée' : '⏸ Tâche reportée');
     } else {
       toast(newStt === 'En cours' ? '⚡ Tâche démarrée' : '✅ Tâche terminée');
     }
@@ -1929,25 +2156,60 @@ function openDetail(id) {
   document.getElementById('det-ech').textContent   = t.echeance
     ? new Date(t.echeance).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
     : 'Non définie';
-  const map = {'A faire':0,'En cours':1,'Terminée':2};
+  const map = {'A faire':0,'En cours':1,'Terminée':2,'Non réalisée':3,'Reportée':4};
   document.querySelectorAll('.sttb').forEach((b,i) => b.classList.toggle('sel', i === (map[t.statut||'A faire']||0)));
+  const raisonWrap = document.getElementById('det-raison-wrap');
+  const raisonTag  = document.getElementById('det-raison-tag');
+  if (t.raisonEchec) {
+    raisonWrap.style.display = 'block';
+    raisonTag.textContent = (t.statut === 'Reportée' ? '⏸ Reportée — ' : '❌ Non réalisée — ') + t.raisonEchec;
+  } else {
+    raisonWrap.style.display = 'none';
+  }
   const dangerCard = document.getElementById('det-danger-card');
-  if (dangerCard) dangerCard.style.display = isBureau(CP) ? 'block' : 'none';
+  if (dangerCard) dangerCard.style.display = isPresidentOrVP(CP) ? 'block' : 'none';
+  const rappelBtn = document.getElementById('btn-rappel-new');
+  if (rappelBtn) rappelBtn.style.display = isPresidentOrVP(CP) ? 'inline-flex' : 'none';
   loadCmts(id);
+  loadRappels(id);
   go('detail');
 }
+
+/* ── Statuts avec raison : Non réalisée / Reportée (v2.0) ─────────── */
+let pendingRaisonStatut = null;
+window.askRaisonStatut = function(statut) {
+  if (!curTaskId) return;
+  pendingRaisonStatut = statut;
+  document.getElementById('reason-modal-title').textContent = statut === 'Reportée' ? 'Raison du report' : 'Raison de la non-réalisation';
+  document.getElementById('task-reason-inp').value = '';
+  document.getElementById('ov-task-reason').classList.add('on');
+};
+window.confirmStatutAvecRaison = async function() {
+  const raison = (document.getElementById('task-reason-inp').value || '').trim();
+  if (!raison) { toast('Explique brièvement la raison'); return; }
+  if (!pendingRaisonStatut || !curTaskId) return;
+  await quickStt({stopPropagation:()=>{}}, curTaskId, pendingRaisonStatut, raison);
+  document.getElementById('det-stt').textContent = pendingRaisonStatut;
+  const map = {'A faire':0,'En cours':1,'Terminée':2,'Non réalisée':3,'Reportée':4};
+  document.querySelectorAll('.sttb').forEach((b,i) => b.classList.toggle('sel', i === (map[pendingRaisonStatut]||0)));
+  document.getElementById('det-raison-wrap').style.display = 'block';
+  document.getElementById('det-raison-tag').textContent = (pendingRaisonStatut === 'Reportée' ? '⏸ Reportée — ' : '❌ Non réalisée — ') + raison;
+  closeOverlay('ov-task-reason');
+  pendingRaisonStatut = null;
+};
 
 async function majStatut(s) {
   if (!curTaskId) return;
   await quickStt({stopPropagation:()=>{}}, curTaskId, s);
   document.getElementById('det-stt').textContent = s;
-  const map = {'A faire':0,'En cours':1,'Terminée':2};
+  const map = {'A faire':0,'En cours':1,'Terminée':2,'Non réalisée':3,'Reportée':4};
   document.querySelectorAll('.sttb').forEach((b,i) => b.classList.toggle('sel', i === (map[s]||0)));
+  document.getElementById('det-raison-wrap').style.display = 'none';
 }
 
 /* ── Suppression admin d'une tâche (Session 7) ────────────────────── */
 async function deleteTask() {
-  if (!curTaskId || !isBureau(CP)) { toast('Réservé au Bureau'); return; }
+  if (!curTaskId || !isPresidentOrVP(CP)) { toast('Réservé au Président et au Vice-Président'); return; }
   if (!confirm('Supprimer définitivement cette tâche ? Cette action est irréversible.')) return;
   try {
     await db.collection('taches').doc(curTaskId).delete();
@@ -1956,6 +2218,60 @@ async function deleteTask() {
     go('taches');
     loadTasks();
   } catch(e) { toast('Erreur : ' + e.message); }
+}
+
+/* ── Rappels de tâches — 3 types (v2.0) ────────────────────────────── */
+const RAPPEL_ICONS = { normal:'🔔', important:'⚠️', urgent:'🚨' };
+const RAPPEL_LABELS = { normal:'Rappel normal', important:'Rappel important', urgent:'Rappel urgent' };
+let curRappelType = 'normal';
+
+window.openRappelModal = function() {
+  if (!curTaskId || !isPresidentOrVP(CP)) { toast('Réservé au Président et au Vice-Président'); return; }
+  curRappelType = 'normal';
+  document.querySelectorAll('.rtb').forEach(b => b.classList.toggle('on', b.getAttribute('data-type') === 'normal'));
+  document.getElementById('rappel-msg-inp').value = '';
+  document.getElementById('ov-rappel').classList.add('on');
+};
+window.pickRappelType = function(el, type) {
+  curRappelType = type;
+  document.querySelectorAll('.rtb').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+};
+window.sendRappel = async function() {
+  if (!curTaskId || !isPresidentOrVP(CP)) { toast('Réservé au Président et au Vice-Président'); return; }
+  const msg = (document.getElementById('rappel-msg-inp').value || '').trim();
+  if (!msg) { toast('Écris un message'); return; }
+  try {
+    await db.collection('taches').doc(curTaskId).collection('rappels').add({
+      type: curRappelType, message: msg,
+      envoyePar: CU.uid, envoyeParNom: CP.nom || '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-rappel');
+    toast(RAPPEL_ICONS[curRappelType] + ' Rappel envoyé');
+    loadRappels(curTaskId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+async function loadRappels(tacheId) {
+  const el = document.getElementById('rappels-list');
+  if (!el) return;
+  try {
+    const snap = await db.collection('taches').doc(tacheId).collection('rappels').orderBy('createdAt','desc').get();
+    if (snap.empty) { el.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">Aucun rappel.</div></div>'; return; }
+    let html = '';
+    snap.forEach(d => {
+      const r = d.data();
+      const date = r.createdAt?.toDate ? r.createdAt.toDate().toLocaleDateString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+      html += `<div class="rappel-item">
+        <div class="rappel-ic">${RAPPEL_ICONS[r.type]||'🔔'}</div>
+        <div class="rappel-body">
+          <div class="rappel-msg">${escHtml(r.message||'')}</div>
+          <div class="rappel-meta">${RAPPEL_LABELS[r.type]||'Rappel'} · ${escHtml(r.envoyeParNom||'—')} · ${date}</div>
+        </div>
+      </div>`;
+    });
+    el.innerHTML = html;
+  } catch(e) { el.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">'+e.message+'</div></div>'; }
 }
 
 async function loadCmts(tacheId) {
@@ -1993,7 +2309,7 @@ async function sendCmt() {
 
 // ── MODAL TACHE ───────────────────────────────────────────────────
 async function openNewTask() {
-  if (!isBureau(CP)) { toast('Réservé au bureau'); return; }
+  if (!isPresidentOrVP(CP)) { toast('La délégation de tâches est réservée au Président et au Vice-Président'); return; }
   // Reset
   ['m-nom','m-ech','m-desc'].forEach(id => { document.getElementById(id).value = ''; });
   // Charger membres
