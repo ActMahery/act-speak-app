@@ -1591,6 +1591,27 @@ function isSecFin(p)           { return isBureau(p) && normAccents(p && p.role).
 function canProposeTx(p) { return isPresident(p) || isTresorier(p) || isTresorierAdjoint(p) || isSecFin(p); }
 // Peut autoriser (valider) une transaction — Président ou Trésorier uniquement, jamais sa propre saisie
 function canValidateTx(p, tx) { return (isPresident(p) || isTresorier(p)) && p && tx && p.uid !== tx.auteurId; }
+
+// ── Rôles Président / Vice-Président (Session 7 — v2.0 Architecture) ──
+function isVP(p) { return isBureau(p) && normAccents(p && p.role).includes('vice president'); }
+// Supervision globale des tâches (vue de toutes les tâches, délégation à tout membre, rappels)
+function isPresidentOrVP(p) { return isPresident(p) || isVP(p); }
+// Accès aux données personnelles (agenda/finances/programmes) d'un autre membre :
+// uniquement le Président, en plus du propriétaire lui-même (choix validé — v2.0)
+function canAccessPersonalData(viewer, targetUid) {
+  return !!viewer && (viewer.uid === targetUid || isPresident(viewer));
+}
+// Calcule les flags booléens miroir (consommés par les règles Firestore — évite le regex accents côté rules)
+function computeRoleFlags(roleText) {
+  const fake = { role: roleText, categorie: 'bureau' }; // évalué dans un contexte "membre du Bureau"
+  return {
+    estPresident:        isPresident(fake),
+    estVP:                isVP(fake),
+    estTresorier:         isTresorier(fake),
+    estTresorierAdjoint:  isTresorierAdjoint(fake),
+    estSecFin:            isSecFin(fake)
+  };
+}
 // Écrit la catégorie migrée en base une seule fois si absente (silencieux, non bloquant)
 async function ensureCategorieMigree(uid, data) {
   if (data && !data.categorie) {
@@ -1637,6 +1658,11 @@ auth.onAuthStateChanged(async user => {
         const data = snap.data();
         if (data.statut === 'bloque') { auth.signOut(); go('login'); showErr('Accès suspendu.'); return; }
         await ensureCategorieMigree(user.uid, data);
+        if (data.role && data.estPresident === undefined) {
+          const flags = computeRoleFlags(data.role);
+          db.collection('users').doc(user.uid).update(flags).catch(() => {});
+          Object.assign(data, flags);
+        }
         CP = data;
         fillDash(); // Re-remplir avec les vraies données
       } else {
@@ -1861,10 +1887,19 @@ function renderTasks(list) {
   });
 }
 
+// Mappe l'ancien champ statut (FR, libre) vers les nouveaux champs v2.0
+const STATUT_TO_DETAIL = { 'A faire':'a_faire', 'En cours':'en_cours', 'Terminée':'terminee', 'En retard':'a_faire' };
+const STATUT_TO_PROGRESSION = { 'A faire':0, 'En cours':50, 'Terminée':100, 'En retard':0 };
+
 async function quickStt(e, id, newStt) {
   e.stopPropagation();
   try {
-    await db.collection('taches').doc(id).update({ statut:newStt, updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
+    await db.collection('taches').doc(id).update({
+      statut:newStt,
+      statutDetail: STATUT_TO_DETAIL[newStt] || 'a_faire',
+      progression: STATUT_TO_PROGRESSION[newStt] != null ? STATUT_TO_PROGRESSION[newStt] : 0,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
     const t = allTasks.find(t => t.id === id);
     if (t) t.statut = newStt;
     applyFilter(curFilter);
@@ -1995,6 +2030,8 @@ async function submitTask() {
       echeance:document.getElementById('m-ech').value||null,
       description:document.getElementById('m-desc').value.trim(),
       statut:'A faire', ref,
+      // Champs v2.0 (Architecture) — préparent Bloc B (visibilité Président/VP, progression, projets)
+      scope: 'association', progression: 0, statutDetail: 'a_faire', raisonEchec: '',
       createdBy:CU.uid, createdByNom:CP.nom,
       createdAt:firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt:firebase.firestore.FieldValue.serverTimestamp()
@@ -2017,6 +2054,10 @@ async function loadMembers() {
     snap.forEach(d => {
       const m   = d.data();
       const cat = getCategorie(m);
+      // Migration silencieuse des flags de rôle (Président/VP/Trésorier...) — une seule fois
+      if (cat === 'bureau' && m.role && m.estPresident === undefined) {
+        db.collection('users').doc(d.id).update(computeRoleFlags(m.role)).catch(() => {});
+      }
       const sc = m.statut === 'bloque' ? 'b' : m.statut === 'en_attente' ? 'p' : 'a';
       const sl = m.statut === 'bloque' ? 'Bloqué' : m.statut === 'en_attente' ? 'En attente' : 'Actif';
       const init = (m.nom||m.email||'?').charAt(0).toUpperCase();
@@ -2026,7 +2067,10 @@ async function loadMembers() {
         <div class="mem-av">${m.photo?`<img src="${m.photo}">`:`<span>${init}</span>`}</div>
         <div class="mem-info" style="flex:1">
           <div class="mem-name">${escHtml(m.nom||m.email)}</div>
-          <div class="mem-role">${escHtml(m.role||'—')} · ${CAT_SHORT[cat]}</div>
+          <div class="mem-role-edit">
+            <input type="text" class="mem-role-inp" data-uid="${d.id}" value="${escHtml(m.role||'')}" placeholder="Rôle (ex: Président, Trésorier...)">
+            <button class="mem-role-save" data-action="save-role" data-uid="${d.id}" title="Enregistrer le rôle">💾</button>
+          </div>
           <div class="mem-acts">
             <button class="mab ${m.statut==='bloque'?'unb':'blk'}" data-action="toggle-stt" data-uid="${d.id}" data-next="${m.statut==='bloque'?'actif':'bloque'}">${m.statut==='bloque'?'Débloquer':'Bloquer'}</button>
             <select class="mem-cat-sel" data-action="set-categorie" data-uid="${d.id}">${catOpts}</select>
@@ -2043,7 +2087,28 @@ async function loadMembers() {
     list.querySelectorAll('select[data-action="set-categorie"]').forEach(sel => {
       sel.addEventListener('change', () => setCategorie(sel.getAttribute('data-uid'), sel.value));
     });
+    list.querySelectorAll('button[data-action="save-role"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const uid = btn.getAttribute('data-uid');
+        const inp = list.querySelector(`.mem-role-inp[data-uid="${uid}"]`);
+        if (inp) saveRole(uid, inp.value);
+      });
+    });
+    list.querySelectorAll('.mem-role-inp').forEach(inp => {
+      inp.addEventListener('keypress', e => { if (e.key === 'Enter') saveRole(inp.getAttribute('data-uid'), inp.value); });
+    });
   } catch(e) { list.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>'; }
+}
+
+async function saveRole(uid, role) {
+  role = (role||'').trim();
+  try {
+    const flags = computeRoleFlags(role);
+    await db.collection('users').doc(uid).update(Object.assign({ role: role }, flags));
+    toast('Rôle mis à jour → ' + (role || '—'));
+    // Si c'est mon propre profil, rafraîchir CP en direct
+    if (CU && uid === CU.uid) { CP.role = role; Object.assign(CP, flags); fillDash(); }
+  } catch(e) { toast('Erreur : ' + e.message); }
 }
 
 async function setStt(uid, s) {
