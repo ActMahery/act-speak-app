@@ -256,6 +256,39 @@ input,select,textarea{font-family:inherit}
 .rtb.normal.on{background:#EFF6FF;color:#1C3557;border-color:var(--navy)}
 .rtb.important.on{background:#FFF3CD;color:#856404;border-color:#856404}
 .rtb.urgent.on{background:#FDE8E8;color:#C0392B;border-color:#C0392B}
+
+/* Projets — Postes & Publication (v2.0) */
+.pub-tb{flex:1;height:auto;min-height:38px;border-radius:10px;font-size:11.5px;font-weight:600;border:2px solid transparent;background:var(--surface2);color:var(--t2);padding:8px 6px}
+.pub-tb.on{border-color:var(--navy);background:#EFF6FF;color:#1C3557}
+[data-dark] .pub-tb.on{border-color:var(--gold);background:rgba(28,53,87,.4);color:#93C5FD}
+.p-poste-add-row{display:flex;gap:8px;margin-top:8px}
+.p-poste-add-row input{flex:1;height:40px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:0 12px;font-size:13px;color:var(--t1);outline:none}
+.p-poste-add-row button{width:40px;height:40px;background:var(--navy);color:#fff;border-radius:var(--r8);font-size:16px}
+.p-poste-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border-radius:14px;padding:5px 6px 5px 12px;font-size:12px;color:var(--t1);margin:0 6px 6px 0}
+.p-poste-chip button{background:none;border:none;color:var(--t3);font-size:14px;padding:0 4px}
+/* Détail projet — Postes & Demandes */
+.pd-poste-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--surface2)}
+.pd-poste-row:last-child{border-bottom:none}
+.pd-poste-nom{font-size:13px;color:var(--t1);font-weight:500}
+.pd-poste-occ{font-size:11px;color:var(--t3);margin-top:1px}
+.pd-poste-tag{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:10px}
+.pd-poste-tag.libre{background:#D4EDDA;color:#155724}
+.pd-poste-tag.pourvu{background:var(--surface2);color:var(--t3)}
+[data-dark] .pd-poste-tag.libre{background:rgba(21,87,36,.3);color:#6EE7B7}
+.pd-demande-item{padding:12px 16px;border-bottom:1px solid var(--surface2)}
+.pd-demande-item:last-child{border-bottom:none}
+.pd-demande-top{display:flex;justify-content:space-between;align-items:center}
+.pd-demande-nom{font-size:13.5px;font-weight:600;color:var(--t1)}
+.pd-demande-poste{font-size:11px;color:var(--gold);font-weight:600}
+.pd-demande-txt{font-size:12px;color:var(--t2);margin-top:5px;line-height:1.4}
+.pd-demande-acts{display:flex;gap:8px;margin-top:9px}
+.pd-demande-acts button{font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:12px}
+.pd-demande-acts .acc{background:#D4EDDA;color:#155724}
+.pd-demande-acts .ref{background:#FDE8E8;color:#C0392B}
+.pd-membres-item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--surface2)}
+.pd-membres-item:last-child{border-bottom:none}
+.pd-membres-av{width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.btn-join-proj{width:100%;height:44px;background:var(--gold);color:#fff;border-radius:var(--r22);font-size:13.5px;font-weight:600}
 [data-dark] .rtb.on{border-color:var(--gold)}
 /* comments */
 .cmt-item{padding:11px 16px;border-bottom:1px solid var(--surface2);display:flex;gap:9px}
@@ -1334,9 +1367,26 @@ input,select,textarea{font-family:inherit}
     <div class="pd-card">
       <div class="pd-card-t">Informations</div>
       <div class="det-row"><span class="det-row-l">Responsable</span><span class="det-row-v" id="pd-resp">—</span></div>
+      <div class="det-row"><span class="det-row-l">Resp. délégation</span><span class="det-row-v" id="pd-resp-deleg">—</span></div>
       <div class="det-row"><span class="det-row-l">Échéance</span><span class="det-row-v" id="pd-ech">—</span></div>
       <div class="det-row"><span class="det-row-l">Budget</span><span class="det-row-v" id="pd-budget">—</span></div>
       <div class="det-row"><span class="det-row-l">Statut</span><span class="det-row-v" id="pd-statut">—</span></div>
+      <div class="det-row"><span class="det-row-l">Publication</span><span class="det-row-v" id="pd-pub">—</span></div>
+    </div>
+    <div class="pd-card" id="pd-join-card" style="display:none;padding:14px 16px">
+      <button class="btn-join-proj" onclick="openJoinModal()">🙋 Rejoindre ce projet</button>
+    </div>
+    <div class="pd-card" id="pd-postes-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">Postes du projet</div>
+      <div id="pd-postes-list"></div>
+    </div>
+    <div class="pd-card" id="pd-membres-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">Membres du projet</div>
+      <div id="pd-membres-list"></div>
+    </div>
+    <div class="pd-card" id="pd-demandes-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">Demandes d'adhésion</div>
+      <div id="pd-demandes-list"></div>
     </div>
     <div class="pd-card">
       <div class="pd-card-t" style="padding:13px 16px">Tâches du projet (Kanban)</div>
@@ -1357,7 +1407,10 @@ input,select,textarea{font-family:inherit}
     </div>
     <div class="pd-card" id="pd-add-task-card" style="display:none">
       <div class="pd-card-t">Ajouter une tâche au projet</div>
-      <div style="padding:13px 16px 16px;display:flex;gap:8px">
+      <div style="padding:13px 16px 0">
+        <button id="pd-new-task-btn" onclick="openNewTask(curProjId)" style="width:100%;height:42px;background:var(--gold);color:#fff;border-radius:var(--r8);font-size:13px;font-weight:600;margin-bottom:10px">➕ Nouvelle tâche pour ce projet</button>
+      </div>
+      <div style="padding:0 16px 16px;display:flex;gap:8px">
         <select id="pd-task-sel" style="flex:1;height:44px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:0 12px;font-size:13px;color:var(--t1);outline:none">
           <option value="">— Choisir une tâche existante —</option>
         </select>
@@ -1432,14 +1485,50 @@ input,select,textarea{font-family:inherit}
     <div class="mtitle">Nouveau projet</div>
     <div class="mfield"><label>Nom du projet *</label><input type="text" id="p-nom" placeholder="Ex: Journée portes ouvertes 2026"></div>
     <div class="mfield"><label>Description</label><textarea id="p-desc" placeholder="Objectifs, contexte..."></textarea></div>
-    <div class="mfield"><label>Responsable</label><select id="p-resp"><option value="">— Choisir —</option></select></div>
     <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>Responsable du projet</label><select id="p-resp"><option value="">— Choisir —</option></select></div>
+      <div class="mfield" style="margin-bottom:0"><label>Resp. délégation tâches</label><select id="p-resp-deleg"><option value="">— Même que ci-dessus —</option></select></div>
+    </div>
+    <div class="mrow" style="margin-top:14px">
       <div class="mfield" style="margin-bottom:0"><label>Échéance</label><input type="date" id="p-ech"></div>
       <div class="mfield" style="margin-bottom:0"><label>Budget (Ar)</label><input type="number" id="p-budget" placeholder="0"></div>
+    </div>
+    <div class="mfield" style="margin-top:14px">
+      <label>Postes du projet</label>
+      <div id="p-postes-list"></div>
+      <div class="p-poste-add-row">
+        <input type="text" id="p-poste-inp" placeholder="Ex: Responsable communication" onkeypress="if(event.key==='Enter'){event.preventDefault();addPosteDraft();}">
+        <button type="button" onclick="addPosteDraft()">➕</button>
+      </div>
+    </div>
+    <div class="mfield">
+      <label>Publication</label>
+      <div class="rappel-type-sel">
+        <button type="button" class="pub-tb on" data-pub="brouillon" onclick="pickPubStatut(this,'brouillon')">📝 Brouillon</button>
+        <button type="button" class="pub-tb" data-pub="publie" onclick="pickPubStatut(this,'publie')">📣 Publié — ouvert aux demandes</button>
+      </div>
     </div>
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-proj')">Annuler</button>
       <button class="bsub" id="p-sub" onclick="submitProjet()"><span>Créer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REJOINDRE UN PROJET (v2.0) -->
+<div class="overlay" id="ov-join-proj" onclick="closeOverlay('ov-join-proj')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Rejoindre le projet</div>
+    <div class="mfield">
+      <label>Poste souhaité</label>
+      <select id="join-poste-sel"><option value="">— Aucun poste précis —</option></select>
+    </div>
+    <div class="mfield"><label>Ta motivation *</label><textarea id="join-motivation-inp" placeholder="Pourquoi veux-tu rejoindre ce projet ?"></textarea></div>
+    <div class="mfield"><label>Compétences / ce que tu peux apporter</label><textarea id="join-competences-inp" placeholder="Optionnel"></textarea></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-join-proj')">Annuler</button>
+      <button class="bsub" onclick="submitJoinRequest()"><span>Envoyer la demande</span></button>
     </div>
   </div>
 </div>
@@ -1731,6 +1820,10 @@ function isPresidentOrVP(p) { return isPresident(p) || isVP(p); }
 // uniquement le Président, en plus du propriétaire lui-même (choix validé — v2.0)
 function canAccessPersonalData(viewer, targetUid) {
   return !!viewer && (viewer.uid === targetUid || isPresident(viewer));
+}
+// Responsable de projet ou responsable de délégation — pouvoirs de tâches limités à leur projet (v2.0)
+function isProjectResponsable(projet, uid) {
+  return !!projet && !!uid && (projet.responsableId === uid || projet.responsableDelegationId === uid);
 }
 // Calcule les flags booléens miroir (consommés par les règles Firestore — évite le regex accents côté rules)
 function computeRoleFlags(roleText) {
@@ -2326,8 +2419,19 @@ async function sendCmt() {
 }
 
 // ── MODAL TACHE ───────────────────────────────────────────────────
-async function openNewTask() {
-  if (!isPresidentOrVP(CP)) { toast('La délégation de tâches est réservée au Président et au Vice-Président'); return; }
+let taskProjetCtx = null; // {id, nom, membres[]} — contexte projet quand ouvert depuis un responsable de projet
+
+async function openNewTask(projetIdCtx) {
+  taskProjetCtx = null;
+  if (projetIdCtx) {
+    // Ouverture depuis un projet : réservé au responsable / responsable délégation de CE projet
+    if (!curProjData || curProjData.id !== projetIdCtx || !isProjectResponsable(curProjData, CU?.uid)) {
+      toast('Réservé au responsable de ce projet'); return;
+    }
+    taskProjetCtx = curProjData;
+  } else if (!isPresidentOrVP(CP)) {
+    toast('La délégation de tâches est réservée au Président et au Vice-Président'); return;
+  }
   // Reset
   ['m-nom','m-ech','m-desc'].forEach(id => { document.getElementById(id).value = ''; });
   // Charger membres
@@ -2337,7 +2441,18 @@ async function openNewTask() {
     const snap = await db.collection('users').get();
     snap.forEach(d => memsCache.push(d.data()));
   }
-  memsCache.forEach(m => { sel.innerHTML += `<option value="${m.uid}">${m.nom} (${m.role||'Membre'})</option>`; });
+  const titleEl = document.getElementById('m-task-title');
+  if (taskProjetCtx) {
+    // Restreint aux membres du projet (+ responsables)
+    const ids = new Set((taskProjetCtx.membres||[]).map(m => m.uid));
+    if (taskProjetCtx.responsableId) ids.add(taskProjetCtx.responsableId);
+    if (taskProjetCtx.responsableDelegationId) ids.add(taskProjetCtx.responsableDelegationId);
+    memsCache.filter(m => ids.has(m.uid)).forEach(m => { sel.innerHTML += `<option value="${m.uid}">${m.nom} (${m.role||'Membre'})</option>`; });
+    if (titleEl) titleEl.textContent = 'Nouvelle tâche — ' + (taskProjetCtx.nom||'projet');
+  } else {
+    memsCache.forEach(m => { sel.innerHTML += `<option value="${m.uid}">${m.nom} (${m.role||'Membre'})</option>`; });
+    if (titleEl) titleEl.textContent = 'Nouvelle tâche';
+  }
   document.getElementById('ov-task').classList.add('on');
 }
 
@@ -2364,8 +2479,10 @@ async function submitTask() {
       echeance:document.getElementById('m-ech').value||null,
       description:document.getElementById('m-desc').value.trim(),
       statut:'A faire', ref,
-      // Champs v2.0 (Architecture) — préparent Bloc B (visibilité Président/VP, progression, projets)
-      scope: 'association', progression: 0, statutDetail: 'a_faire', raisonEchec: '',
+      // Champs v2.0 (Architecture) — visibilité Président/VP, progression, projets
+      scope: taskProjetCtx ? 'projet' : 'association',
+      projetId: taskProjetCtx ? taskProjetCtx.id : null,
+      progression: 0, statutDetail: 'a_faire', raisonEchec: '',
       createdBy:CU.uid, createdByNom:CP.nom,
       createdAt:firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt:firebase.firestore.FieldValue.serverTimestamp()
@@ -3516,6 +3633,7 @@ window.go = function(screen) {
 
 let allProjets   = [];
 let curProjId    = null;
+let curProjData  = null;
 let curTxType    = 'entree';
 let txJustifUrl  = '';
 let allTx        = [];
@@ -3598,11 +3716,54 @@ async function openProjDetail(id) {
 
   document.getElementById('pd-title').textContent  = p.nom || '—';
   document.getElementById('pd-resp').textContent   = p.responsable || '—';
+  document.getElementById('pd-resp-deleg').textContent = p.responsableDelegation || p.responsable || '—';
   document.getElementById('pd-statut').textContent = p.statut || 'Actif';
   document.getElementById('pd-budget').textContent = p.budget ? Number(p.budget).toLocaleString('fr-FR') + ' Ar' : '—';
+  document.getElementById('pd-pub').textContent    = p.statutPublication === 'publie' ? '📣 Publié' : p.statutPublication === 'archive' ? '📦 Archivé' : '📝 Brouillon';
   document.getElementById('pd-ech').textContent    = p.echeance
     ? new Date(p.echeance).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
     : 'Non définie';
+
+  curProjData = p;
+  const postes  = p.postes || [];
+  const membres = p.membres || [];
+  const jeSuisMembre = membres.some(m => m.uid === CU?.uid) || p.responsableId === CU?.uid || p.responsableDelegationId === CU?.uid;
+  const respScope = isProjectResponsable(p, CU?.uid);
+
+  // Bouton Rejoindre
+  const joinCard = document.getElementById('pd-join-card');
+  if (joinCard) joinCard.style.display = (p.statutPublication === 'publie' && !jeSuisMembre) ? 'block' : 'none';
+
+  // Postes
+  const postesCard = document.getElementById('pd-postes-card');
+  if (postes.length) {
+    postesCard.style.display = 'block';
+    document.getElementById('pd-postes-list').innerHTML = postes.map(po => `
+      <div class="pd-poste-row">
+        <div><div class="pd-poste-nom">${escHtml(po.nom)}</div>${po.pourvu ? `<div class="pd-poste-occ">👤 ${escHtml(po.membreNom||'—')}</div>` : ''}</div>
+        <div class="pd-poste-tag ${po.pourvu?'pourvu':'libre'}">${po.pourvu ? 'Pourvu' : 'Libre'}</div>
+      </div>`).join('');
+  } else { postesCard.style.display = 'none'; }
+
+  // Membres
+  const membresCard = document.getElementById('pd-membres-card');
+  if (membres.length) {
+    membresCard.style.display = 'block';
+    document.getElementById('pd-membres-list').innerHTML = membres.map(m => `
+      <div class="pd-membres-item">
+        <div class="pd-membres-av">${(m.nom||'?').charAt(0).toUpperCase()}</div>
+        <div style="flex:1"><div style="font-size:13px;color:var(--t1);font-weight:500">${escHtml(m.nom||'—')}</div><div style="font-size:11px;color:var(--t3)">${escHtml(m.poste||'Membre du projet')}</div></div>
+      </div>`).join('');
+  } else { membresCard.style.display = 'none'; }
+
+  // Demandes d'adhésion — visible du responsable / resp. délégation uniquement
+  const demandesCard = document.getElementById('pd-demandes-card');
+  if (respScope) {
+    demandesCard.style.display = 'block';
+    loadDemandesProjet(id, postes);
+  } else {
+    demandesCard.style.display = 'none';
+  }
 
   // Charger les tâches liées au projet
   try {
@@ -3658,10 +3819,12 @@ async function openProjDetail(id) {
       }
     }
 
-    // Select pour lier une tâche (bureau uniquement)
+    // Select pour lier une tâche (bureau + responsables du projet)
     var addCard = document.getElementById('pd-add-task-card');
-    if (CP && isBureau(CP)) {
+    if (CP && (isBureau(CP) || respScope)) {
       addCard.style.display = 'block';
+      var newTaskBtn = document.getElementById('pd-new-task-btn');
+      if (newTaskBtn) newTaskBtn.style.display = respScope ? 'block' : 'none';
       var sel = document.getElementById('pd-task-sel');
       sel.innerHTML = '<option value="">— Choisir une tâche existante —</option>';
       var allSnap = await db.collection('taches').get();
@@ -3686,12 +3849,95 @@ window.linkTaskToProjet = async function() {
   var tid = sel.value;
   if (!tid || !curProjId) { toast('Choisis une tâche'); return; }
   try {
-    await db.collection('taches').doc(tid).update({ projetId: curProjId });
+    await db.collection('taches').doc(tid).update({ projetId: curProjId, scope:'projet' });
     toast('Tâche liée au projet ✅');
     sel.value = '';
     openProjDetail(curProjId);
   } catch(e) { toast('Erreur : ' + e.message); }
 };
+
+/* ── Rejoindre un projet (v2.0) ─────────────────────────────────────── */
+window.openJoinModal = function() {
+  if (!curProjData) return;
+  const postes = (curProjData.postes || []).filter(p => !p.pourvu);
+  const sel = document.getElementById('join-poste-sel');
+  sel.innerHTML = '<option value="">— Aucun poste précis —</option>' +
+    postes.map(p => `<option value="${p.id}">${escHtml(p.nom)}</option>`).join('');
+  document.getElementById('join-motivation-inp').value = '';
+  document.getElementById('join-competences-inp').value = '';
+  document.getElementById('ov-join-proj').classList.add('on');
+};
+window.submitJoinRequest = async function() {
+  const posteId = document.getElementById('join-poste-sel').value;
+  const posteNom = posteId ? (curProjData.postes.find(p => p.id === posteId)||{}).nom : '';
+  const motivation = (document.getElementById('join-motivation-inp').value || '').trim();
+  const competences = (document.getElementById('join-competences-inp').value || '').trim();
+  if (!motivation) { toast('Explique ta motivation'); return; }
+  try {
+    await db.collection('projets').doc(curProjId).collection('demandes').add({
+      uid: CU.uid, nom: CP.nom || CU.email,
+      motivation, competences, posteSouhaiteId: posteId || null, posteSouhaiteNom: posteNom || '',
+      statut: 'attente', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-join-proj');
+    toast('Demande envoyée ✅');
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+async function loadDemandesProjet(projetId, postes) {
+  const el = document.getElementById('pd-demandes-list');
+  if (!el) return;
+  try {
+    const snap = await db.collection('projets').doc(projetId).collection('demandes').where('statut','==','attente').get();
+    if (snap.empty) { el.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">Aucune demande en attente.</div></div>'; return; }
+    let html = '';
+    snap.forEach(d => {
+      const r = d.data();
+      html += `<div class="pd-demande-item">
+        <div class="pd-demande-top">
+          <div class="pd-demande-nom">${escHtml(r.nom||'—')}</div>
+          ${r.posteSouhaiteNom ? `<div class="pd-demande-poste">${escHtml(r.posteSouhaiteNom)}</div>` : ''}
+        </div>
+        <div class="pd-demande-txt">💬 ${escHtml(r.motivation||'')}</div>
+        ${r.competences ? `<div class="pd-demande-txt">🛠️ ${escHtml(r.competences)}</div>` : ''}
+        <div class="pd-demande-acts">
+          <button class="acc" data-action="dem-accept" data-id="${d.id}" data-uid="${r.uid}" data-nom="${escHtml(r.nom||'')}" data-poste="${r.posteSouhaiteId||''}">✅ Accepter</button>
+          <button class="ref" data-action="dem-reject" data-id="${d.id}">✕ Refuser</button>
+        </div>
+      </div>`;
+    });
+    el.innerHTML = html;
+    // Délégation d'événements — jamais d'onclick avec variable inline
+    el.querySelectorAll('[data-action="dem-accept"]').forEach(btn => {
+      btn.addEventListener('click', () => acceptDemande(btn.getAttribute('data-id'), btn.getAttribute('data-uid'), btn.getAttribute('data-nom'), btn.getAttribute('data-poste')));
+    });
+    el.querySelectorAll('[data-action="dem-reject"]').forEach(btn => {
+      btn.addEventListener('click', () => rejectDemande(btn.getAttribute('data-id')));
+    });
+  } catch(e) { el.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">'+e.message+'</div></div>'; }
+}
+async function acceptDemande(demandeId, uid, nom, posteId) {
+  if (!curProjData || !isProjectResponsable(curProjData, CU.uid)) { toast('Réservé au responsable du projet'); return; }
+  try {
+    const postes = (curProjData.postes || []).map(p => p.id === posteId ? Object.assign({}, p, {pourvu:true, membreId:uid, membreNom:nom}) : p);
+    const membres = (curProjData.membres || []).concat([{ uid, nom, poste: posteId ? (postes.find(p=>p.id===posteId)||{}).nom : 'Membre du projet', dateAjout: new Date().toISOString() }]);
+    await db.collection('projets').doc(curProjId).update({ postes, membres });
+    await db.collection('projets').doc(curProjId).collection('demandes').doc(demandeId).update({ statut:'acceptee' });
+    toast(nom + ' a rejoint le projet ✅');
+    openProjDetail(curProjId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+async function rejectDemande(demandeId) {
+  if (!curProjData || !isProjectResponsable(curProjData, CU.uid)) { toast('Réservé au responsable du projet'); return; }
+  try {
+    await db.collection('projets').doc(curProjId).collection('demandes').doc(demandeId).update({ statut:'refusee' });
+    toast('Demande refusée');
+    openProjDetail(curProjId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+
+let postesDraft = [];
+let pubStatutDraft = 'brouillon';
 
 window.openModalProjet = async function() {
   if (!CP || !isBureau(CP)) { toast('Réservé au Bureau'); return; }
@@ -3699,35 +3945,76 @@ window.openModalProjet = async function() {
   document.getElementById('p-desc').value  = '';
   document.getElementById('p-ech').value   = '';
   document.getElementById('p-budget').value = '';
+  postesDraft = [];
+  pubStatutDraft = 'brouillon';
+  document.querySelectorAll('.pub-tb').forEach(b => b.classList.toggle('on', b.getAttribute('data-pub') === 'brouillon'));
+  renderPostesDraft();
 
-  var sel = document.getElementById('p-resp');
-  sel.innerHTML = '<option value="">— Choisir —</option>';
   if (!memsCache.length) {
     var snap = await db.collection('users').get();
     snap.forEach(function(d) { memsCache.push(d.data()); });
   }
-  for (var i = 0; i < memsCache.length; i++) {
-    var m = memsCache[i];
-    sel.innerHTML += '<option value="' + escHtml(m.nom || '') + '">' + escHtml(m.nom || m.email) + '</option>';
-  }
+  var optsHtml = memsCache.map(function(m) {
+    return '<option value="' + m.uid + '">' + escHtml(m.nom || m.email) + '</option>';
+  }).join('');
+  document.getElementById('p-resp').innerHTML = '<option value="">— Choisir —</option>' + optsHtml;
+  document.getElementById('p-resp-deleg').innerHTML = '<option value="">— Même que ci-dessus —</option>' + optsHtml;
+
   document.getElementById('ov-proj').classList.add('on');
 };
+
+window.pickPubStatut = function(el, statut) {
+  pubStatutDraft = statut;
+  document.querySelectorAll('.pub-tb').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+};
+window.addPosteDraft = function() {
+  const inp = document.getElementById('p-poste-inp');
+  const nom = (inp.value || '').trim();
+  if (!nom) return;
+  postesDraft.push({ id: 'p' + Date.now() + Math.floor(Math.random()*1000), nom, pourvu:false, membreId:null, membreNom:null });
+  inp.value = '';
+  renderPostesDraft();
+};
+window.removePosteDraft = function(id) {
+  postesDraft = postesDraft.filter(p => p.id !== id);
+  renderPostesDraft();
+};
+function renderPostesDraft() {
+  const el = document.getElementById('p-postes-list');
+  if (!el) return;
+  if (!postesDraft.length) { el.innerHTML = '<div style="font-size:11.5px;color:var(--t3)">Aucun poste ajouté — optionnel.</div>'; return; }
+  el.innerHTML = postesDraft.map(p =>
+    `<span class="p-poste-chip">${escHtml(p.nom)}<button type="button" data-action="rm-poste" data-id="${p.id}">✕</button></span>`
+  ).join('');
+  el.querySelectorAll('[data-action="rm-poste"]').forEach(btn => {
+    btn.addEventListener('click', () => removePosteDraft(btn.getAttribute('data-id')));
+  });
+}
 
 window.submitProjet = async function() {
   var nom  = document.getElementById('p-nom').value.trim();
   var desc = document.getElementById('p-desc').value.trim();
-  var resp = document.getElementById('p-resp').value;
+  var respId = document.getElementById('p-resp').value;
+  var respDelegId = document.getElementById('p-resp-deleg').value || respId;
   var ech  = document.getElementById('p-ech').value;
   var bud  = document.getElementById('p-budget').value;
   if (!nom) { toast('Le nom est obligatoire'); return; }
+
+  var respM = memsCache.find(m => m.uid === respId);
+  var respDelegM = memsCache.find(m => m.uid === respDelegId);
 
   var btn = document.getElementById('p-sub');
   btn.disabled = true; btn.querySelector('span').textContent = '...';
   try {
     await db.collection('projets').add({
-      nom: nom, description: desc, responsable: resp,
+      nom: nom, description: desc,
+      responsable: respM ? respM.nom : '', responsableId: respId || null,
+      responsableDelegation: respDelegM ? respDelegM.nom : (respM ? respM.nom : ''), responsableDelegationId: respDelegId || null,
       echeance: ech || null, budget: bud ? Number(bud) : 0,
       statut: 'Actif', avancement: 0,
+      statutPublication: pubStatutDraft,
+      postes: postesDraft, membres: [],
       createdBy: CU.uid, createdByNom: CP.nom,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
