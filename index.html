@@ -221,6 +221,8 @@ input,select,textarea{font-family:inherit}
 .det-title{font-size:19px;font-weight:700;color:#fff;line-height:1.3}
 .det-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
 .det-card{background:var(--surface);border-radius:var(--r22);box-shadow:var(--sh);overflow:hidden}
+.btn-danger-full{width:100%;height:46px;background:#FDE8E8;color:var(--red);font-size:13px;font-weight:600;border-radius:var(--r22)}
+[data-dark] .btn-danger-full{background:rgba(192,57,43,.25)}
 .det-card-t{font-size:11px;font-weight:600;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;padding:13px 16px 0}
 .det-row{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--surface2);font-size:13px}
 .det-row:last-child{border-bottom:none}
@@ -364,6 +366,8 @@ input,select,textarea{font-family:inherit}
 [data-dark] .msg-group.theirs .msg-bubble{background:var(--surface3)}
 .msg-time{font-size:10px;color:var(--t3);padding:0 10px}
 .msg-group.mine .msg-time{text-align:right}
+.msg-del-btn{margin-left:6px;font-size:11px;background:none;border:none;cursor:pointer;opacity:.55;vertical-align:middle}
+.msg-del-btn:hover{opacity:1}
 .msg-img{max-width:200px;border-radius:12px;cursor:pointer;display:block}
 
 /* Réactions */
@@ -841,6 +845,9 @@ input,select,textarea{font-family:inherit}
         <button class="cmt-send" onclick="sendCmt()">➤</button>
       </div>
     </div>
+    <div class="det-card" id="det-danger-card" style="display:none">
+      <button class="btn-danger-full" onclick="deleteTask()">🗑️ Supprimer cette tâche</button>
+    </div>
   </div>
 </div>
 
@@ -1104,6 +1111,11 @@ input,select,textarea{font-family:inherit}
         <button class="btn-pv save" onclick="savePV()">💾 Enregistrer</button>
         <button class="btn-pv share" onclick="sharePV()">📤 Partager</button>
       </div>
+    </div>
+
+    <!-- Suppression admin -->
+    <div class="rd-card" id="rd-danger-card" style="display:none">
+      <button class="btn-danger-full" onclick="deleteReunion()">🗑️ Supprimer cette réunion</button>
     </div>
 
   </div>
@@ -1658,11 +1670,15 @@ function loadRecentTasks() {
       const t = d.data();
       const st = t.statut || 'A faire';
       const stClass = st === 'Terminée' ? 'te' : st === 'En cours' ? 'ec' : 'af';
-      html += `<div style="padding:12px 16px;border-bottom:1px solid var(--surface2);display:flex;align-items:center;gap:10px" onclick="openDetail('${d.id}')">
+      html += `<div style="padding:12px 16px;border-bottom:1px solid var(--surface2);display:flex;align-items:center;gap:10px" data-taskid="${d.id}">
         <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.nom||'—'}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">${t.assigneeNom||'—'}</div></div>
         <div class="stt ${stClass}">${st}</div></div>`;
     });
     list.innerHTML = html;
+    // Délégation d'événements — jamais d'onclick avec variable inline
+    list.querySelectorAll('[data-taskid]').forEach(el => {
+      el.addEventListener('click', () => openDetail(el.getAttribute('data-taskid')));
+    });
     document.getElementById('d-tasks').textContent = snap.size;
   }).catch(() => {});
 }
@@ -1717,10 +1733,10 @@ function renderTasks(list) {
     const init = (t.assigneeNom||'?').charAt(0).toUpperCase();
 
     let acts = '';
-    if (st === 'A faire')  acts += `<button class="ta conf" onclick="quickStt(event,'${t.id}','En cours')">✅ Confirmer</button>`;
-    else if (st === 'En cours') acts += `<button class="ta done" onclick="quickStt(event,'${t.id}','Terminée')">✅ Terminer</button>`;
+    if (st === 'A faire')  acts += `<button class="ta conf" data-action="quick-stt" data-id="${t.id}" data-next="En cours">✅ Confirmer</button>`;
+    else if (st === 'En cours') acts += `<button class="ta done" data-action="quick-stt" data-id="${t.id}" data-next="Terminée">✅ Terminer</button>`;
     else acts += `<button class="ta conf" style="opacity:.5;pointer-events:none">✅ Terminée</button>`;
-    acts += `<button class="ta det" onclick="openDetail('${t.id}')">Détail ›</button>`;
+    acts += `<button class="ta det" data-action="open-detail" data-id="${t.id}">Détail ›</button>`;
 
     return `<div class="tc">
       <div class="tc-top">
@@ -1739,6 +1755,13 @@ function renderTasks(list) {
       <div class="tc-acts">${acts}</div>
     </div>`;
   }).join('');
+  // Délégation d'événements — jamais d'onclick avec variable inline
+  body.querySelectorAll('[data-action="quick-stt"]').forEach(btn => {
+    btn.addEventListener('click', e => quickStt(e, btn.getAttribute('data-id'), btn.getAttribute('data-next')));
+  });
+  body.querySelectorAll('[data-action="open-detail"]').forEach(btn => {
+    btn.addEventListener('click', () => openDetail(btn.getAttribute('data-id')));
+  });
 }
 
 async function quickStt(e, id, newStt) {
@@ -1776,6 +1799,8 @@ function openDetail(id) {
     : 'Non définie';
   const map = {'A faire':0,'En cours':1,'Terminée':2};
   document.querySelectorAll('.sttb').forEach((b,i) => b.classList.toggle('sel', i === (map[t.statut||'A faire']||0)));
+  const dangerCard = document.getElementById('det-danger-card');
+  if (dangerCard) dangerCard.style.display = isBureau(CP) ? 'block' : 'none';
   loadCmts(id);
   go('detail');
 }
@@ -1786,6 +1811,19 @@ async function majStatut(s) {
   document.getElementById('det-stt').textContent = s;
   const map = {'A faire':0,'En cours':1,'Terminée':2};
   document.querySelectorAll('.sttb').forEach((b,i) => b.classList.toggle('sel', i === (map[s]||0)));
+}
+
+/* ── Suppression admin d'une tâche (Session 7) ────────────────────── */
+async function deleteTask() {
+  if (!curTaskId || !isBureau(CP)) { toast('Réservé au Bureau'); return; }
+  if (!confirm('Supprimer définitivement cette tâche ? Cette action est irréversible.')) return;
+  try {
+    await db.collection('taches').doc(curTaskId).delete();
+    toast('Tâche supprimée');
+    curTaskId = null;
+    go('taches');
+    loadTasks();
+  } catch(e) { toast('Erreur : ' + e.message); }
 }
 
 async function loadCmts(tacheId) {
@@ -2112,29 +2150,48 @@ function loadMsgs(convId, isPriv) {
       Object.entries(reacts).forEach(([emoji, users]) => {
         if (users && users.length > 0) {
           const active = users.includes(CU?.uid) ? ' active' : '';
-          reactHtml += `<button class="reaction-btn${active}" onclick="toggleReaction('${d.id}','${convId}','${emoji}')">${emoji} ${users.length}</button>`;
+          reactHtml += `<button class="reaction-btn${active}" data-action="react" data-msgid="${d.id}" data-convid="${convId}" data-emoji="${emoji}">${emoji} ${users.length}</button>`;
         }
       });
 
       // Image ou texte
       let bodyHtml = '';
       if (m.imageUrl) {
-        bodyHtml = `<img src="${m.imageUrl}" class="msg-img" alt="image" onclick="window.open('${m.imageUrl}')">`;
+        bodyHtml = `<img src="${m.imageUrl}" class="msg-img" alt="image" data-action="open-img" data-url="${m.imageUrl}">`;
       } else {
         bodyHtml = escHtml(m.texte || '');
       }
 
+      // Suppression admin (Bureau) — visible sur tout message, tout canal
+      const delBtn = isBureau(CP)
+        ? `<button class="msg-del-btn" data-action="del-msg" data-msgid="${d.id}" data-convid="${convId}" title="Supprimer (admin)">🗑️</button>`
+        : '';
+
       html += `<div class="msg-group ${grp}" id="msg-${d.id}">
         ${!mine && newGroup ? `<div class="msg-author">${escHtml(m.auteurNom||'')}</div>` : ''}
-        <div class="msg-bubble" oncontextmenu="showReactions(event,'${d.id}','${convId}')" ontouchend="handleLongPress(event,'${d.id}','${convId}')">${bodyHtml}</div>
+        <div class="msg-bubble" data-action="msg-bubble" data-msgid="${d.id}" data-convid="${convId}">${bodyHtml}</div>
         ${reactHtml ? `<div class="msg-reactions">${reactHtml}</div>` : ''}
-        <div class="msg-time">${time}${mine && m.vu ? ' · Vu ✓' : ''}</div>
+        <div class="msg-time">${time}${mine && m.vu ? ' · Vu ✓' : ''}${delBtn}</div>
       </div>`;
 
       lastUid = m.auteurId;
     });
 
     wrap.innerHTML = html;
+    // Délégation d'événements — jamais d'onclick avec variable inline
+    wrap.querySelectorAll('[data-action="msg-bubble"]').forEach(el => {
+      el.addEventListener('contextmenu', e => showReactions(e, el.getAttribute('data-msgid'), el.getAttribute('data-convid')));
+      el.addEventListener('touchend', e => handleLongPress(e, el.getAttribute('data-msgid'), el.getAttribute('data-convid')));
+    });
+    wrap.querySelectorAll('[data-action="open-img"]').forEach(el => {
+      el.addEventListener('click', () => window.open(el.getAttribute('data-url')));
+    });
+    wrap.querySelectorAll('[data-action="react"]').forEach(el => {
+      el.addEventListener('click', () => toggleReaction(el.getAttribute('data-msgid'), el.getAttribute('data-convid'), el.getAttribute('data-emoji')));
+    });
+    wrap.querySelectorAll('[data-action="del-msg"]').forEach(el => {
+      el.addEventListener('click', e => { e.stopPropagation(); deleteMsg(el.getAttribute('data-msgid'), el.getAttribute('data-convid')); });
+    });
     // Scroll en bas
     setTimeout(() => { wrap.scrollTop = wrap.scrollHeight; }, 50);
 
@@ -2218,8 +2275,12 @@ window.showReactions = function(e, msgId, convId) {
   picker.id = 'react-picker';
   picker.style.cssText = `position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:var(--surface);border-radius:30px;padding:10px 14px;box-shadow:0 4px 24px rgba(0,0,0,.2);display:flex;gap:10px;z-index:999;`;
   picker.innerHTML = REACTIONS.map(r =>
-    `<button style="font-size:22px;cursor:pointer;transition:transform .15s" onclick="toggleReaction('${msgId}','${convId}','${r}');this.parentNode.remove()" onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform=''">${r}</button>`
+    `<button class="react-pick-btn" data-emoji="${r}" style="font-size:22px;cursor:pointer;transition:transform .15s" onmouseover="this.style.transform='scale(1.3)'" onmouseout="this.style.transform=''">${r}</button>`
   ).join('');
+  // Délégation d'événements — jamais d'onclick avec variable inline
+  picker.querySelectorAll('.react-pick-btn').forEach(btn => {
+    btn.addEventListener('click', () => { toggleReaction(msgId, convId, btn.getAttribute('data-emoji')); picker.remove(); });
+  });
   document.body.appendChild(picker);
   setTimeout(() => picker.remove(), 4000);
 };
@@ -2239,6 +2300,16 @@ window.toggleReaction = async function(msgId, convId, emoji) {
     reacts[emoji] = users;
     await ref.update({ reactions: reacts });
   } catch(e) { toast('Erreur réaction'); }
+};
+
+/* ── Suppression admin d'un message (Session 7) ───────────────────── */
+window.deleteMsg = async function(msgId, convId) {
+  if (!isBureau(CP)) { toast('Réservé au Bureau'); return; }
+  if (!confirm('Supprimer ce message définitivement ?')) return;
+  try {
+    await db.collection('chat').doc(convId).collection('messages').doc(msgId).delete();
+    toast('Message supprimé');
+  } catch(e) { toast('Erreur : ' + e.message); }
 };
 
 /* ── Marquer vu ─────────────────────────────────────────────────── */
@@ -2425,7 +2496,7 @@ function renderReunions(list) {
     ).join('');
 
     return `<div class="reun-card" ${isPast?'style="opacity:.7"':''}>
-      <div class="reun-card-top" onclick="openReunDetail('${r.id}')">
+      <div class="reun-card-top" data-action="open-reun" data-id="${r.id}">
         <div class="reun-date-box">
           <div class="reun-date-day">${day}</div>
           <div class="reun-date-mon">${mon}</div>
@@ -2442,10 +2513,17 @@ function renderReunions(list) {
           <div class="reun-pres-avs">${avsHtml}</div>
           <div class="reun-pres-count">${oui.length} présent${oui.length!==1?'s':''}</div>
         </div>
-        ${!isPast ? `<button class="btn-presence ${btnC}" onclick="quickPresence(event,'${r.id}','${myPres||''}')">${btnL}</button>` : `<span style="font-size:11px;color:var(--t3)">Terminée</span>`}
+        ${!isPast ? `<button class="btn-presence ${btnC}" data-action="quick-presence" data-id="${r.id}" data-cur="${myPres||''}">${btnL}</button>` : `<span style="font-size:11px;color:var(--t3)">Terminée</span>`}
       </div>
     </div>`;
   }).join('');
+  // Délégation d'événements — jamais d'onclick avec variable inline
+  body.querySelectorAll('[data-action="open-reun"]').forEach(el => {
+    el.addEventListener('click', () => openReunDetail(el.getAttribute('data-id')));
+  });
+  body.querySelectorAll('[data-action="quick-presence"]').forEach(btn => {
+    btn.addEventListener('click', e => quickPresence(e, btn.getAttribute('data-id'), btn.getAttribute('data-cur')));
+  });
 }
 
 /* ── Présence rapide (depuis la liste) ──────────────────────────── */
@@ -2539,6 +2617,9 @@ window.openReunDetail = async function(id) {
     pvCard.style.display = 'none';
   }
 
+  const dangerCard = document.getElementById('rd-danger-card');
+  if (dangerCard) dangerCard.style.display = isBureau(CP) ? 'block' : 'none';
+
   go('reun-detail');
 };
 
@@ -2553,6 +2634,19 @@ window.setPresence = async function(val) {
     toast(val === 'oui' ? '✅ Présence confirmée' : '❌ Absence enregistrée');
     // Rafraîchir
     openReunDetail(curReunId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Suppression admin d'une réunion (Session 7) ──────────────────── */
+window.deleteReunion = async function() {
+  if (!curReunId || !isBureau(CP)) { toast('Réservé au Bureau'); return; }
+  if (!confirm('Supprimer définitivement cette réunion ? Cette action est irréversible.')) return;
+  try {
+    await db.collection('reunions').doc(curReunId).delete();
+    toast('Réunion supprimée');
+    curReunId = null;
+    go('reunion');
+    loadReunions();
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
@@ -2640,10 +2734,11 @@ async function loadArchivesReunions() {
       return;
     }
     body.innerHTML = '';
+    let html = '';
     snap.forEach(d => {
       const r = d.data();
       const dateObj = r.date?.toDate ? r.date.toDate() : new Date(r.date);
-      body.innerHTML += `<div class="reun-card" style="opacity:.75" onclick="openReunDetail('${d.id}')">
+      html += `<div class="reun-card" style="opacity:.75" data-action="open-reun-archive" data-id="${d.id}">
         <div class="reun-card-top">
           <div class="reun-date-box" style="background:var(--t3)">
             <div class="reun-date-day">${dateObj.toLocaleDateString('fr-FR',{day:'2-digit'})}</div>
@@ -2656,6 +2751,11 @@ async function loadArchivesReunions() {
           <div style="font-size:11px;color:var(--t3)">Archivée</div>
         </div>
       </div>`;
+    });
+    body.innerHTML = html;
+    // Délégation d'événements — jamais d'onclick avec variable inline
+    body.querySelectorAll('[data-action="open-reun-archive"]').forEach(el => {
+      el.addEventListener('click', () => openReunDetail(el.getAttribute('data-id')));
     });
   } catch(e) { body.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>'; }
 }
@@ -2732,7 +2832,7 @@ window.showCalDay = function(day, year, month, events) {
   el.innerHTML = events.map(ev => {
     const dotColor = ev.type === 'reunion' ? 'var(--navy)' : 'var(--gold)';
     const icon     = ev.type === 'reunion' ? '📅' : '✅';
-    return `<div class="cal-ev-item" onclick="${ev.type==='reunion'?`openReunDetail('${ev.id}')`:`openDetail('${ev.id}')`}">
+    return `<div class="cal-ev-item" data-action="open-event" data-type="${ev.type}" data-id="${ev.id}">
       <div class="cal-ev-dot" style="background:${dotColor}"></div>
       <div class="cal-ev-info">
         <div class="cal-ev-nom">${icon} ${escHtml(ev.nom)}</div>
@@ -2741,6 +2841,14 @@ window.showCalDay = function(day, year, month, events) {
       <div style="font-size:13px;color:var(--t3)">›</div>
     </div>`;
   }).join('');
+  // Délégation d'événements — jamais d'onclick avec variable inline
+  el.querySelectorAll('[data-action="open-event"]').forEach(item => {
+    item.addEventListener('click', () => {
+      const id = item.getAttribute('data-id');
+      if (item.getAttribute('data-type') === 'reunion') openReunDetail(id);
+      else openDetail(id);
+    });
+  });
 };
 
 /* ── Patch go() pour réunions ───────────────────────────────────── */
