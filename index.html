@@ -621,6 +621,19 @@ input,select,textarea{font-family:inherit}
 .ann-lvl.a{background:var(--surface2);color:var(--t3)}
 [data-dark] .ann-lvl.b{background:rgba(133,100,4,.4);color:#FCD34D}
 [data-dark] .ann-lvl.m{background:rgba(28,53,87,.4);color:#93C5FD}
+/* Catégories de membres (Session 7) */
+.ann-lvl.cat-bureau{background:#FFF3CD;color:#856404}
+.ann-lvl.cat-actif{background:#EFF6FF;color:#1C3557}
+.ann-lvl.cat-benevole{background:#F0FDF4;color:#0F6E56}
+.ann-lvl.cat-honoraire{background:#F5F3FF;color:#5B21B6}
+.ann-lvl.cat-bienfaiteur{background:#FDF2F8;color:#9D174D}
+[data-dark] .ann-lvl.cat-bureau{background:rgba(133,100,4,.4);color:#FCD34D}
+[data-dark] .ann-lvl.cat-actif{background:rgba(28,53,87,.4);color:#93C5FD}
+[data-dark] .ann-lvl.cat-benevole{background:rgba(15,110,86,.35);color:#6EE7B7}
+[data-dark] .ann-lvl.cat-honoraire{background:rgba(91,33,182,.35);color:#C4B5FD}
+[data-dark] .ann-lvl.cat-bienfaiteur{background:rgba(157,23,77,.35);color:#F9A8D4}
+/* Sélecteur de catégorie dans le panel admin */
+.mem-cat-sel{font-size:11px;font-weight:600;padding:4px 8px;border-radius:8px;border:1.5px solid var(--surface3);background:var(--surface2);color:var(--t1);outline:none}
 
 /* ══ SONDAGES ══════════════════════════════════════════════════ */
 #s-sondages{background:var(--bg)}
@@ -899,9 +912,11 @@ input,select,textarea{font-family:inherit}
       <input class="inv-inp" id="inv-pwd" type="text" placeholder="Mot de passe provisoire *">
       <div class="inv-row">
         <select class="inv-sel" id="inv-lvl">
-          <option value="3">Adhérent</option>
-          <option value="2">Membre actif</option>
-          <option value="1">Bureau</option>
+          <option value="actif">Membre Actif</option>
+          <option value="benevole">Membre Bénévole</option>
+          <option value="honoraire">Membre Honoraire</option>
+          <option value="bienfaiteur">Membre Bienfaiteur</option>
+          <option value="bureau">Bureau</option>
         </select>
       </div>
       <button class="btn-inv" onclick="inviteMember()">Créer le compte</button>
@@ -1438,12 +1453,43 @@ let memsCache = [];
 let curTaskId = null;
 let curFilter = 'toutes';
 
-const LVL = {1:'Bureau Exécutif', 2:'Membre actif', 3:'Adhérent'};
-const QA = {
-  1:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🚀',lb:'Projets',bg:'#FFF7ED',fn:"go('projets')"},{ic:'📅',lb:'Réunion',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💰',lb:'Tréso',bg:'#F5F3FF',fn:"go('treso')"}],
-  2:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"}],
-  3:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'⬆️',lb:'Rejoindre',bg:'#F5F3FF',fn:"toast('Demande envoyée !')"}]
+const LVL = {1:'Bureau Exécutif', 2:'Membre actif', 3:'Adhérent'}; // legacy — conservé pour compat affichage anciennes données
+const CAT_LABEL = {
+  bureau:'Bureau Exécutif', actif:'Membre Actif', benevole:'Membre Bénévole',
+  honoraire:'Membre Honoraire', bienfaiteur:'Membre Bienfaiteur'
 };
+const CAT_SHORT = {
+  bureau:'Bureau', actif:'Actif', benevole:'Bénévole',
+  honoraire:'Honoraire', bienfaiteur:'Bienfaiteur'
+};
+// Classe CSS courte par catégorie (badges annuaire/admin)
+const CAT_CLASS = { bureau:'cat-bureau', actif:'cat-actif', benevole:'cat-benevole', honoraire:'cat-honoraire', bienfaiteur:'cat-bienfaiteur' };
+const QA = {
+  bureau:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🚀',lb:'Projets',bg:'#FFF7ED',fn:"go('projets')"},{ic:'📅',lb:'Réunion',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💰',lb:'Tréso',bg:'#F5F3FF',fn:"go('treso')"}],
+  actif:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"}],
+  benevole:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'👥',lb:'Annuaire',bg:'#F5F3FF',fn:"go('annuaire')"}],
+  honoraire:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"}],
+  bienfaiteur:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'💰',lb:'Trésorerie',bg:'#F5F3FF',fn:"go('treso')"}]
+};
+// ── Catégories — helpers de migration douce niveau → categorie ─────
+// Une catégorie non reconnue retombe sur 'benevole' (accès sûr, non-admin).
+function getCategorie(p) {
+  if (!p) return 'benevole';
+  if (p.categorie && CAT_LABEL[p.categorie]) return p.categorie;
+  // Migration à la volée depuis l'ancien champ niveau (non destructif)
+  if (p.niveau === 1) return 'bureau';
+  if (p.niveau === 2) return 'actif';
+  return 'benevole';
+}
+function isBureau(p) { return getCategorie(p) === 'bureau'; }
+// Écrit la catégorie migrée en base une seule fois si absente (silencieux, non bloquant)
+async function ensureCategorieMigree(uid, data) {
+  if (data && !data.categorie) {
+    const cat = getCategorie(data);
+    try { await db.collection('users').doc(uid).update({categorie: cat}); data.categorie = cat; }
+    catch(e) { /* silencieux — pas bloquant pour l'utilisateur */ }
+  }
+}
 
 // ── NAVIGATION ────────────────────────────────────────────────────
 function go(screen) {
@@ -1470,7 +1516,7 @@ auth.onAuthStateChanged(async user => {
       uid:user.uid, email:user.email,
       nom:user.displayName||user.email.split('@')[0],
       prenom:(user.displayName||'Membre').split(' ').pop(),
-      role:'Membre', niveau:1, statut:'actif', score:0, photo:user.photoURL||''
+      role:'Membre', categorie:'benevole', statut:'actif', score:0, photo:user.photoURL||''
     };
     fillDash();
     go('dash');
@@ -1481,6 +1527,7 @@ auth.onAuthStateChanged(async user => {
       if (snap.exists) {
         const data = snap.data();
         if (data.statut === 'bloque') { auth.signOut(); go('login'); showErr('Accès suspendu.'); return; }
+        await ensureCategorieMigree(user.uid, data);
         CP = data;
         fillDash(); // Re-remplir avec les vraies données
       } else {
@@ -1543,12 +1590,12 @@ function fillDash() {
   if (!CP || !CU) return;
   const prenom  = CP.prenom || CP.nom || 'Membre';
   const initial = prenom.charAt(0).toUpperCase();
-  const niveau  = CP.niveau || 3;
+  const categorie = getCategorie(CP);
   const score   = CP.score  || 0;
 
   document.getElementById('d-name').textContent = prenom;
   document.getElementById('d-av-i').textContent = initial;
-  document.getElementById('d-lvl').textContent  = LVL[niveau] || 'Membre';
+  document.getElementById('d-lvl').textContent  = CAT_LABEL[categorie] || 'Membre';
   document.getElementById('d-score').innerHTML  = score + '<span>pts</span>';
   document.getElementById('d-score-big').innerHTML = score + ' <small>/ 100</small>';
   document.getElementById('d-score-next').textContent =
@@ -1559,7 +1606,7 @@ function fillDash() {
 
   // QA
   const qa = document.getElementById('d-qa');
-  qa.innerHTML = (QA[niveau]||QA[3]).map(a =>
+  qa.innerHTML = (QA[categorie]||QA['benevole']).map(a =>
     `<button class="qa" onclick="${a.fn}"><div class="qa-ic" style="background:${a.bg}">${a.ic}</div><div class="qa-lb">${a.lb}</div></button>`
   ).join('');
 
@@ -1567,7 +1614,7 @@ function fillDash() {
   document.getElementById('p-name').textContent   = CP.nom || CU.email;
   document.getElementById('p-role').textContent   = CP.role || 'Membre';
   document.getElementById('p-email').textContent  = CU.email;
-  document.getElementById('p-role-d').textContent = (LVL[niveau]||'Membre') + (CP.role ? ' · ' + CP.role : '');
+  document.getElementById('p-role-d').textContent = (CAT_LABEL[categorie]||'Membre') + (CP.role ? ' · ' + CP.role : '');
   document.getElementById('p-score-d').textContent = score + ' pts';
   document.getElementById('p-av-i').textContent   = initial;
 
@@ -1576,7 +1623,7 @@ function fillDash() {
     document.getElementById('d-av').innerHTML     = img;
     document.getElementById('p-av').innerHTML     = img;
   }
-  if (niveau === 1) {
+  if (categorie === 'bureau') {
     document.getElementById('btn-new').style.display    = 'flex';
     document.getElementById('admin-btn').style.display  = 'block';
     var tresoBtnEl = document.getElementById('treso-btn');
@@ -1600,7 +1647,7 @@ function fillDash() {
 // ── TACHES ────────────────────────────────────────────────────────
 function loadRecentTasks() {
   if (!CU || !CP) return;
-  let q = CP.niveau === 1
+  let q = isBureau(CP)
     ? db.collection('taches').orderBy('createdAt','desc').limit(3)
     : db.collection('taches').where('assigneeId','==',CU.uid).orderBy('createdAt','desc').limit(3);
   q.get().then(snap => {
@@ -1625,7 +1672,7 @@ async function loadTasks() {
   body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
   if (!CU || !CP) return;
   try {
-    let q = CP.niveau === 1
+    let q = isBureau(CP)
       ? db.collection('taches').orderBy('createdAt','desc')
       : db.collection('taches').where('assigneeId','==',CU.uid).orderBy('createdAt','desc');
     const snap = await q.get();
@@ -1701,7 +1748,7 @@ async function quickStt(e, id, newStt) {
     const t = allTasks.find(t => t.id === id);
     if (t) t.statut = newStt;
     applyFilter(curFilter);
-    if (newStt === 'Terminée' && CP.niveau !== 1) {
+    if (newStt === 'Terminée' && !isBureau(CP)) {
       const ns = (CP.score||0) + 10;
       await db.collection('users').doc(CU.uid).update({ score:ns });
       CP.score = ns;
@@ -1776,7 +1823,7 @@ async function sendCmt() {
 
 // ── MODAL TACHE ───────────────────────────────────────────────────
 async function openNewTask() {
-  if (CP?.niveau !== 1) { toast('Réservé au bureau'); return; }
+  if (!isBureau(CP)) { toast('Réservé au bureau'); return; }
   // Reset
   ['m-nom','m-ech','m-desc'].forEach(id => { document.getElementById(id).value = ''; });
   // Charger membres
@@ -1833,26 +1880,34 @@ async function loadMembers() {
     if (countEl) countEl.textContent = snap.size + ' membre' + (snap.size>1?'s':'');
     let html = '';
     snap.forEach(d => {
-      const m  = d.data();
+      const m   = d.data();
+      const cat = getCategorie(m);
       const sc = m.statut === 'bloque' ? 'b' : m.statut === 'en_attente' ? 'p' : 'a';
       const sl = m.statut === 'bloque' ? 'Bloqué' : m.statut === 'en_attente' ? 'En attente' : 'Actif';
       const init = (m.nom||m.email||'?').charAt(0).toUpperCase();
-      html += `<div class="mem-item">
+      const catOpts = Object.keys(CAT_LABEL).map(k =>
+        `<option value="${k}"${k===cat?' selected':''}>${CAT_LABEL[k]}</option>`).join('');
+      html += `<div class="mem-item" data-uid="${d.id}">
         <div class="mem-av">${m.photo?`<img src="${m.photo}">`:`<span>${init}</span>`}</div>
         <div class="mem-info" style="flex:1">
-          <div class="mem-name">${m.nom||m.email}</div>
-          <div class="mem-role">${m.role||'—'} · ${LVL[m.niveau]||'Adhérent'}</div>
+          <div class="mem-name">${escHtml(m.nom||m.email)}</div>
+          <div class="mem-role">${escHtml(m.role||'—')} · ${CAT_SHORT[cat]}</div>
           <div class="mem-acts">
-            ${m.statut==='bloque'
-              ?`<button class="mab unb" onclick="setStt('${d.id}','actif')">Débloquer</button>`
-              :`<button class="mab blk" onclick="setStt('${d.id}','bloque')">Bloquer</button>`}
-            <button class="mab app" onclick="promote('${d.id}',${Math.max(1,(m.niveau||3)-1)})">Promouvoir</button>
+            <button class="mab ${m.statut==='bloque'?'unb':'blk'}" data-action="toggle-stt" data-uid="${d.id}" data-next="${m.statut==='bloque'?'actif':'bloque'}">${m.statut==='bloque'?'Débloquer':'Bloquer'}</button>
+            <select class="mem-cat-sel" data-action="set-categorie" data-uid="${d.id}">${catOpts}</select>
           </div>
         </div>
         <div class="mem-st ${sc}">${sl}</div>
       </div>`;
     });
     list.innerHTML = html || '<div class="empty"><div class="empty-t">Aucun membre</div></div>';
+    // Délégation d'événements — jamais d'onclick avec variable inline
+    list.querySelectorAll('button[data-action="toggle-stt"]').forEach(btn => {
+      btn.addEventListener('click', () => setStt(btn.getAttribute('data-uid'), btn.getAttribute('data-next')));
+    });
+    list.querySelectorAll('select[data-action="set-categorie"]').forEach(sel => {
+      sel.addEventListener('change', () => setCategorie(sel.getAttribute('data-uid'), sel.value));
+    });
   } catch(e) { list.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>'; }
 }
 
@@ -1860,23 +1915,25 @@ async function setStt(uid, s) {
   await db.collection('users').doc(uid).update({statut:s});
   toast(s==='bloque'?'Accès bloqué':'Accès rétabli'); loadMembers();
 }
-async function promote(uid, lvl) {
-  await db.collection('users').doc(uid).update({niveau:lvl});
-  toast('Niveau → '+LVL[lvl]); loadMembers();
+async function setCategorie(uid, cat) {
+  if (!CAT_LABEL[cat]) return;
+  await db.collection('users').doc(uid).update({categorie:cat});
+  toast('Catégorie → '+CAT_LABEL[cat]); loadMembers();
 }
 async function inviteMember() {
   const email = document.getElementById('inv-email').value.trim();
   const nom   = document.getElementById('inv-nom').value.trim();
   const role  = document.getElementById('inv-role').value.trim();
   const pwd   = document.getElementById('inv-pwd').value.trim();
-  const lvl   = parseInt(document.getElementById('inv-lvl').value);
+  const cat   = document.getElementById('inv-lvl').value;
   if (!email||!nom||!pwd) { toast('E-mail, nom et mot de passe requis'); return; }
+  if (!CAT_LABEL[cat]) { toast('Catégorie invalide'); return; }
   try {
     const cred = await auth.createUserWithEmailAndPassword(email, pwd);
     await cred.user.updateProfile({ displayName:nom });
     await db.collection('users').doc(cred.user.uid).set({
       uid:cred.user.uid, email, nom, prenom:nom.split(' ').pop(),
-      role:role||'Membre', niveau:lvl, statut:'actif',
+      role:role||'Membre', categorie:cat, statut:'actif',
       score:0, badges:['⚡'], photo:'',
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -1964,7 +2021,7 @@ window.switchChatTab = function(el, tab) {
 /* ── Ouvrir une conversation ────────────────────────────────────── */
 window.openConv = function(canalId, name, sub, type) {
   // Vérif accès bureau
-  if (canalId === 'bureau' && CP?.niveau !== 1) { toast('Réservé au Bureau'); return; }
+  if (canalId === 'bureau' && !isBureau(CP)) { toast('Réservé au Bureau'); return; }
   // Annonces : seul le bureau peut écrire
   curConvId   = canalId;
   curConvName = name;
@@ -1979,7 +2036,7 @@ window.openConv = function(canalId, name, sub, type) {
   // Désactiver input pour Annonces si pas bureau
   const inp = document.getElementById('conv-inp');
   const btn = document.getElementById('conv-send-btn');
-  if (canalId === 'annonces' && CP?.niveau !== 1) {
+  if (canalId === 'annonces' && !isBureau(CP)) {
     inp.disabled = true;
     inp.placeholder = 'Seul le bureau peut publier ici.';
     btn.disabled = true;
@@ -2204,22 +2261,33 @@ async function loadPrives() {
   try {
     const snap = await db.collection('users').get();
     let html = '';
+    const membresPrives = [];
     snap.forEach(d => {
       const m = d.data();
       if (m.uid === CU?.uid) return; // pas soi-même
       const init = (m.nom||'?').charAt(0).toUpperCase();
-      html += `<div class="mem-chat-item" onclick="openPrivConv('${m.uid}','${escHtml(m.nom||m.email)}','${m.photo||''}')">
+      const cat  = getCategorie(m);
+      membresPrives.push({uid:m.uid, nom:m.nom||m.email, photo:m.photo||''});
+      html += `<div class="mem-chat-item" data-uid="${m.uid}">
         <div class="mem-chat-av">
           ${m.photo ? `<img src="${m.photo}" alt="">` : `<span style="font-size:17px;font-weight:700;color:#fff">${init}</span>`}
         </div>
         <div class="mem-info">
           <div class="mem-name">${escHtml(m.nom||m.email)}</div>
-          <div class="mem-role">${m.role||'Membre'} · ${LVL[m.niveau]||'Adhérent'}</div>
+          <div class="mem-role">${escHtml(m.role||'Membre')} · ${CAT_SHORT[cat]}</div>
         </div>
         <div style="font-size:12px;color:var(--gold);font-weight:500">Écrire ›</div>
       </div>`;
     });
     list.innerHTML = html || '<div class="empty"><div class="empty-t">Aucun membre trouvé</div></div>';
+    // Délégation d'événements — jamais d'onclick avec variable inline
+    list.querySelectorAll('.mem-chat-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const uid = el.getAttribute('data-uid');
+        const mm  = membresPrives.find(x => x.uid === uid);
+        if (mm) openPrivConv(mm.uid, mm.nom, mm.photo);
+      });
+    });
   } catch(e) {
     list.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>';
   }
@@ -2263,9 +2331,9 @@ window.go = function(screen) {
   }
   origGo(screen);
   if (screen === 'chat') {
-    // Afficher canal bureau si niveau 1
+    // Afficher canal bureau si le membre fait partie du Bureau
     const bureauItem = document.getElementById('canal-bureau-item');
-    if (bureauItem) bureauItem.style.display = CP?.niveau === 1 ? 'flex' : 'none';
+    if (bureauItem) bureauItem.style.display = isBureau(CP) ? 'flex' : 'none';
     loadCanalPreviews();
   }
 };
@@ -2299,7 +2367,7 @@ async function loadReunions() {
   body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
   if (!CU) return;
 
-  if (CP?.niveau === 1) document.getElementById('btn-new-reun').style.display = 'flex';
+  if (isBureau(CP)) document.getElementById('btn-new-reun').style.display = 'flex';
 
   try {
     const snap = await db.collection('reunions')
@@ -2464,7 +2532,7 @@ window.openReunDetail = async function(id) {
 
   // PV (bureau seulement)
   const pvCard = document.getElementById('rd-pv-card');
-  if (CP?.niveau === 1) {
+  if (isBureau(CP)) {
     pvCard.style.display = 'block';
     document.getElementById('pv-textarea').value = r.pv || '';
   } else {
@@ -2516,7 +2584,7 @@ window.sharePV = function() {
 
 /* ── Modal nouvelle réunion ─────────────────────────────────────── */
 window.openModalReunion = function() {
-  if (CP?.niveau !== 1) { toast('Réservé au Bureau'); return; }
+  if (!isBureau(CP)) { toast('Réservé au Bureau'); return; }
   ['r-nom','r-lieu','r-od','r-desc'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('r-date').value  = new Date().toISOString().split('T')[0];
   document.getElementById('r-heure').value = '09:00';
@@ -2702,7 +2770,7 @@ async function loadProjets() {
   if (!body || !CU) return;
   body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
 
-  if (CP && CP.niveau === 1) {
+  if (CP && isBureau(CP)) {
     var btn = document.getElementById('btn-new-proj');
     if (btn) btn.style.display = 'flex';
   }
@@ -2835,7 +2903,7 @@ async function openProjDetail(id) {
 
     // Select pour lier une tâche (bureau uniquement)
     var addCard = document.getElementById('pd-add-task-card');
-    if (CP && CP.niveau === 1) {
+    if (CP && isBureau(CP)) {
       addCard.style.display = 'block';
       var sel = document.getElementById('pd-task-sel');
       sel.innerHTML = '<option value="">— Choisir une tâche existante —</option>';
@@ -2869,7 +2937,7 @@ window.linkTaskToProjet = async function() {
 };
 
 window.openModalProjet = async function() {
-  if (!CP || CP.niveau !== 1) { toast('Réservé au Bureau'); return; }
+  if (!CP || !isBureau(CP)) { toast('Réservé au Bureau'); return; }
   document.getElementById('p-nom').value   = '';
   document.getElementById('p-desc').value  = '';
   document.getElementById('p-ech').value   = '';
@@ -2916,7 +2984,7 @@ window.submitProjet = async function() {
 /* ══ TRÉSORERIE ══════════════════════════════════════════════════ */
 
 async function loadTreso() {
-  if (!CU || !CP || CP.niveau !== 1) {
+  if (!CU || !CP || !isBureau(CP)) {
     go('dash');
     toast('Accès réservé au Bureau');
     return;
@@ -3113,7 +3181,7 @@ var BADGES_DEF = [
   {id:'reunion',         ic:'🤝', label:'Présent',          cond:function(p,s) { return s.reunions >= 1; }},
   {id:'score_50',        ic:'🌟', label:'50 pts',           cond:function(p,s) { return (p.score||0) >= 50; }},
   {id:'score_100',       ic:'💎', label:'100 pts',          cond:function(p,s) { return (p.score||0) >= 100; }},
-  {id:'fondateur',       ic:'🏅', label:'Fondateur',        cond:function(p,s) { return p.niveau === 1; }},
+  {id:'fondateur',       ic:'🏅', label:'Fondateur',        cond:function(p,s) { return isBureau(p); }},
 ];
 
 async function checkBadges(uid, profile) {
@@ -3175,8 +3243,9 @@ function renderAnnuaire(list) {
   for (var i = 0; i < list.length; i++) {
     var m  = list[i];
     var init = (m.nom || m.email || '?').charAt(0).toUpperCase();
-    var lvlC = m.niveau === 1 ? 'b' : m.niveau === 2 ? 'm' : 'a';
-    var lvlL = m.niveau === 1 ? 'Bureau' : m.niveau === 2 ? 'Membre' : 'Adhérent';
+    var catV = getCategorie(m);
+    var lvlC = CAT_CLASS[catV];
+    var lvlL = CAT_SHORT[catV];
     var badges = (m.badges || []).slice(0,3).join(' ');
     var isSelf = m.uid === (CU && CU.uid);
     html += '<div class="ann-item" data-uid="' + (m.uid || m.id) + '" data-email="' + escHtml(m.email||'') + '">';
@@ -3222,7 +3291,7 @@ async function loadSondages() {
   var body = document.getElementById('sond-body');
   if (!body || !CU) return;
   body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
-  if (CP && CP.niveau === 1) {
+  if (CP && isBureau(CP)) {
     var btn = document.getElementById('btn-new-sond');
     if (btn) btn.style.display = 'flex';
   }
@@ -3312,7 +3381,7 @@ async function voterSondage(sondId, option) {
 }
 
 window.openModalSondage = function() {
-  if (!CP || CP.niveau !== 1) { toast('Réservé au Bureau'); return; }
+  if (!CP || !isBureau(CP)) { toast('Réservé au Bureau'); return; }
   ['sond-q','sond-o1','sond-o2','sond-o3','sond-o4'].forEach(function(id) {
     document.getElementById(id).value = '';
   });
@@ -3347,7 +3416,7 @@ window.submitSondage = async function() {
 
 /* ══ STATISTIQUES ════════════════════════════════════════════════ */
 async function loadStats() {
-  if (!CU || !CP || CP.niveau !== 1) { toast('Réservé au Bureau'); go('dash'); return; }
+  if (!CU || !CP || !isBureau(CP)) { toast('Réservé au Bureau'); go('dash'); return; }
   try {
     // Membres
     var mSnap = await db.collection('users').get();
