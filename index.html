@@ -378,6 +378,31 @@ input,select,textarea{font-family:inherit}
 
 /* Input */
 .conv-input-area{padding:10px 12px;background:var(--surface);border-top:1px solid var(--surface3);display:flex;align-items:flex-end;gap:8px;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+/* Session 7 — réponses, mentions, édition */
+.reply-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-top:1px solid var(--surface3)}
+.reply-bar-line{width:3px;align-self:stretch;background:var(--gold);border-radius:2px;flex-shrink:0}
+.reply-bar-body{flex:1;min-width:0}
+.reply-bar-t{font-size:12px;font-weight:600;color:var(--gold)}
+.reply-bar-b{font-size:12px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reply-bar-x{font-size:16px;color:var(--t3);cursor:pointer;padding:4px 6px;flex-shrink:0}
+.mention-dd{max-height:180px;overflow-y:auto;background:var(--surface);border-top:1px solid var(--surface3)}
+.mention-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer}
+.mention-item:hover,.mention-item:active{background:var(--surface2)}
+.mention-item-av{width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.mention-item-nom{font-size:13px;color:var(--t1)}
+.mention{color:var(--gold);font-weight:600}
+.msg-reply-ref{border-left:2.5px solid var(--gold);padding:3px 8px;margin-bottom:5px;font-size:11.5px;color:var(--t3);border-radius:4px;background:rgba(0,0,0,.04);cursor:pointer}
+[data-dark] .msg-reply-ref{background:rgba(255,255,255,.06)}
+.msg-reply-ref b{color:var(--gold);font-weight:600}
+.msg-edited-tag{font-size:9.5px;color:var(--t3);font-style:italic;margin-left:3px}
+.msg-edit-btn,.msg-reply-btn{margin-left:6px;font-size:11px;background:none;border:none;cursor:pointer;opacity:.55;vertical-align:middle}
+.msg-edit-btn:hover,.msg-reply-btn:hover{opacity:1}
+.msg-edit-wrap{padding:4px}
+.msg-edit-textarea{width:100%;min-width:180px;font-size:14px;font-family:inherit;border-radius:10px;border:1.5px solid var(--surface3);padding:8px 10px;resize:none;background:var(--surface);color:var(--t1);outline:none}
+.msg-edit-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.msg-edit-acts button{font-size:12px;padding:5px 12px;border-radius:14px;font-weight:600}
+.msg-edit-save{background:var(--navy);color:#fff}
+.msg-edit-cancel{background:var(--surface2);color:var(--t2)}
 .conv-input{flex:1;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:22px;padding:10px 16px;font-size:14px;color:var(--t1);outline:none;resize:none;max-height:100px;line-height:1.4;font-family:inherit}
 .conv-input:focus{border-color:var(--navy)}
 [data-dark] .conv-input:focus{border-color:var(--gold)}
@@ -1012,10 +1037,19 @@ input,select,textarea{font-family:inherit}
   <div class="msgs-wrap" id="msgs-wrap">
     <div class="msgs-loading">⏳ Chargement des messages...</div>
   </div>
+  <div class="mention-dd" id="mention-dd" style="display:none"></div>
+  <div class="reply-bar" id="reply-bar" style="display:none">
+    <div class="reply-bar-line"></div>
+    <div class="reply-bar-body">
+      <div class="reply-bar-t" id="reply-bar-nom">—</div>
+      <div class="reply-bar-b" id="reply-bar-txt">—</div>
+    </div>
+    <div class="reply-bar-x" onclick="cancelReply()">✕</div>
+  </div>
   <div class="conv-input-area">
     <div class="conv-attach" onclick="sendPhoto()">📎</div>
     <textarea class="conv-input" id="conv-inp" placeholder="Écrire un message..." rows="1"
-      oninput="autoResize(this)"
+      oninput="autoResize(this);handleMentionInput(this)"
       onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
     <button class="conv-send" id="conv-send-btn" onclick="sendMsg()">➤</button>
   </div>
@@ -2043,6 +2077,13 @@ let curConvName = null;
 let msgsListener = null;  // Firestore real-time listener
 let chatTab = 'canaux';
 
+// ── Session 7 : réponses, édition, mentions ────────────────────────
+let replyTo = null;              // {id, nom, texte} — message en cours de réponse
+let editingMsgId = null;         // id du message en cours d'édition
+let cachedMembers = null;        // [{uid,nom}] pour @mention (chargé une fois)
+let cachedMembersPromise = null;
+const EDIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+
 const CANAL_ICONS = { general:'🌐', bureau:'⚙️', annonces:'📢' };
 const REACTIONS = ['👍','✅','👀','❤️','😂'];
 
@@ -2060,6 +2101,7 @@ window.switchChatTab = function(el, tab) {
 window.openConv = function(canalId, name, sub, type) {
   // Vérif accès bureau
   if (canalId === 'bureau' && !isBureau(CP)) { toast('Réservé au Bureau'); return; }
+  cancelReply(); hideMentionDD(); editingMsgId = null;
   // Annonces : seul le bureau peut écrire
   curConvId   = canalId;
   curConvName = name;
@@ -2089,6 +2131,7 @@ window.openConv = function(canalId, name, sub, type) {
 };
 
 window.openPrivConv = function(uid, nom, photo) {
+  cancelReply(); hideMentionDD(); editingMsgId = null;
   // ID conversation privée : tri alphabétique des UIDs
   const ids = [CU.uid, uid].sort();
   const convId = 'priv_' + ids.join('_');
@@ -2114,6 +2157,7 @@ window.openPrivConv = function(uid, nom, photo) {
 function loadMsgs(convId, isPriv) {
   const wrap = document.getElementById('msgs-wrap');
   wrap.innerHTML = '<div class="msgs-loading">⏳ Chargement...</div>';
+  ensureMentionCache(); // best-effort, en arrière-plan
 
   // Stopper l'ancien listener
   if (msgsListener) { msgsListener(); msgsListener = null; }
@@ -2129,6 +2173,7 @@ function loadMsgs(convId, isPriv) {
     let html = '';
     let lastDate = '';
     let lastUid  = '';
+    const now = Date.now();
 
     snap.forEach(d => {
       const m    = d.data();
@@ -2137,6 +2182,9 @@ function loadMsgs(convId, isPriv) {
       const date = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleDateString('fr-FR',{day:'2-digit',month:'long'}) : '';
       const time = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
       const newGroup = m.auteurId !== lastUid;
+      const createdMs = m.createdAt?.toDate ? m.createdAt.toDate().getTime() : 0;
+      const canEdit   = mine && createdMs && (now - createdMs < EDIT_WINDOW_MS);
+      const canDelete = mine || isBureau(CP);
 
       // Séparateur de date
       if (date && date !== lastDate) {
@@ -2154,24 +2202,31 @@ function loadMsgs(convId, isPriv) {
         }
       });
 
-      // Image ou texte
+      // Citation de réponse
+      const replyHtml = m.replyTo
+        ? `<div class="msg-reply-ref" data-action="jump-reply" data-target="${m.replyTo.id}"><b>${escHtml(m.replyTo.nom||'')}</b> · ${escHtml(m.replyTo.texte||'')}</div>`
+        : '';
+
+      // Image ou texte (avec surlignage des @mentions)
       let bodyHtml = '';
       if (m.imageUrl) {
         bodyHtml = `<img src="${m.imageUrl}" class="msg-img" alt="image" data-action="open-img" data-url="${m.imageUrl}">`;
       } else {
-        bodyHtml = escHtml(m.texte || '');
+        bodyHtml = highlightMentions(escHtml(m.texte || ''));
       }
 
-      // Suppression admin (Bureau) — visible sur tout message, tout canal
-      const delBtn = isBureau(CP)
-        ? `<button class="msg-del-btn" data-action="del-msg" data-msgid="${d.id}" data-convid="${convId}" title="Supprimer (admin)">🗑️</button>`
-        : '';
+      const editedTag = m.edited ? `<span class="msg-edited-tag">modifié</span>` : '';
+      const replyBtn  = `<button class="msg-reply-btn" data-action="reply-msg" data-msgid="${d.id}" data-nom="${escHtml(m.auteurNom||'')}" data-txt="${escHtml((m.texte||'📷 Photo').slice(0,80))}" title="Répondre">↩️</button>`;
+      const editBtn   = canEdit
+        ? `<button class="msg-edit-btn" data-action="edit-msg" data-msgid="${d.id}" data-convid="${convId}" title="Modifier">✏️</button>` : '';
+      const delBtn    = canDelete
+        ? `<button class="msg-del-btn" data-action="del-msg" data-msgid="${d.id}" data-convid="${convId}" title="Supprimer">🗑️</button>` : '';
 
       html += `<div class="msg-group ${grp}" id="msg-${d.id}">
         ${!mine && newGroup ? `<div class="msg-author">${escHtml(m.auteurNom||'')}</div>` : ''}
-        <div class="msg-bubble" data-action="msg-bubble" data-msgid="${d.id}" data-convid="${convId}">${bodyHtml}</div>
+        <div class="msg-bubble" data-action="msg-bubble" data-msgid="${d.id}" data-convid="${convId}">${replyHtml}<span class="msg-bubble-txt" id="msg-txt-${d.id}">${bodyHtml}</span></div>
         ${reactHtml ? `<div class="msg-reactions">${reactHtml}</div>` : ''}
-        <div class="msg-time">${time}${mine && m.vu ? ' · Vu ✓' : ''}${delBtn}</div>
+        <div class="msg-time">${time}${mine && m.vu ? ' · Vu ✓' : ''}${editedTag}${replyBtn}${editBtn}${delBtn}</div>
       </div>`;
 
       lastUid = m.auteurId;
@@ -2188,6 +2243,19 @@ function loadMsgs(convId, isPriv) {
     });
     wrap.querySelectorAll('[data-action="react"]').forEach(el => {
       el.addEventListener('click', () => toggleReaction(el.getAttribute('data-msgid'), el.getAttribute('data-convid'), el.getAttribute('data-emoji')));
+    });
+    wrap.querySelectorAll('[data-action="reply-msg"]').forEach(el => {
+      el.addEventListener('click', e => { e.stopPropagation(); startReply(el.getAttribute('data-msgid'), el.getAttribute('data-nom'), el.getAttribute('data-txt')); });
+    });
+    wrap.querySelectorAll('[data-action="edit-msg"]').forEach(el => {
+      el.addEventListener('click', e => { e.stopPropagation(); startEditMsg(el.getAttribute('data-msgid'), el.getAttribute('data-convid')); });
+    });
+    wrap.querySelectorAll('[data-action="jump-reply"]').forEach(el => {
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        const target = document.getElementById('msg-' + el.getAttribute('data-target'));
+        if (target) { target.scrollIntoView({behavior:'smooth', block:'center'}); target.style.background = 'var(--surface2)'; setTimeout(() => target.style.background = '', 900); }
+      });
     });
     wrap.querySelectorAll('[data-action="del-msg"]').forEach(el => {
       el.addEventListener('click', e => { e.stopPropagation(); deleteMsg(el.getAttribute('data-msgid'), el.getAttribute('data-convid')); });
@@ -2208,9 +2276,12 @@ window.sendMsg = async function() {
   const txt = inp.value.trim();
   if (!txt || !curConvId || !CU) return;
   inp.value = ''; inp.style.height = 'auto';
+  const replySnapshot = replyTo; // capturé avant reset
+  cancelReply();
+  hideMentionDD();
 
   try {
-    await db.collection('chat').doc(curConvId).collection('messages').add({
+    const payload = {
       texte: txt,
       auteurId:    CU.uid,
       auteurNom:   CP?.nom || CU.email,
@@ -2218,7 +2289,9 @@ window.sendMsg = async function() {
       createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
       reactions:   {},
       vu:          false,
-    });
+    };
+    if (replySnapshot) payload.replyTo = replySnapshot;
+    await db.collection('chat').doc(curConvId).collection('messages').add(payload);
     // Mettre à jour le dernier message du canal
     await db.collection('chat').doc(curConvId).set({
       lastMsg:  txt,
@@ -2302,17 +2375,131 @@ window.toggleReaction = async function(msgId, convId, emoji) {
   } catch(e) { toast('Erreur réaction'); }
 };
 
-/* ── Suppression admin d'un message (Session 7) ───────────────────── */
+/* ── Suppression d'un message : auteur ou Bureau (Session 7) ──────── */
 window.deleteMsg = async function(msgId, convId) {
-  if (!isBureau(CP)) { toast('Réservé au Bureau'); return; }
-  if (!confirm('Supprimer ce message définitivement ?')) return;
+  if (!CU) return;
   try {
-    await db.collection('chat').doc(convId).collection('messages').doc(msgId).delete();
+    const ref  = db.collection('chat').doc(convId).collection('messages').doc(msgId);
+    const snap = await ref.get();
+    const data = snap.data();
+    if (!data) return;
+    const mine = data.auteurId === CU.uid;
+    if (!mine && !isBureau(CP)) { toast('Tu ne peux supprimer que tes propres messages'); return; }
+    if (!confirm('Supprimer ce message définitivement ?')) return;
+    await ref.delete();
     toast('Message supprimé');
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
-/* ── Marquer vu ─────────────────────────────────────────────────── */
+/* ── Réponse à un message (Session 7) ─────────────────────────────── */
+window.startReply = function(msgId, nom, txt) {
+  replyTo = { id: msgId, nom: nom, texte: txt };
+  document.getElementById('reply-bar-nom').textContent = 'Réponse à ' + nom;
+  document.getElementById('reply-bar-txt').textContent = txt;
+  document.getElementById('reply-bar').style.display = 'flex';
+  document.getElementById('conv-inp').focus();
+};
+window.cancelReply = function() {
+  replyTo = null;
+  document.getElementById('reply-bar').style.display = 'none';
+};
+
+/* ── Édition d'un message sous 10 min (Session 7) ─────────────────── */
+window.startEditMsg = async function(msgId, convId) {
+  if (editingMsgId) return; // une seule édition à la fois
+  const bubble = document.querySelector(`.msg-bubble[data-msgid="${msgId}"]`);
+  const txtEl  = document.getElementById('msg-txt-' + msgId);
+  if (!bubble || !txtEl) return;
+  editingMsgId = msgId;
+  const original = txtEl.textContent;
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-edit-wrap';
+  wrap.innerHTML = `<textarea class="msg-edit-textarea" rows="2"></textarea>
+    <div class="msg-edit-acts">
+      <button class="msg-edit-cancel" data-action="edit-cancel">Annuler</button>
+      <button class="msg-edit-save" data-action="edit-save">Enregistrer</button>
+    </div>`;
+  const ta = wrap.querySelector('textarea');
+  ta.value = original;
+  txtEl.style.display = 'none';
+  txtEl.insertAdjacentElement('afterend', wrap);
+  ta.focus();
+  wrap.querySelector('[data-action="edit-cancel"]').addEventListener('click', () => cancelEditMsg(msgId, wrap, txtEl));
+  wrap.querySelector('[data-action="edit-save"]').addEventListener('click', () => saveEditMsg(msgId, convId, ta.value, wrap, txtEl));
+};
+function cancelEditMsg(msgId, wrap, txtEl) {
+  editingMsgId = null;
+  wrap.remove();
+  txtEl.style.display = '';
+}
+async function saveEditMsg(msgId, convId, newTxt, wrap, txtEl) {
+  newTxt = newTxt.trim();
+  if (!newTxt) { toast('Le message ne peut pas être vide'); return; }
+  try {
+    await db.collection('chat').doc(convId).collection('messages').doc(msgId).update({
+      texte: newTxt, edited: true, editedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    editingMsgId = null;
+    toast('Message modifié');
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+
+/* ── @mentions (Session 7) ────────────────────────────────────────── */
+function ensureMentionCache() {
+  if (cachedMembersPromise) return cachedMembersPromise;
+  cachedMembersPromise = db.collection('users').get().then(snap => {
+    cachedMembers = [];
+    snap.forEach(d => { const m = d.data(); if (m.nom) cachedMembers.push({ uid:m.uid, nom:m.nom }); });
+    return cachedMembers;
+  }).catch(() => { cachedMembers = []; return cachedMembers; });
+  return cachedMembersPromise;
+}
+function highlightMentions(html) {
+  if (!cachedMembers || !cachedMembers.length) return html;
+  cachedMembers.forEach(m => {
+    if (!m.nom) return;
+    const token = '@' + escHtml(m.nom);
+    if (html.includes(token)) {
+      html = html.split(token).join(`<span class="mention">${token}</span>`);
+    }
+  });
+  return html;
+}
+window.handleMentionInput = function(textarea) {
+  const val = textarea.value;
+  const pos = textarea.selectionStart;
+  const before = val.slice(0, pos);
+  const match = before.match(/@([\wÀ-ÿ ]{0,20})$/);
+  const dd = document.getElementById('mention-dd');
+  if (!match) { hideMentionDD(); return; }
+  const query = match[1].toLowerCase();
+  ensureMentionCache().then(members => {
+    const results = members.filter(m => m.nom.toLowerCase().includes(query)).slice(0, 6);
+    if (!results.length) { hideMentionDD(); return; }
+    dd.innerHTML = results.map(m =>
+      `<div class="mention-item" data-action="pick-mention" data-nom="${escHtml(m.nom)}"><div class="mention-item-av">${m.nom.charAt(0).toUpperCase()}</div><div class="mention-item-nom">${escHtml(m.nom)}</div></div>`
+    ).join('');
+    dd.querySelectorAll('[data-action="pick-mention"]').forEach(el => {
+      el.addEventListener('click', () => selectMention(el.getAttribute('data-nom'), match[0].length));
+    });
+    dd.style.display = 'block';
+  });
+};
+window.hideMentionDD = function() {
+  const dd = document.getElementById('mention-dd');
+  if (dd) dd.style.display = 'none';
+};
+window.selectMention = function(nom, matchLen) {
+  const ta  = document.getElementById('conv-inp');
+  const pos = ta.selectionStart;
+  const before = ta.value.slice(0, pos - matchLen);
+  const after  = ta.value.slice(pos);
+  ta.value = before + '@' + nom + ' ' + after;
+  hideMentionDD();
+  ta.focus();
+};
+
+
 async function markVu(convId) {
   if (!CU) return;
   try {
