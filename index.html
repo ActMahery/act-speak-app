@@ -596,6 +596,7 @@ input,select,textarea{font-family:inherit}
 
 /* Boutons entrée/dépense */
 .treso-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.treso-readonly-note{background:var(--surface2);border-radius:var(--r14);padding:12px 14px;font-size:12px;color:var(--t3);line-height:1.5;margin-bottom:4px}
 .treso-btn{height:54px;border-radius:var(--r14);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--sh);transition:transform var(--tr)}
 .treso-btn:active{transform:scale(.97)}
 .treso-btn.entree{background:#D4EDDA;color:#155724}
@@ -619,6 +620,26 @@ input,select,textarea{font-family:inherit}
 .tx-amount.d{color:#C0392B}
 [data-dark] .tx-amount.e{color:#6EE7B7}
 [data-dark] .tx-amount.d{color:#FCA5A5}
+
+/* Trésorerie double contrôle (Session 7) */
+.treso-pending-count{background:var(--gold);color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:1px 8px}
+.tx-pending-item{background:var(--surface2);border-radius:var(--r14);padding:12px 14px;margin-bottom:8px}
+.tx-pending-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.tx-diverg-note{font-size:11.5px;color:#C0392B;margin-top:4px;font-style:italic}
+.tx-pending-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap}
+.tx-stt-badge{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:10px;flex-shrink:0}
+.tx-stt-badge.att{background:#FFF3CD;color:#856404}
+.tx-stt-badge.diverg{background:#FDE8E8;color:#C0392B}
+.tx-stt-badge.pres{background:#F5F3FF;color:#5B21B6}
+[data-dark] .tx-stt-badge.att{background:rgba(133,100,4,.4);color:#FCD34D}
+[data-dark] .tx-stt-badge.diverg{background:rgba(192,57,43,.3);color:#FCA5A5}
+[data-dark] .tx-stt-badge.pres{background:rgba(91,33,182,.35);color:#C4B5FD}
+.tx-pending-acts{display:flex;gap:6px;flex-wrap:wrap}
+.tx-act{font-size:11px;font-weight:600;padding:6px 11px;border-radius:12px}
+.tx-act.ok{background:#D4EDDA;color:#155724}
+.tx-act.ko{background:#FDE8E8;color:#C0392B}
+.tx-act.pres{background:#F5F3FF;color:#5B21B6}
+.tx-act.edit{background:var(--surface3);color:var(--t2)}
 
 /* Graphique simple */
 .treso-chart{padding:14px 16px;display:flex;align-items:flex-end;gap:6px;height:80px}
@@ -1268,9 +1289,18 @@ input,select,textarea{font-family:inherit}
     </div>
   </div>
   <div class="treso-body">
-    <div class="treso-actions">
+    <div class="treso-actions" id="treso-actions">
       <button class="treso-btn entree" onclick="openModalTx('entree')">📈 Entrée</button>
       <button class="treso-btn depense" onclick="openModalTx('depense')">📉 Dépense</button>
+    </div>
+    <div class="treso-readonly-note" id="treso-readonly-note" style="display:none">
+      👁️ Accès en lecture seule — seuls le Président, le Trésorier, le Trésorier Adjoint et le Secrétaire Financier peuvent saisir ou valider des transactions.
+    </div>
+    <div class="card" id="treso-pending-card" style="display:none;margin-bottom:14px">
+      <div class="sec-title" style="display:flex;align-items:center;gap:8px;padding:14px 16px 0">
+        ⏳ À valider <span class="treso-pending-count" id="treso-pending-badge">0</span>
+      </div>
+      <div id="treso-pending-list" style="padding:10px 12px"></div>
     </div>
     <div>
       <div class="sec-title">Ce mois</div>
@@ -1353,6 +1383,22 @@ input,select,textarea{font-family:inherit}
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-tx')">Annuler</button>
       <button class="bsub" id="tx-sub" onclick="submitTransaction()"><span>Enregistrer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SIGNALER DIVERGENCE (Session 7 — double contrôle) -->
+<div class="overlay" id="ov-tx-reject" onclick="closeOverlay('ov-tx-reject')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Signaler une divergence</div>
+    <div class="mfield">
+      <label>Que constates-tu par rapport à ce qui a été saisi ? *</label>
+      <textarea id="tx-reject-reason" placeholder="Ex: Montant réel encaissé différent, justificatif manquant..."></textarea>
+    </div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-tx-reject')">Annuler</button>
+      <button class="bsub" onclick="confirmRejectTx()"><span>Signaler</span></button>
     </div>
   </div>
 </div>
@@ -1528,6 +1574,23 @@ function getCategorie(p) {
   return 'benevole';
 }
 function isBureau(p) { return getCategorie(p) === 'bureau'; }
+
+// ── Trésorerie double contrôle (Session 7) ─────────────────────────
+// Seuls Président / Trésorier / Trésorier Adjoint / Secrétaire Financier peuvent proposer une transaction.
+// Seuls Président et Trésorier (pas l'adjoint, pas le secrétaire financier) peuvent l'autoriser.
+// Les autres membres du Bureau consultent en lecture seule (solde, dépenses, statut validé/non validé).
+const TRESO_SEUIL_PRESIDENT = 500000; // Ar — au-delà, double validation Président ET Trésorier requise
+function normAccents(s) {
+  return (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function isPresident(p)        { return isBureau(p) && normAccents(p && p.role).includes('president'); }
+function isTresorierAdjoint(p) { return isBureau(p) && normAccents(p && p.role).includes('tresorier adjoint'); }
+function isTresorier(p)        { return isBureau(p) && normAccents(p && p.role).includes('tresorier') && !isTresorierAdjoint(p); }
+function isSecFin(p)           { return isBureau(p) && normAccents(p && p.role).includes('secretaire financier'); }
+// Peut proposer (saisir) une transaction
+function canProposeTx(p) { return isPresident(p) || isTresorier(p) || isTresorierAdjoint(p) || isSecFin(p); }
+// Peut autoriser (valider) une transaction — Président ou Trésorier uniquement, jamais sa propre saisie
+function canValidateTx(p, tx) { return (isPresident(p) || isTresorier(p)) && p && tx && p.uid !== tx.auteurId; }
 // Écrit la catégorie migrée en base une seule fois si absente (silencieux, non bloquant)
 async function ensureCategorieMigree(uid, data) {
   if (data && !data.categorie) {
@@ -3285,6 +3348,12 @@ async function loadTreso() {
     return;
   }
 
+  var actionsEl = document.getElementById('treso-actions');
+  var roNoteEl  = document.getElementById('treso-readonly-note');
+  var canPropose = canProposeTx(CP);
+  if (actionsEl) actionsEl.style.display = canPropose ? 'grid' : 'none';
+  if (roNoteEl)  roNoteEl.style.display  = canPropose ? 'none' : 'block';
+
   try {
     var now   = new Date();
     var start = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -3296,11 +3365,12 @@ async function loadTreso() {
     allTx = [];
     snap.forEach(function(d) { allTx.push(Object.assign({id:d.id}, d.data())); });
 
-    // Calcul solde total
+    // Calcul solde — uniquement les transactions VALIDÉES (double contrôle)
     var solde = 0;
     var totalE = 0; var totalD = 0;
     for (var i = 0; i < allTx.length; i++) {
       var tx = allTx[i];
+      if (tx.statut !== 'validee') continue;
       if (tx.type === 'entree')  { solde += tx.montant; totalE += tx.montant; }
       if (tx.type === 'depense') { solde -= tx.montant; totalD += tx.montant; }
     }
@@ -3315,18 +3385,157 @@ async function loadTreso() {
     if (te) te.textContent = totalE.toLocaleString('fr-FR') + ' Ar';
     if (td) td.textContent = totalD.toLocaleString('fr-FR') + ' Ar';
 
-    // Liste transactions
-    renderTransactions(allTx.slice(0, 20));
+    // Transactions en attente de validation / divergence / attente Président
+    var pending = allTx.filter(function(t) { return t.statut !== 'validee'; });
+    var pendCard = document.getElementById('treso-pending-card');
+    var pendBadge = document.getElementById('treso-pending-badge');
+    if (pendCard) pendCard.style.display = pending.length ? 'block' : 'none';
+    if (pendBadge) pendBadge.textContent = pending.length;
+    renderPendingTx(pending);
 
-    // Mini graphique 6 derniers mois
+    // Liste transactions validées
+    renderTransactions(allTx.filter(function(t){return t.statut==='validee';}).slice(0, 20));
+
+    // Mini graphique 6 derniers mois (validées seulement)
     renderChart();
   } catch(e) {
     toast('Erreur trésorerie : ' + e.message);
   }
 }
 
+/* ── Section transactions en attente de validation (Session 7) ────── */
+function renderPendingTx(list) {
+  var el = document.getElementById('treso-pending-list');
+  if (!el) return;
+  if (!list.length) { el.innerHTML = ''; return; }
+  var html = '';
+  list.forEach(function(tx) {
+    var isE = tx.type === 'entree';
+    var sign = isE ? '+' : '-';
+    var isBig = tx.montant >= TRESO_SEUIL_PRESIDENT;
+    var valT  = tx.validations && tx.validations.tresorier;
+    var valP  = tx.validations && tx.validations.president;
+
+    var badge;
+    if (tx.statut === 'divergence') {
+      badge = '<span class="tx-stt-badge diverg">⚠️ Divergence</span>';
+    } else if (isBig) {
+      if (valT && !valP)      badge = '<span class="tx-stt-badge pres">👑 Attente Président</span>';
+      else if (!valT && valP) badge = '<span class="tx-stt-badge pres">👑 Attente Trésorier</span>';
+      else                    badge = '<span class="tx-stt-badge pres">👑 Seuil élevé — 2 validations requises</span>';
+    } else {
+      badge = '<span class="tx-stt-badge att">⏳ En attente de validation</span>';
+    }
+
+    var isAuthor  = tx.auteurId === CU?.uid;
+    var iAmPres   = isPresident(CP) && !valP;
+    var iAmTres   = isTresorier(CP) && !valT;
+    var canValNow = canValidateTx(CP, tx) && (iAmPres || iAmTres);
+
+    var acts = '';
+    if (canValNow) {
+      var lbl = iAmPres ? '✅ Valider (Président)' : '✅ Valider (Trésorier)';
+      acts += `<button class="tx-act ok" data-action="tx-validate" data-id="${tx.id}">${lbl}</button>`;
+      acts += `<button class="tx-act ko" data-action="tx-reject" data-id="${tx.id}">⚠️ Divergence</button>`;
+    }
+    if (tx.statut === 'divergence' && isAuthor && canProposeTx(CP)) {
+      acts += `<button class="tx-act edit" data-action="tx-resubmit" data-id="${tx.id}">✏️ Corriger &amp; resoumettre</button>`;
+    }
+    if (!acts) acts = `<span style="font-size:11.5px;color:var(--t3)">En attente du Président ou du Trésorier</span>`;
+
+    html += `<div class="tx-pending-item">
+      <div class="tx-pending-top">
+        <div class="tx-info">
+          <div class="tx-nom">${escHtml(tx.description||'—')}</div>
+          <div class="tx-meta">${escHtml(tx.categorie||'—')} · saisi par ${escHtml(tx.auteurNom||'—')}</div>
+          ${tx.commentaireDivergence ? `<div class="tx-diverg-note">💬 ${escHtml(tx.commentaireDivergence)}</div>` : ''}
+        </div>
+        <div class="tx-amount ${isE?'e':'d'}">${sign}${Number(tx.montant).toLocaleString('fr-FR')} Ar</div>
+      </div>
+      <div class="tx-pending-foot">${badge}<div class="tx-pending-acts">${acts}</div></div>
+    </div>`;
+  });
+  el.innerHTML = html;
+  // Délégation d'événements — jamais d'onclick avec variable inline
+  el.querySelectorAll('[data-action="tx-validate"]').forEach(b => b.addEventListener('click', () => validateTx(b.getAttribute('data-id'))));
+  el.querySelectorAll('[data-action="tx-reject"]').forEach(b => b.addEventListener('click', () => startRejectTx(b.getAttribute('data-id'))));
+  el.querySelectorAll('[data-action="tx-resubmit"]').forEach(b => b.addEventListener('click', () => resubmitTx(b.getAttribute('data-id'))));
+}
+
+/* ── Actions de validation double contrôle (Session 7) ────────────── */
+// Seuls Président et Trésorier valident. En dessous du seuil, l'un des deux suffit.
+// Au-dessus du seuil, les DEUX doivent valider (dans n'importe quel ordre).
+window.validateTx = async function(id) {
+  const tx = allTx.find(t => t.id === id);
+  if (!tx || !canValidateTx(CP, tx)) { toast('Réservé au Président ou au Trésorier'); return; }
+  const isBig = tx.montant >= TRESO_SEUIL_PRESIDENT;
+  const asPresident = isPresident(CP);
+  const asTresorier  = isTresorier(CP);
+
+  const validations = Object.assign({}, tx.validations || {});
+  if (asPresident) validations.president = { uid: CU.uid, nom: CP.nom || '', at: new Date().toISOString() };
+  if (asTresorier)  validations.tresorier = { uid: CU.uid, nom: CP.nom || '', at: new Date().toISOString() };
+
+  const complete = !isBig || (validations.tresorier && validations.president);
+
+  try {
+    await db.collection('tresorerie').doc(id).update({
+      validations: validations,
+      statut: complete ? 'validee' : 'attente',
+      validateurId: CU.uid, validateurNom: CP.nom || '',
+      validatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      commentaireDivergence: firebase.firestore.FieldValue.delete()
+    });
+    toast(complete ? 'Transaction validée ✅' : 'Validation enregistrée — en attente de la seconde signature (seuil dépassé)');
+    loadTreso();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+let txToReject = null;
+window.startRejectTx = function(id) {
+  txToReject = id;
+  const ta = document.getElementById('tx-reject-reason');
+  if (ta) ta.value = '';
+  document.getElementById('ov-tx-reject')?.classList.add('on');
+};
+window.confirmRejectTx = async function() {
+  if (!txToReject) return;
+  const reason = (document.getElementById('tx-reject-reason').value || '').trim();
+  if (!reason) { toast('Explique la divergence constatée'); return; }
+  try {
+    await db.collection('tresorerie').doc(txToReject).update({
+      statut: 'divergence',
+      commentaireDivergence: reason,
+      validations: {},
+      validateurId: CU.uid, validateurNom: CP.nom || '',
+      validatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-tx-reject');
+    toast('Divergence signalée');
+    txToReject = null;
+    loadTreso();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+window.resubmitTx = async function(id) {
+  const tx = allTx.find(t => t.id === id);
+  if (!tx || tx.auteurId !== CU?.uid || !canProposeTx(CP)) return;
+  try {
+    await db.collection('tresorerie').doc(id).update({
+      statut: 'attente',
+      validations: {},
+      validateurId: firebase.firestore.FieldValue.delete(),
+      validateurNom: firebase.firestore.FieldValue.delete(),
+      commentaireDivergence: firebase.firestore.FieldValue.delete()
+    });
+    toast('Transaction resoumise pour validation');
+    loadTreso();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
 function renderTransactions(list) {
   var el = document.getElementById('tx-list');
+
   if (!el) return;
   if (!list.length) {
     el.innerHTML = '<div class="empty"><div class="empty-ic">💰</div><div class="empty-t">Aucune transaction</div></div>';
@@ -3344,7 +3553,7 @@ function renderTransactions(list) {
     html += '<div class="tx-ic ' + (isE ? 'e' : 'd') + '">' + (isE ? '📈' : '📉') + '</div>';
     html += '<div class="tx-info">';
     html += '<div class="tx-nom">' + escHtml(tx.description || '—') + '</div>';
-    html += '<div class="tx-meta">' + escHtml(tx.categorie || '—') + ' · ' + date + '</div>';
+    html += '<div class="tx-meta">' + escHtml(tx.categorie || '—') + ' · ' + date + ' · ✅ validé par ' + escHtml(tx.validateurNom || '—') + '</div>';
     html += '</div>';
     html += '<div class="tx-amount ' + (isE ? 'e' : 'd') + '">' + sign + Number(tx.montant).toLocaleString('fr-FR') + ' Ar</div>';
     html += '</div>';
@@ -3367,6 +3576,7 @@ function renderChart() {
   }
   for (var j = 0; j < allTx.length; j++) {
     var tx = allTx[j];
+    if (tx.statut !== 'validee') continue;
     if (!tx.createdAt || !tx.createdAt.toDate) continue;
     var txDate = tx.createdAt.toDate();
     for (var k = 0; k < months.length; k++) {
@@ -3399,6 +3609,7 @@ function renderChart() {
 
 /* ── Modal Transaction ─────────────────────────────────────────── */
 window.openModalTx = function(type) {
+  if (!canProposeTx(CP)) { toast('Réservé au Président, Trésorier, Trésorier Adjoint ou Secrétaire Financier'); return; }
   curTxType = type;
   txJustifUrl = '';
   var titleEl = document.getElementById('tx-modal-title');
@@ -3427,6 +3638,7 @@ window.previewJustif = async function(input) {
 };
 
 window.submitTransaction = async function() {
+  if (!canProposeTx(CP)) { toast('Réservé au Président, Trésorier, Trésorier Adjoint ou Secrétaire Financier'); return; }
   var montant = parseFloat(document.getElementById('tx-montant').value);
   var desc    = document.getElementById('tx-desc').value.trim();
   var cat     = document.getElementById('tx-cat').value;
@@ -3441,11 +3653,12 @@ window.submitTransaction = async function() {
       description: desc, categorie: cat,
       justificatif: txJustifUrl || '',
       auteurId: CU.uid, auteurNom: CP.nom || '',
+      statut: 'attente', // double contrôle — validation requise avant impact sur le solde
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     closeOverlay('ov-tx');
     loadTreso();
-    toast((curTxType === 'entree' ? 'Entrée' : 'Dépense') + ' enregistrée ✅');
+    toast((curTxType === 'entree' ? 'Entrée' : 'Dépense') + ' enregistrée — en attente de validation');
   } catch(e) { toast('Erreur : ' + e.message); }
   finally { btn.disabled = false; btn.querySelector('span').textContent = 'Enregistrer'; }
 };
