@@ -605,7 +605,22 @@ input,select,textarea{font-family:inherit}
 .proj-title{font-size:22px;font-weight:700;color:#fff}
 .proj-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px}
 .btn-new-proj{height:36px;padding:0 14px;background:var(--gold);color:#fff;border-radius:10px;font-size:13px;font-weight:600;display:none;align-items:center;gap:5px}
+.proj-search{width:100%;height:40px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:0 14px;font-size:13px;color:#fff;outline:none}
+.proj-search::placeholder{color:rgba(255,255,255,.5)}
 .proj-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+.proj-cat-badge{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:10px;background:var(--surface2);color:var(--t2);display:inline-flex;align-items:center;gap:4px;margin-top:6px}
+.proj-badge.archive{background:var(--surface2);color:var(--t3)}
+.pd-locked-banner{background:var(--surface2);color:var(--t3);border-radius:var(--r14);padding:12px 14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.pd-lifecycle-acts{display:flex;gap:8px;flex-wrap:wrap;padding:14px 16px}
+.pd-lifecycle-acts button{flex:1;min-width:120px;height:40px;border-radius:10px;font-size:12px;font-weight:600}
+.pd-lc-archive{background:#F5F3FF;color:#5B21B6}
+.pd-lc-delete{background:#FDE8E8;color:#C0392B}
+.pd-lc-statut{background:var(--surface2);color:var(--t1);border:1.5px solid var(--surface3)}
+.cr-item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--surface2)}
+.cr-item:last-child{border-bottom:none}
+.cr-item a{font-size:13px;color:var(--navy);font-weight:500;text-decoration:none;flex:1}
+[data-dark] .cr-item a{color:var(--gold)}
+.btn-add-cr{width:100%;height:40px;background:var(--surface2);color:var(--t1);border:1.5px dashed var(--surface3);border-radius:var(--r8);font-size:12.5px;font-weight:600;margin:12px 16px}
 
 /* Carte projet */
 .proj-card{background:var(--surface);border-radius:var(--r22);box-shadow:var(--sh);overflow:hidden;cursor:pointer;transition:transform var(--tr)}
@@ -1337,6 +1352,12 @@ input,select,textarea{font-family:inherit}
       <div><div class="proj-title">Projets</div><div class="proj-sub" id="proj-count">—</div></div>
       <button class="btn-new-proj" id="btn-new-proj" onclick="openModalProjet()">➕ Nouveau</button>
     </div>
+    <input type="text" class="proj-search" id="proj-search" placeholder="🔍 Rechercher un projet..." oninput="renderProjets(filterProjetsList())">
+    <div class="filters" id="proj-cat-filters" style="padding:10px 0 0">
+      <button class="chip on" data-cat="actifs" onclick="filterProjetsCat(this,'actifs')">Actifs</button>
+      <button class="chip" data-cat="archive" onclick="filterProjetsCat(this,'archive')">📦 Archivés</button>
+    </div>
+    <div class="filters" id="proj-cat-filters2" style="padding:0 0 12px"></div>
   </div>
   <div class="proj-body" id="proj-body">
     <div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>
@@ -1357,12 +1378,24 @@ input,select,textarea{font-family:inherit}
     <div class="pd-title" id="pd-title">—</div>
   </div>
   <div class="pd-body">
+    <div class="pd-locked-banner" id="pd-locked-banner" style="display:none">🔒 Projet archivé — lecture seule, aucune modification possible</div>
+    <div class="pd-card" id="pd-cat-badge-wrap" style="display:none;padding:12px 16px">
+      <span class="proj-cat-badge" id="pd-cat-badge">—</span>
+    </div>
     <div class="pd-card">
       <div class="pd-card-t">Avancement</div>
       <div style="padding:14px 16px">
         <div class="proj-progress-top"><span id="pd-pct-label">0%</span><span id="pd-tasks-count" style="color:var(--t3);font-size:11px">0 tâches</span></div>
         <div class="proj-progress-bg"><div class="proj-progress-fill" id="pd-bar" style="width:0%"></div></div>
       </div>
+    </div>
+    <div class="pd-card" id="pd-but-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">But / Objectif</div>
+      <div style="padding:0 16px 14px;font-size:13px;color:var(--t2);line-height:1.5" id="pd-but-txt"></div>
+    </div>
+    <div class="pd-card" id="pd-impact-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">Impact attendu</div>
+      <div style="padding:0 16px 14px;font-size:13px;color:var(--t2);line-height:1.5" id="pd-impact-txt"></div>
     </div>
     <div class="pd-card">
       <div class="pd-card-t">Informations</div>
@@ -1372,6 +1405,14 @@ input,select,textarea{font-family:inherit}
       <div class="det-row"><span class="det-row-l">Budget</span><span class="det-row-v" id="pd-budget">—</span></div>
       <div class="det-row"><span class="det-row-l">Statut</span><span class="det-row-v" id="pd-statut">—</span></div>
       <div class="det-row"><span class="det-row-l">Publication</span><span class="det-row-v" id="pd-pub">—</span></div>
+    </div>
+    <div class="pd-card" id="pd-statut-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">Faire évoluer le statut</div>
+      <div class="pd-lifecycle-acts" style="padding-top:0">
+        <button class="pd-lc-statut" onclick="setProjetStatut('Actif')">Actif</button>
+        <button class="pd-lc-statut" onclick="setProjetStatut('En pause')">En pause</button>
+        <button class="pd-lc-statut" onclick="setProjetStatut('Terminé')">✅ Terminé</button>
+      </div>
     </div>
     <div class="pd-card" id="pd-join-card" style="display:none;padding:14px 16px">
       <button class="btn-join-proj" onclick="openJoinModal()">🙋 Rejoindre ce projet</button>
@@ -1387,6 +1428,19 @@ input,select,textarea{font-family:inherit}
     <div class="pd-card" id="pd-demandes-card" style="display:none">
       <div class="pd-card-t" style="padding:13px 16px">Demandes d'adhésion</div>
       <div id="pd-demandes-list"></div>
+    </div>
+    <div class="pd-card" id="pd-cr-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">Comptes rendus <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--t3)">(obligatoire avant de clore le projet)</span></div>
+      <div id="pd-cr-list"></div>
+      <button class="btn-add-cr" id="pd-cr-add-btn" onclick="document.getElementById('pd-cr-file').click()">➕ Ajouter un compte rendu (fichier/photo)</button>
+      <input type="file" id="pd-cr-file" style="display:none" onchange="uploadCompteRendu(this)">
+    </div>
+    <div class="pd-card" id="pd-lifecycle-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">Gestion du projet</div>
+      <div class="pd-lifecycle-acts">
+        <button class="pd-lc-archive" id="pd-btn-archive" onclick="openArchiveModal()">📦 Archiver</button>
+        <button class="pd-lc-delete" id="pd-btn-delete" onclick="deleteProjet()">🗑️ Supprimer</button>
+      </div>
     </div>
     <div class="pd-card">
       <div class="pd-card-t" style="padding:13px 16px">Tâches du projet (Kanban)</div>
@@ -1406,15 +1460,18 @@ input,select,textarea{font-family:inherit}
       </div>
     </div>
     <div class="pd-card" id="pd-add-task-card" style="display:none">
-      <div class="pd-card-t">Ajouter une tâche au projet</div>
-      <div style="padding:13px 16px 0">
+      <div class="pd-card-t">Tâches du projet — gestion</div>
+      <div id="pd-new-task-wrap" style="display:none;padding:13px 16px 0">
         <button id="pd-new-task-btn" onclick="openNewTask(curProjId)" style="width:100%;height:42px;background:var(--gold);color:#fff;border-radius:var(--r8);font-size:13px;font-weight:600;margin-bottom:10px">➕ Nouvelle tâche pour ce projet</button>
       </div>
-      <div style="padding:0 16px 16px;display:flex;gap:8px">
-        <select id="pd-task-sel" style="flex:1;height:44px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:0 12px;font-size:13px;color:var(--t1);outline:none">
-          <option value="">— Choisir une tâche existante —</option>
-        </select>
-        <button onclick="linkTaskToProjet()" style="height:44px;padding:0 14px;background:var(--navy);color:#fff;border-radius:var(--r8);font-size:13px;font-weight:600">Lier</button>
+      <div id="pd-link-task-wrap" style="display:none;padding:13px 16px 16px;gap:8px">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:8px">Lier une tâche associative existante à ce projet — réservé au Président et au Vice-Président</div>
+        <div style="display:flex;gap:8px">
+          <select id="pd-task-sel" style="flex:1;height:44px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:0 12px;font-size:13px;color:var(--t1);outline:none">
+            <option value="">— Choisir une tâche existante —</option>
+          </select>
+          <button onclick="linkTaskToProjet()" style="height:44px;padding:0 14px;background:var(--navy);color:#fff;border-radius:var(--r8);font-size:13px;font-weight:600">Lier</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1485,6 +1542,9 @@ input,select,textarea{font-family:inherit}
     <div class="mtitle">Nouveau projet</div>
     <div class="mfield"><label>Nom du projet *</label><input type="text" id="p-nom" placeholder="Ex: Journée portes ouvertes 2026"></div>
     <div class="mfield"><label>Description</label><textarea id="p-desc" placeholder="Objectifs, contexte..."></textarea></div>
+    <div class="mfield"><label>But / Objectif</label><textarea id="p-but" placeholder="Pourquoi ce projet, ce qu'il doit produire concrètement"></textarea></div>
+    <div class="mfield"><label>Impact attendu</label><textarea id="p-impact" placeholder="Ce que ça apporte à l'association / aux membres"></textarea></div>
+    <div class="mfield"><label>Catégorie (optionnel)</label><select id="p-cat"><option value="">— Aucune —</option></select></div>
     <div class="mrow">
       <div class="mfield" style="margin-bottom:0"><label>Responsable du projet</label><select id="p-resp"><option value="">— Choisir —</option></select></div>
       <div class="mfield" style="margin-bottom:0"><label>Resp. délégation tâches</label><select id="p-resp-deleg"><option value="">— Même que ci-dessus —</option></select></div>
@@ -1529,6 +1589,25 @@ input,select,textarea{font-family:inherit}
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-join-proj')">Annuler</button>
       <button class="bsub" onclick="submitJoinRequest()"><span>Envoyer la demande</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ARCHIVER UN PROJET (v2.0) -->
+<div class="overlay" id="ov-archive-proj" onclick="closeOverlay('ov-archive-proj')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Archiver le projet</div>
+    <div class="mfield" style="font-size:12.5px;color:var(--t3);line-height:1.5">
+      Une fois archivé, le projet passe en lecture seule : plus aucune tâche, demande, poste ou information ne pourra être modifiée. Cette action reste réversible uniquement par le Président ou le Vice-Président.
+    </div>
+    <label style="display:flex;align-items:center;gap:9px;padding:12px 0;font-size:13px;color:var(--t1);cursor:pointer">
+      <input type="checkbox" id="archive-consulte-chk" style="width:18px;height:18px">
+      J'ai consulté le(s) responsable(s) de ce projet avant d'archiver
+    </label>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-archive-proj')">Annuler</button>
+      <button class="bsub" onclick="confirmArchiveProjet()"><span>Archiver</span></button>
     </div>
   </div>
 </div>
@@ -1825,6 +1904,16 @@ function canAccessPersonalData(viewer, targetUid) {
 function isProjectResponsable(projet, uid) {
   return !!projet && !!uid && (projet.responsableId === uid || projet.responsableDelegationId === uid);
 }
+// Un projet archivé devient strictement en lecture seule (v2.0)
+function isProjetVerrouille(p) { return !!p && p.statutPublication === 'archive'; }
+// Catégories dérivées des objets statutaires ACT & SPEAK — modifiable, non figé
+const PROJET_CATEGORIES = {
+  culture:   { label:'Culture, Arts & Expression',        ic:'🎭' },
+  langues:   { label:'Langues & Interculturel',            ic:'🗣️' },
+  citoyen:   { label:'Engagement Citoyen & Leadership',     ic:'🌱' },
+  environ:   { label:'Environnement & Développement Durable', ic:'🌍' },
+  autre:     { label:'Autre',                               ic:'📌' }
+};
 // Calcule les flags booléens miroir (consommés par les règles Firestore — évite le regex accents côté rules)
 function computeRoleFlags(roleText) {
   const fake = { role: roleText, categorie: 'bureau' }; // évalué dans un contexte "membre du Bureau"
@@ -2428,6 +2517,7 @@ async function openNewTask(projetIdCtx) {
     if (!curProjData || curProjData.id !== projetIdCtx || !isProjectResponsable(curProjData, CU?.uid)) {
       toast('Réservé au responsable de ce projet'); return;
     }
+    if (isProjetVerrouille(curProjData)) { toast('Projet archivé — lecture seule'); return; }
     taskProjetCtx = curProjData;
   } else if (!isPresidentOrVP(CP)) {
     toast('La délégation de tâches est réservée au Président et au Vice-Président'); return;
@@ -3640,6 +3730,8 @@ let allTx        = [];
 
 /* ══ PROJETS ════════════════════════════════════════════════════ */
 
+let projGroupFilter = 'actifs', projCatFilter = 'tous';
+
 async function loadProjets() {
   var body = document.getElementById('proj-body');
   if (!body || !CU) return;
@@ -3650,39 +3742,80 @@ async function loadProjets() {
     if (btn) btn.style.display = 'flex';
   }
 
+  // Chips catégories (générés une fois depuis PROJET_CATEGORIES)
+  var cf2 = document.getElementById('proj-cat-filters2');
+  if (cf2 && !cf2.dataset.built) {
+    cf2.innerHTML = Object.keys(PROJET_CATEGORIES).map(k =>
+      `<button class="chip" data-cat2="${k}">${PROJET_CATEGORIES[k].ic} ${PROJET_CATEGORIES[k].label}</button>`
+    ).join('');
+    // Délégation d'événements — jamais d'onclick avec variable inline
+    cf2.querySelectorAll('[data-cat2]').forEach(btn => {
+      btn.addEventListener('click', () => filterProjetsCat2(btn, btn.getAttribute('data-cat2')));
+    });
+    cf2.dataset.built = '1';
+  }
+
   try {
     var snap = await db.collection('projets').orderBy('createdAt','desc').get();
     allProjets = [];
     snap.forEach(function(d) { allProjets.push(Object.assign({id:d.id}, d.data())); });
-    var c = allProjets.length;
-    var el = document.getElementById('proj-count');
-    if (el) el.textContent = c + ' projet' + (c !== 1 ? 's' : '');
-    renderProjets(allProjets);
+    renderProjets(filterProjetsList());
   } catch(e) {
     body.innerHTML = '<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-b">' + e.message + '</div></div>';
   }
 }
 
+function filterProjetsCat(el, group) {
+  document.querySelectorAll('#proj-cat-filters .chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  projGroupFilter = group;
+  renderProjets(filterProjetsList());
+}
+function filterProjetsCat2(el, cat) {
+  var already = el.classList.contains('on');
+  document.querySelectorAll('#proj-cat-filters2 .chip').forEach(c => c.classList.remove('on'));
+  projCatFilter = already ? 'tous' : cat;
+  if (!already) el.classList.add('on');
+  renderProjets(filterProjetsList());
+}
+function filterProjetsList() {
+  var q = (document.getElementById('proj-search')?.value || '').trim().toLowerCase();
+  var list = allProjets.filter(function(p) {
+    if (projGroupFilter === 'actifs' && isProjetVerrouille(p)) return false;
+    if (projGroupFilter === 'archive' && !isProjetVerrouille(p)) return false;
+    if (projCatFilter !== 'tous' && p.categorie !== projCatFilter) return false;
+    if (q && !(p.nom||'').toLowerCase().includes(q) && !(p.description||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  var el = document.getElementById('proj-count');
+  if (el) el.textContent = list.length + ' projet' + (list.length !== 1 ? 's' : '');
+  return list;
+}
+
 function renderProjets(list) {
   var body = document.getElementById('proj-body');
   if (!list.length) {
-    body.innerHTML = '<div class="empty"><div class="empty-ic">🚀</div><div class="empty-t">Aucun projet</div><div class="empty-b">Le bureau n&apos;a pas encore lancé de projet.</div></div>';
+    body.innerHTML = '<div class="empty"><div class="empty-ic">🚀</div><div class="empty-t">Aucun projet</div><div class="empty-b">Aucun résultat pour ce filtre.</div></div>';
     return;
   }
   var html = '';
   for (var i = 0; i < list.length; i++) {
     var p = list[i];
     var pct = p.avancement || 0;
-    var stC = p.statut === 'Terminé' ? 'termine' : p.statut === 'En pause' ? 'pause' : 'actif';
+    var locked = isProjetVerrouille(p);
+    var stC = locked ? 'archive' : p.statut === 'Terminé' ? 'termine' : p.statut === 'En pause' ? 'pause' : 'actif';
+    var stLabel = locked ? '📦 Archivé' : (p.statut || 'Actif');
     var ech = p.echeance ? new Date(p.echeance).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : 'Non définie';
     var budget = p.budget ? Number(p.budget).toLocaleString('fr-FR') + ' Ar' : '—';
+    var catInfo = p.categorie ? PROJET_CATEGORIES[p.categorie] : null;
     var pid = p.id;
     html += '<div class="proj-card" data-pid="' + pid + '">' + '\n';
     html += '<div class="proj-card-top">';
     html += '<div class="proj-card-header">';
     html += '<div class="proj-nom">' + escHtml(p.nom || '—') + '</div>';
-    html += '<div class="proj-badge ' + stC + '">' + (p.statut || 'Actif') + '</div>';
+    html += '<div class="proj-badge ' + stC + '">' + stLabel + '</div>';
     html += '</div>';
+    if (catInfo) html += '<div class="proj-cat-badge">' + catInfo.ic + ' ' + catInfo.label + '</div>';
     if (p.description) html += '<div class="proj-desc">' + escHtml(p.description.substring(0,80)) + (p.description.length > 80 ? '…' : '') + '</div>';
     html += '<div class="proj-progress-wrap">';
     html += '<div class="proj-progress-top"><span>Avancement</span><span class="proj-progress-pct">' + pct + '%</span></div>';
@@ -3729,10 +3862,55 @@ async function openProjDetail(id) {
   const membres = p.membres || [];
   const jeSuisMembre = membres.some(m => m.uid === CU?.uid) || p.responsableId === CU?.uid || p.responsableDelegationId === CU?.uid;
   const respScope = isProjectResponsable(p, CU?.uid);
+  const locked = isProjetVerrouille(p);
+
+  // Bannière verrou
+  const lockedBanner = document.getElementById('pd-locked-banner');
+  if (lockedBanner) lockedBanner.style.display = locked ? 'flex' : 'none';
+
+  // Catégorie
+  const catWrap = document.getElementById('pd-cat-badge-wrap');
+  const catInfo = p.categorie ? PROJET_CATEGORIES[p.categorie] : null;
+  if (catInfo) {
+    catWrap.style.display = 'block';
+    document.getElementById('pd-cat-badge').textContent = catInfo.ic + ' ' + catInfo.label;
+  } else { catWrap.style.display = 'none'; }
+
+  // But / Impact
+  const butCard = document.getElementById('pd-but-card');
+  if (p.but) { butCard.style.display = 'block'; document.getElementById('pd-but-txt').textContent = p.but; }
+  else { butCard.style.display = 'none'; }
+  const impactCard = document.getElementById('pd-impact-card');
+  if (p.impact) { impactCard.style.display = 'block'; document.getElementById('pd-impact-txt').textContent = p.impact; }
+  else { impactCard.style.display = 'none'; }
+
+  // Faire évoluer le statut — responsables + Président/VP, si non verrouillé
+  const statutCard = document.getElementById('pd-statut-card');
+  if (statutCard) statutCard.style.display = (!locked && (respScope || isPresidentOrVP(CP))) ? 'block' : 'none';
+
+  // Comptes rendus
+  const crCard = document.getElementById('pd-cr-card');
+  const crs = p.comptesRendus || [];
+  if (crCard) {
+    crCard.style.display = 'block';
+    document.getElementById('pd-cr-list').innerHTML = crs.length
+      ? crs.map(cr => `<div class="cr-item">📎 <a href="${cr.url}" target="_blank" rel="noopener">${escHtml(cr.nom)}</a><span style="font-size:10.5px;color:var(--t3)">${escHtml(cr.ajoutePar||'')}</span></div>`).join('')
+      : '<div class="empty" style="padding:14px"><div class="empty-b">Aucun compte rendu pour l\'instant.</div></div>';
+    const crAddBtn = document.getElementById('pd-cr-add-btn');
+    if (crAddBtn) crAddBtn.style.display = (!locked && (respScope || isPresidentOrVP(CP))) ? 'block' : 'none';
+  }
+
+  // Archiver / Supprimer — Président/VP uniquement
+  const lifecycleCard = document.getElementById('pd-lifecycle-card');
+  if (lifecycleCard) {
+    lifecycleCard.style.display = isPresidentOrVP(CP) ? 'block' : 'none';
+    const archBtn = document.getElementById('pd-btn-archive');
+    if (archBtn) archBtn.style.display = locked ? 'none' : 'block';
+  }
 
   // Bouton Rejoindre
   const joinCard = document.getElementById('pd-join-card');
-  if (joinCard) joinCard.style.display = (p.statutPublication === 'publie' && !jeSuisMembre) ? 'block' : 'none';
+  if (joinCard) joinCard.style.display = (!locked && p.statutPublication === 'publie' && !jeSuisMembre) ? 'block' : 'none';
 
   // Postes
   const postesCard = document.getElementById('pd-postes-card');
@@ -3756,9 +3934,9 @@ async function openProjDetail(id) {
       </div>`).join('');
   } else { membresCard.style.display = 'none'; }
 
-  // Demandes d'adhésion — visible du responsable / resp. délégation uniquement
+  // Demandes d'adhésion — visible du responsable / resp. délégation uniquement, jamais si archivé
   const demandesCard = document.getElementById('pd-demandes-card');
-  if (respScope) {
+  if (respScope && !locked) {
     demandesCard.style.display = 'block';
     loadDemandesProjet(id, postes);
   } else {
@@ -3819,21 +3997,27 @@ async function openProjDetail(id) {
       }
     }
 
-    // Select pour lier une tâche (bureau + responsables du projet)
+    // Gestion des tâches du projet : création réservée aux responsables, liaison réservée au Président/VP
     var addCard = document.getElementById('pd-add-task-card');
-    if (CP && (isBureau(CP) || respScope)) {
+    var newTaskWrap  = document.getElementById('pd-new-task-wrap');
+    var linkTaskWrap = document.getElementById('pd-link-task-wrap');
+    var showNewTask  = !locked && respScope;
+    var showLinkTask = !locked && isPresidentOrVP(CP);
+    if (CP && (showNewTask || showLinkTask)) {
       addCard.style.display = 'block';
-      var newTaskBtn = document.getElementById('pd-new-task-btn');
-      if (newTaskBtn) newTaskBtn.style.display = respScope ? 'block' : 'none';
-      var sel = document.getElementById('pd-task-sel');
-      sel.innerHTML = '<option value="">— Choisir une tâche existante —</option>';
-      var allSnap = await db.collection('taches').get();
-      allSnap.forEach(function(d) {
-        var td = d.data();
-        if (!td.projetId) {
-          sel.innerHTML += '<option value="' + d.id + '">' + escHtml(td.nom || '—') + ' (' + escHtml(td.assigneeNom || '—') + ')</option>';
-        }
-      });
+      if (newTaskWrap)  newTaskWrap.style.display  = showNewTask ? 'block' : 'none';
+      if (linkTaskWrap) linkTaskWrap.style.display = showLinkTask ? 'block' : 'none';
+      if (showLinkTask) {
+        var sel = document.getElementById('pd-task-sel');
+        sel.innerHTML = '<option value="">— Choisir une tâche existante —</option>';
+        var allSnap = await db.collection('taches').get();
+        allSnap.forEach(function(d) {
+          var td = d.data();
+          if (!td.projetId) {
+            sel.innerHTML += '<option value="' + d.id + '">' + escHtml(td.nom || '—') + ' (' + escHtml(td.assigneeNom || '—') + ')</option>';
+          }
+        });
+      }
     } else {
       addCard.style.display = 'none';
     }
@@ -3845,6 +4029,8 @@ async function openProjDetail(id) {
 }
 
 window.linkTaskToProjet = async function() {
+  if (!isPresidentOrVP(CP)) { toast('Réservé au Président et au Vice-Président'); return; }
+  if (curProjData && isProjetVerrouille(curProjData)) { toast('Projet archivé — lecture seule'); return; }
   var sel = document.getElementById('pd-task-sel');
   var tid = sel.value;
   if (!tid || !curProjId) { toast('Choisis une tâche'); return; }
@@ -3868,6 +4054,7 @@ window.openJoinModal = function() {
   document.getElementById('ov-join-proj').classList.add('on');
 };
 window.submitJoinRequest = async function() {
+  if (curProjData && isProjetVerrouille(curProjData)) { toast('Projet archivé — impossible de rejoindre'); return; }
   const posteId = document.getElementById('join-poste-sel').value;
   const posteNom = posteId ? (curProjData.postes.find(p => p.id === posteId)||{}).nom : '';
   const motivation = (document.getElementById('join-motivation-inp').value || '').trim();
@@ -3918,23 +4105,116 @@ async function loadDemandesProjet(projetId, postes) {
 }
 async function acceptDemande(demandeId, uid, nom, posteId) {
   if (!curProjData || !isProjectResponsable(curProjData, CU.uid)) { toast('Réservé au responsable du projet'); return; }
+  if (isProjetVerrouille(curProjData)) { toast('Projet archivé — lecture seule'); return; }
   try {
     const postes = (curProjData.postes || []).map(p => p.id === posteId ? Object.assign({}, p, {pourvu:true, membreId:uid, membreNom:nom}) : p);
     const membres = (curProjData.membres || []).concat([{ uid, nom, poste: posteId ? (postes.find(p=>p.id===posteId)||{}).nom : 'Membre du projet', dateAjout: new Date().toISOString() }]);
     await db.collection('projets').doc(curProjId).update({ postes, membres });
     await db.collection('projets').doc(curProjId).collection('demandes').doc(demandeId).update({ statut:'acceptee' });
+    await pushJournal(curProjId, nom + ' a rejoint le projet');
     toast(nom + ' a rejoint le projet ✅');
     openProjDetail(curProjId);
   } catch(e) { toast('Erreur : ' + e.message); }
 }
 async function rejectDemande(demandeId) {
   if (!curProjData || !isProjectResponsable(curProjData, CU.uid)) { toast('Réservé au responsable du projet'); return; }
+  if (isProjetVerrouille(curProjData)) { toast('Projet archivé — lecture seule'); return; }
   try {
     await db.collection('projets').doc(curProjId).collection('demandes').doc(demandeId).update({ statut:'refusee' });
     toast('Demande refusée');
     openProjDetail(curProjId);
   } catch(e) { toast('Erreur : ' + e.message); }
 }
+
+/* ── Journal d'activité (v2.0) ─────────────────────────────────────── */
+function journalEntry(texte) {
+  return { texte, auteurNom: CP?.nom || '—', at: new Date().toISOString() };
+}
+async function pushJournal(projetId, texte) {
+  try {
+    await db.collection('projets').doc(projetId).update({
+      journal: firebase.firestore.FieldValue.arrayUnion(journalEntry(texte))
+    });
+  } catch(e) { /* non bloquant */ }
+}
+
+/* ── Cycle de vie du projet : statut, archivage, suppression (v2.0) ── */
+window.setProjetStatut = async function(statut) {
+  if (!curProjData || !curProjId) return;
+  if (!isPresidentOrVP(CP) && !isProjectResponsable(curProjData, CU.uid)) { toast('Réservé aux responsables du projet ou au Président/VP'); return; }
+  if (isProjetVerrouille(curProjData)) { toast('Projet archivé — lecture seule'); return; }
+  if (statut === 'Terminé' && !(curProjData.comptesRendus && curProjData.comptesRendus.length)) {
+    toast('Ajoute au moins un compte rendu avant de clore le projet');
+    return;
+  }
+  try {
+    await db.collection('projets').doc(curProjId).update({ statut });
+    await pushJournal(curProjId, 'Statut → ' + statut);
+    toast('Statut mis à jour ✅');
+    openProjDetail(curProjId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+window.openArchiveModal = function() {
+  if (!curProjData || !isPresidentOrVP(CP)) { toast('Réservé au Président et au Vice-Président'); return; }
+  document.getElementById('archive-consulte-chk').checked = false;
+  document.getElementById('ov-archive-proj').classList.add('on');
+};
+window.confirmArchiveProjet = async function() {
+  if (!document.getElementById('archive-consulte-chk').checked) { toast('Confirme avoir consulté le(s) responsable(s)'); return; }
+  try {
+    await db.collection('projets').doc(curProjId).update({
+      statutPublication: 'archive', archivedBy: CU.uid, archivedByNom: CP.nom,
+      archivedAt: firebase.firestore.FieldValue.serverTimestamp(), responsablesConsultes: true
+    });
+    await pushJournal(curProjId, 'Projet archivé par ' + CP.nom);
+    closeOverlay('ov-archive-proj');
+    toast('Projet archivé 📦');
+    openProjDetail(curProjId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+window.deleteProjet = async function() {
+  if (!curProjData || !curProjId || !isPresidentOrVP(CP)) { toast('Réservé au Président et au Vice-Président'); return; }
+  if (!confirm('Supprimer définitivement ce projet ? Les tâches liées seront détachées (conservées comme tâches associatives normales) et non supprimées. Cette action est irréversible.')) return;
+  try {
+    // Détacher les tâches liées plutôt que les supprimer
+    const tSnap = await db.collection('taches').where('projetId','==',curProjId).get();
+    const batch = db.batch();
+    tSnap.forEach(d => batch.update(d.ref, { projetId: null, scope: 'association' }));
+    await batch.commit();
+    // Nettoyer les demandes d'adhésion (sous-collection)
+    const dSnap = await db.collection('projets').doc(curProjId).collection('demandes').get();
+    const batch2 = db.batch();
+    dSnap.forEach(d => batch2.delete(d.ref));
+    await batch2.commit();
+    await db.collection('projets').doc(curProjId).delete();
+    toast('Projet supprimé');
+    curProjId = null; curProjData = null;
+    go('projets'); loadProjets();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Comptes rendus (v2.0) — obligatoires avant clôture ────────────── */
+window.uploadCompteRendu = async function(input) {
+  const file = input.files[0];
+  if (!file || !curProjId) return;
+  if (!isPresidentOrVP(CP) && !isProjectResponsable(curProjData, CU.uid)) { toast('Réservé aux responsables du projet ou au Président/VP'); return; }
+  if (isProjetVerrouille(curProjData)) { toast('Projet archivé — lecture seule'); return; }
+  toast('Upload en cours...');
+  try {
+    const ref = storage.ref('comptes-rendus/' + curProjId + '/' + Date.now() + '_' + file.name);
+    await ref.put(file);
+    const url = await ref.getDownloadURL();
+    await db.collection('projets').doc(curProjId).update({
+      comptesRendus: firebase.firestore.FieldValue.arrayUnion({ nom:file.name, url, ajoutePar:CP.nom, at:new Date().toISOString() })
+    });
+    await pushJournal(curProjId, 'Compte rendu ajouté : ' + file.name);
+    toast('Compte rendu ajouté ✅');
+    openProjDetail(curProjId);
+  } catch(e) { toast('Erreur upload : ' + e.message); }
+  input.value = '';
+};
 
 let postesDraft = [];
 let pubStatutDraft = 'brouillon';
@@ -3943,12 +4223,18 @@ window.openModalProjet = async function() {
   if (!CP || !isBureau(CP)) { toast('Réservé au Bureau'); return; }
   document.getElementById('p-nom').value   = '';
   document.getElementById('p-desc').value  = '';
+  document.getElementById('p-but').value   = '';
+  document.getElementById('p-impact').value = '';
   document.getElementById('p-ech').value   = '';
   document.getElementById('p-budget').value = '';
   postesDraft = [];
   pubStatutDraft = 'brouillon';
   document.querySelectorAll('.pub-tb').forEach(b => b.classList.toggle('on', b.getAttribute('data-pub') === 'brouillon'));
   renderPostesDraft();
+
+  var catSel = document.getElementById('p-cat');
+  catSel.innerHTML = '<option value="">— Aucune —</option>' + Object.keys(PROJET_CATEGORIES).map(k =>
+    `<option value="${k}">${PROJET_CATEGORIES[k].ic} ${PROJET_CATEGORIES[k].label}</option>`).join('');
 
   if (!memsCache.length) {
     var snap = await db.collection('users').get();
@@ -3995,6 +4281,9 @@ function renderPostesDraft() {
 window.submitProjet = async function() {
   var nom  = document.getElementById('p-nom').value.trim();
   var desc = document.getElementById('p-desc').value.trim();
+  var but  = document.getElementById('p-but').value.trim();
+  var impact = document.getElementById('p-impact').value.trim();
+  var cat  = document.getElementById('p-cat').value;
   var respId = document.getElementById('p-resp').value;
   var respDelegId = document.getElementById('p-resp-deleg').value || respId;
   var ech  = document.getElementById('p-ech').value;
@@ -4008,13 +4297,15 @@ window.submitProjet = async function() {
   btn.disabled = true; btn.querySelector('span').textContent = '...';
   try {
     await db.collection('projets').add({
-      nom: nom, description: desc,
+      nom: nom, description: desc, but: but, impact: impact, categorie: cat || null,
       responsable: respM ? respM.nom : '', responsableId: respId || null,
       responsableDelegation: respDelegM ? respDelegM.nom : (respM ? respM.nom : ''), responsableDelegationId: respDelegId || null,
       echeance: ech || null, budget: bud ? Number(bud) : 0,
       statut: 'Actif', avancement: 0,
       statutPublication: pubStatutDraft,
       postes: postesDraft, membres: [],
+      etapes: [], comptesRendus: [], documents: [],
+      journal: [{ texte:'Projet créé', auteurNom: CP.nom, at: new Date().toISOString() }],
       createdBy: CU.uid, createdByNom: CP.nom,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
