@@ -4201,19 +4201,53 @@ window.uploadCompteRendu = async function(input) {
   if (!file || !curProjId) return;
   if (!isPresidentOrVP(CP) && !isProjectResponsable(curProjData, CU.uid)) { toast('Réservé aux responsables du projet ou au Président/VP'); return; }
   if (isProjetVerrouille(curProjData)) { toast('Projet archivé — lecture seule'); return; }
-  toast('Upload en cours...');
-  try {
-    const ref = storage.ref('comptes-rendus/' + curProjId + '/' + Date.now() + '_' + file.name);
-    await ref.put(file);
-    const url = await ref.getDownloadURL();
-    await db.collection('projets').doc(curProjId).update({
-      comptesRendus: firebase.firestore.FieldValue.arrayUnion({ nom:file.name, url, ajoutePar:CP.nom, at:new Date().toISOString() })
-    });
-    await pushJournal(curProjId, 'Compte rendu ajouté : ' + file.name);
-    toast('Compte rendu ajouté ✅');
-    openProjDetail(curProjId);
-  } catch(e) { toast('Erreur upload : ' + e.message); }
-  input.value = '';
+  if (file.size > 10 * 1024 * 1024) { toast('Fichier trop lourd (max 10 Mo)'); input.value=''; return; }
+
+  const addBtn = document.getElementById('pd-cr-add-btn');
+  if (addBtn) { addBtn.disabled = true; addBtn.textContent = '⏳ Upload 0%...'; }
+
+  const path = 'comptes-rendus/' + curProjId + '/' + Date.now() + '_' + file.name;
+  const ref = storage.ref(path);
+  const task = ref.put(file);
+
+  // Garde-fou : si rien ne se passe après 20s, on prévient plutôt que de rester bloqué en silence
+  const timeoutId = setTimeout(() => {
+    console.warn('Upload compte-rendu : aucune réponse après 20s pour', path);
+    toast('⚠️ L\'upload ne répond pas — vérifie ta connexion, ou les règles Firebase Storage (path: ' + path + ')');
+    if (addBtn) { addBtn.disabled = false; addBtn.textContent = '➕ Ajouter un compte rendu (fichier/photo)'; }
+  }, 20000);
+
+  task.on('state_changed',
+    snap => {
+      const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+      if (addBtn) addBtn.textContent = '⏳ Upload ' + pct + '%...';
+    },
+    err => {
+      clearTimeout(timeoutId);
+      console.error('Erreur upload compte-rendu:', err.code, err.message);
+      toast('Erreur upload (' + (err.code||'inconnue') + ') : ' + err.message);
+      if (addBtn) { addBtn.disabled = false; addBtn.textContent = '➕ Ajouter un compte rendu (fichier/photo)'; }
+      input.value = '';
+    },
+    async () => {
+      clearTimeout(timeoutId);
+      try {
+        const url = await ref.getDownloadURL();
+        await db.collection('projets').doc(curProjId).update({
+          comptesRendus: firebase.firestore.FieldValue.arrayUnion({ nom:file.name, url, ajoutePar:CP.nom, at:new Date().toISOString() })
+        });
+        await pushJournal(curProjId, 'Compte rendu ajouté : ' + file.name);
+        toast('Compte rendu ajouté ✅');
+        openProjDetail(curProjId);
+      } catch(e) {
+        console.error('Erreur après upload (Firestore):', e.code, e.message);
+        toast('Fichier uploadé mais erreur d\'enregistrement : ' + e.message);
+      } finally {
+        input.value = '';
+        if (addBtn) { addBtn.disabled = false; addBtn.textContent = '➕ Ajouter un compte rendu (fichier/photo)'; }
+      }
+    }
+  );
 };
 
 let postesDraft = [];
