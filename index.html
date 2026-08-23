@@ -1818,7 +1818,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <script>
 // ── INIT ──────────────────────────────────────────────────────
 console.log("ACT & SPEAK v5.1 — Script chargé");
@@ -1834,7 +1833,63 @@ if (!firebase.apps.length) {
 }
 const auth    = firebase.auth();
 const db      = firebase.firestore();
-const storage = firebase.storage();
+
+// ── CLOUDINARY (remplace Firebase Storage — nécessite le plan Blaze payant) ──
+// Session 7 v2.0 : Storage désactivé (Spark gratuit incompatible), upload de fichiers
+// géré via Cloudinary (100% gratuit, sans carte bancaire, 25 Go offerts).
+// ⚠️ À REMPLIR : crée un compte gratuit sur cloudinary.com, puis Settings → Upload →
+// "Add upload preset" → mode "Unsigned" → coche "Allow raw file uploads" si tu veux
+// accepter des PDF (CV, comptes rendus). Remplace les deux valeurs ci-dessous.
+const CLOUDINARY_CLOUD  = 'TON_CLOUD_NAME';   // ex: 'dxyz1234a' — visible en haut du Dashboard Cloudinary
+const CLOUDINARY_PRESET = 'TON_UPLOAD_PRESET'; // le nom que tu as donné à ton preset "Unsigned"
+
+async function uploadToCloudinary(file, folder) {
+  if (CLOUDINARY_CLOUD === 'TON_CLOUD_NAME' || CLOUDINARY_PRESET === 'TON_UPLOAD_PRESET') {
+    throw new Error('Cloudinary non configuré — remplace CLOUDINARY_CLOUD et CLOUDINARY_PRESET dans le code');
+  }
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_PRESET);
+  if (folder) formData.append('folder', folder);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/auto/upload`, {
+    method: 'POST', body: formData
+  });
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({}));
+    throw new Error('Upload Cloudinary échoué (' + res.status + ') : ' + (errBody?.error?.message || 'erreur inconnue'));
+  }
+  const data = await res.json();
+  return data.secure_url;
+}
+
+// Variante avec suivi de progression (XHR — fetch() ne fournit pas onprogress pour l'upload)
+function uploadToCloudinaryWithProgress(file, folder, onProgress) {
+  return new Promise((resolve, reject) => {
+    if (CLOUDINARY_CLOUD === 'TON_CLOUD_NAME' || CLOUDINARY_PRESET === 'TON_UPLOAD_PRESET') {
+      reject(new Error('Cloudinary non configuré — remplace CLOUDINARY_CLOUD et CLOUDINARY_PRESET dans le code'));
+      return;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_PRESET);
+    if (folder) formData.append('folder', folder);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/auto/upload`);
+    xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100)); };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { resolve(JSON.parse(xhr.responseText).secure_url); }
+        catch(e) { reject(new Error('Réponse Cloudinary invalide')); }
+      } else {
+        let msg = 'Upload Cloudinary échoué (' + xhr.status + ')';
+        try { msg += ' : ' + (JSON.parse(xhr.responseText)?.error?.message || ''); } catch(e) {}
+        reject(new Error(msg));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Erreur réseau pendant l\'upload'));
+    xhr.send(formData);
+  });
+}
 
 // ── STATE ─────────────────────────────────────────────────────────
 let CU = null;  // currentUser
@@ -2697,9 +2752,7 @@ function changePhoto() {
     if (!file||!CU) return;
     toast('Upload...');
     try {
-      const ref = storage.ref('photos/'+CU.uid);
-      await ref.put(file);
-      const url = await ref.getDownloadURL();
+      const url = await uploadToCloudinary(file, 'photos');
       await db.collection('users').doc(CU.uid).update({photo:url});
       await CU.updateProfile({photoURL:url});
       CP.photo = url;
@@ -2707,7 +2760,7 @@ function changePhoto() {
       document.getElementById('d-av').innerHTML = img;
       document.getElementById('p-av').innerHTML = img;
       toast('Photo mise à jour ✅');
-    } catch(e) { toast('Erreur upload'); }
+    } catch(e) { toast('Erreur upload : ' + e.message); }
   };
   inp.click();
 }
@@ -2980,9 +3033,7 @@ window.sendPhoto = function() {
     if (!file) return;
     toast('Envoi de la photo...');
     try {
-      const ref = storage.ref('chat/' + curConvId + '/' + Date.now() + '_' + file.name);
-      await ref.put(file);
-      const url = await ref.getDownloadURL();
+      const url = await uploadToCloudinary(file, 'chat/' + curConvId);
       await db.collection('chat').doc(curConvId).collection('messages').add({
         texte: '',
         imageUrl: url,
@@ -4206,48 +4257,23 @@ window.uploadCompteRendu = async function(input) {
   const addBtn = document.getElementById('pd-cr-add-btn');
   if (addBtn) { addBtn.disabled = true; addBtn.textContent = '⏳ Upload 0%...'; }
 
-  const path = 'comptes-rendus/' + curProjId + '/' + Date.now() + '_' + file.name;
-  const ref = storage.ref(path);
-  const task = ref.put(file);
-
-  // Garde-fou : si rien ne se passe après 20s, on prévient plutôt que de rester bloqué en silence
-  const timeoutId = setTimeout(() => {
-    console.warn('Upload compte-rendu : aucune réponse après 20s pour', path);
-    toast('⚠️ L\'upload ne répond pas — vérifie ta connexion, ou les règles Firebase Storage (path: ' + path + ')');
-    if (addBtn) { addBtn.disabled = false; addBtn.textContent = '➕ Ajouter un compte rendu (fichier/photo)'; }
-  }, 20000);
-
-  task.on('state_changed',
-    snap => {
-      const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+  try {
+    const url = await uploadToCloudinaryWithProgress(file, 'comptes-rendus/' + curProjId, pct => {
       if (addBtn) addBtn.textContent = '⏳ Upload ' + pct + '%...';
-    },
-    err => {
-      clearTimeout(timeoutId);
-      console.error('Erreur upload compte-rendu:', err.code, err.message);
-      toast('Erreur upload (' + (err.code||'inconnue') + ') : ' + err.message);
-      if (addBtn) { addBtn.disabled = false; addBtn.textContent = '➕ Ajouter un compte rendu (fichier/photo)'; }
-      input.value = '';
-    },
-    async () => {
-      clearTimeout(timeoutId);
-      try {
-        const url = await ref.getDownloadURL();
-        await db.collection('projets').doc(curProjId).update({
-          comptesRendus: firebase.firestore.FieldValue.arrayUnion({ nom:file.name, url, ajoutePar:CP.nom, at:new Date().toISOString() })
-        });
-        await pushJournal(curProjId, 'Compte rendu ajouté : ' + file.name);
-        toast('Compte rendu ajouté ✅');
-        openProjDetail(curProjId);
-      } catch(e) {
-        console.error('Erreur après upload (Firestore):', e.code, e.message);
-        toast('Fichier uploadé mais erreur d\'enregistrement : ' + e.message);
-      } finally {
-        input.value = '';
-        if (addBtn) { addBtn.disabled = false; addBtn.textContent = '➕ Ajouter un compte rendu (fichier/photo)'; }
-      }
-    }
-  );
+    });
+    await db.collection('projets').doc(curProjId).update({
+      comptesRendus: firebase.firestore.FieldValue.arrayUnion({ nom:file.name, url, ajoutePar:CP.nom, at:new Date().toISOString() })
+    });
+    await pushJournal(curProjId, 'Compte rendu ajouté : ' + file.name);
+    toast('Compte rendu ajouté ✅');
+    openProjDetail(curProjId);
+  } catch(e) {
+    console.error('Erreur upload compte-rendu:', e.message);
+    toast('Erreur upload : ' + e.message);
+  } finally {
+    input.value = '';
+    if (addBtn) { addBtn.disabled = false; addBtn.textContent = '➕ Ajouter un compte rendu (fichier/photo)'; }
+  }
 };
 
 let postesDraft = [];
@@ -4641,9 +4667,7 @@ window.previewJustif = async function(input) {
   document.getElementById('tx-justif-name').value = file.name;
   toast('Upload du justificatif...');
   try {
-    var ref = storage.ref('justificatifs/' + Date.now() + '_' + file.name);
-    await ref.put(file);
-    txJustifUrl = await ref.getDownloadURL();
+    txJustifUrl = await uploadToCloudinary(file, 'justificatifs');
     toast('Justificatif ajouté ✅');
   } catch(e) { toast('Erreur upload : ' + e.message); }
 };
