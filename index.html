@@ -1840,11 +1840,11 @@ const db      = firebase.firestore();
 // ⚠️ À REMPLIR : crée un compte gratuit sur cloudinary.com, puis Settings → Upload →
 // "Add upload preset" → mode "Unsigned" → coche "Allow raw file uploads" si tu veux
 // accepter des PDF (CV, comptes rendus). Remplace les deux valeurs ci-dessous.
-const CLOUDINARY_CLOUD  = 'TON_CLOUD_NAME';   // ex: 'dxyz1234a' — visible en haut du Dashboard Cloudinary
-const CLOUDINARY_PRESET = 'TON_UPLOAD_PRESET'; // le nom que tu as donné à ton preset "Unsigned"
+const CLOUDINARY_CLOUD  = 'zmyehmkt';   // ex: 'dxyz1234a' — visible en haut du Dashboard Cloudinary
+const CLOUDINARY_PRESET = 'act_speak_uploads'; // le nom que tu as donné à ton preset "Unsigned"
 
 async function uploadToCloudinary(file, folder) {
-  if (CLOUDINARY_CLOUD === 'TON_CLOUD_NAME' || CLOUDINARY_PRESET === 'TON_UPLOAD_PRESET') {
+  if (CLOUDINARY_CLOUD === 'zmyehmkt' || CLOUDINARY_PRESET === 'act_speak_uploads') {
     throw new Error('Cloudinary non configuré — remplace CLOUDINARY_CLOUD et CLOUDINARY_PRESET dans le code');
   }
   const formData = new FormData();
@@ -1865,7 +1865,7 @@ async function uploadToCloudinary(file, folder) {
 // Variante avec suivi de progression (XHR — fetch() ne fournit pas onprogress pour l'upload)
 function uploadToCloudinaryWithProgress(file, folder, onProgress) {
   return new Promise((resolve, reject) => {
-    if (CLOUDINARY_CLOUD === 'TON_CLOUD_NAME' || CLOUDINARY_PRESET === 'TON_UPLOAD_PRESET') {
+    if (CLOUDINARY_CLOUD === 'zmyehmkt' || CLOUDINARY_PRESET === 'act_speak_uploads') {
       reject(new Error('Cloudinary non configuré — remplace CLOUDINARY_CLOUD et CLOUDINARY_PRESET dans le code'));
       return;
     }
