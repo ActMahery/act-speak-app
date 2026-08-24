@@ -2120,60 +2120,56 @@ function fillDash() {
   const categorie = getCategorie(CP);
   const score   = CP.score  || 0;
 
-  document.getElementById('d-name').textContent = prenom;
-  document.getElementById('d-av-i').textContent = initial;
-  document.getElementById('d-lvl').textContent  = CAT_LABEL[categorie] || 'Membre';
-  document.getElementById('d-score').innerHTML  = score + '<span>pts</span>';
-  document.getElementById('d-score-big').innerHTML = score + ' <small>/ 100</small>';
-  document.getElementById('d-score-next').textContent =
+  const safe = (id, fn) => { const el = document.getElementById(id); if (el) fn(el); };
+
+  safe('d-name',       el => el.textContent = prenom);
+  safe('d-av-i',       el => el.textContent = initial);
+  safe('d-lvl',        el => el.textContent = CAT_LABEL[categorie] || 'Membre');
+  safe('d-score',      el => el.innerHTML = score + '<span>pts</span>');
+  safe('d-score-big',  el => el.innerHTML = score + ' <small>/ 100</small>');
+  safe('d-score-next', el => el.textContent =
     score < 20 ? 'Confirme tes premières tâches pour marquer des points.' :
     score < 50 ? 'Bonne progression ! Participe aux réunions.' :
-    score < 80 ? 'Excellent ! Le bureau peut te proposer une promotion.' : 'Score exceptionnel — membre exemplaire.';
-  setTimeout(() => { document.getElementById('d-score-bar').style.width = Math.min(score,100)+'%'; }, 400);
+    score < 80 ? 'Excellent ! Le bureau peut te proposer une promotion.' : 'Score exceptionnel — membre exemplaire.');
+  setTimeout(() => safe('d-score-bar', el => el.style.width = Math.min(score,100)+'%'), 400);
 
-  // QA
   const qa = document.getElementById('d-qa');
-  qa.innerHTML = (QA[categorie]||QA['benevole']).map(a =>
+  if (qa) qa.innerHTML = (QA[categorie]||QA['benevole']).map(a =>
     `<button class="qa" onclick="${a.fn}"><div class="qa-ic" style="background:${a.bg}">${a.ic}</div><div class="qa-lb">${a.lb}</div></button>`
   ).join('');
 
-  // Profil
-  document.getElementById('p-name').textContent   = CP.nom || CU.email;
-  document.getElementById('p-role').textContent   = CP.role || 'Membre';
-  document.getElementById('p-email').textContent  = CU.email;
-  document.getElementById('p-role-d').textContent = (CAT_LABEL[categorie]||'Membre') + (CP.role ? ' · ' + CP.role : '');
-  document.getElementById('p-score-d').textContent = score + ' pts';
-  document.getElementById('p-av-i').textContent   = initial;
+  safe('p-name',    el => el.textContent = CP.nom || CU.email);
+  safe('p-role',    el => el.textContent = CP.role || 'Membre');
+  safe('p-email',   el => el.textContent = CU.email);
+  safe('p-role-d',  el => el.textContent = (CAT_LABEL[categorie]||'Membre') + (CP.role ? ' · ' + CP.role : ''));
+  safe('p-score-d', el => el.textContent = score + ' pts');
+  safe('p-av-i',    el => el.textContent = initial);
 
   if (CP.photo) {
     const img = `<img src="${CP.photo}" alt="">`;
-    document.getElementById('d-av').innerHTML     = img;
-    document.getElementById('p-av').innerHTML     = img;
+    safe('d-av', el => el.innerHTML = img);
+    safe('p-av', el => el.innerHTML = img);
   }
   if (categorie === 'bureau') {
-    document.getElementById('admin-btn').style.display  = 'block';
-    var tresoBtnEl = document.getElementById('treso-btn');
-    if (tresoBtnEl) tresoBtnEl.style.display = 'block';
-    var statsBtnEl = document.getElementById('stats-btn');
-    if (statsBtnEl) statsBtnEl.style.display = 'block';
+    safe('admin-btn',   el => el.style.display = 'block');
+    safe('treso-btn',   el => el.style.display = 'block');
+    safe('stats-btn',   el => el.style.display = 'block');
   }
   if (isPresidentOrVP(CP)) {
-    document.getElementById('btn-new').style.display = 'flex';
-    var supBtnEl = document.getElementById('supervision-btn');
-    if (supBtnEl) supBtnEl.style.display = 'block';
+    safe('btn-new',         el => el.style.display = 'flex');
+    safe('supervision-btn', el => el.style.display = 'block');
   }
   if (localStorage.getItem('theme') === 'dark') {
     document.documentElement.setAttribute('data-dark','');
-    document.getElementById('theme-tog').classList.add('on');
+    safe('theme-tog', el => el.classList.add('on'));
   }
-  // Compter membres
   db.collection('users').get().then(s => {
-    document.getElementById('d-mems').textContent = s.size;
+    safe('d-mems', el => el.textContent = s.size);
   }).catch(() => {});
 
-  // Tâches récentes
   loadRecentTasks();
 }
+
 
 // ── TACHES ────────────────────────────────────────────────────────
 function loadRecentTasks() {
