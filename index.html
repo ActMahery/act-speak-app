@@ -1964,6 +1964,14 @@ const PROJET_CATEGORIES = {
   environ:   { label:'Environnement & Développement Durable', ic:'🌍' },
   autre:     { label:'Autre',                               ic:'📌' }
 };
+// Détecte si un texte de rôle correspond à une fonction du Bureau, même si
+// le champ categorie n'a jamais été aligné dessus (source du bug "role dit
+// Président mais categorie dit encore bénévole")
+function roleImpliesBureau(roleText) {
+  const n = normAccents(roleText);
+  if (!n) return false;
+  return ['president','tresorier','secretaire financier','secretaire general','vice president'].some(k => n.includes(k));
+}
 // Calcule les flags booléens miroir (consommés par les règles Firestore — évite le regex accents côté rules)
 function computeRoleFlags(roleText) {
   const fake = { role: roleText, categorie: 'bureau' }; // évalué dans un contexte "membre du Bureau"
@@ -2022,6 +2030,13 @@ auth.onAuthStateChanged(async user => {
         const data = snap.data();
         if (data.statut === 'bloque') { auth.signOut(); go('login'); showErr('Accès suspendu.'); return; }
         await ensureCategorieMigree(user.uid, data);
+        // Auto-correction : si le rôle indique une fonction du Bureau mais que la
+        // catégorie n'a jamais été alignée (compte créé avant que le rôle soit précisé),
+        // on corrige silencieusement — jamais l'inverse (on ne rétrograde jamais tout seul).
+        if (data.categorie !== 'bureau' && roleImpliesBureau(data.role)) {
+          db.collection('users').doc(user.uid).update({ categorie: 'bureau' }).catch(() => {});
+          data.categorie = 'bureau';
+        }
         if (data.role && data.estPresident === undefined) {
           const flags = computeRoleFlags(data.role);
           db.collection('users').doc(user.uid).update(flags).catch(() => {});
@@ -2695,10 +2710,14 @@ async function saveRole(uid, role) {
   role = (role||'').trim();
   try {
     const flags = computeRoleFlags(role);
-    await db.collection('users').doc(uid).update(Object.assign({ role: role }, flags));
+    const payload = Object.assign({ role: role }, flags);
+    // Empêche l'incohérence "rôle Bureau mais catégorie non-Bureau" à la source
+    if (roleImpliesBureau(role)) payload.categorie = 'bureau';
+    await db.collection('users').doc(uid).update(payload);
     toast('Rôle mis à jour → ' + (role || '—'));
     // Si c'est mon propre profil, rafraîchir CP en direct
-    if (CU && uid === CU.uid) { CP.role = role; Object.assign(CP, flags); fillDash(); }
+    if (CU && uid === CU.uid) { Object.assign(CP, payload); fillDash(); }
+    loadMembers();
   } catch(e) { toast('Erreur : ' + e.message); }
 }
 
