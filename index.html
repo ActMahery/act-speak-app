@@ -1822,7 +1822,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 // ── INIT ──────────────────────────────────────────────────────
-console.log("ACT & SPEAK v5.1 — Script chargé");
+console.log("ACT & SPEAK v7.0 — Script chargé");
 if (!firebase.apps.length) {
   firebase.initializeApp({
   apiKey:"AIzaSyCg0iChSrt3yLXn0yd-RFPUy8YmKy0hX8Y",
@@ -1916,8 +1916,11 @@ const QA = {
 // Une catégorie non reconnue retombe sur 'benevole' (accès sûr, non-admin).
 function getCategorie(p) {
   if (!p) return 'benevole';
+  // Source primaire : le champ categorie explicit
   if (p.categorie && CAT_LABEL[p.categorie]) return p.categorie;
-  // Migration à la volée depuis l'ancien champ niveau (non destructif)
+  // Source secondaire : le champ role (contourne le bug où categorie est absent/mal initialisé)
+  if (p.role && roleImpliesBureau(p.role)) return 'bureau';
+  // Migration depuis l'ancien système niveau
   if (p.niveau === 1) return 'bureau';
   if (p.niveau === 2) return 'actif';
   return 'benevole';
@@ -2045,10 +2048,20 @@ auth.onAuthStateChanged(async user => {
         CP = data;
         fillDash(); // Re-remplir avec les vraies données
       } else {
-        // Créer le profil si inexistant
-        await db.collection('users').doc(user.uid).set({
-          ...CP, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        // Créer le profil si inexistant — recalcule la catégorie depuis le rôle Auth si possible
+        const newProfile = {
+          ...CP,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        // Si le display name contient des indices de rôle, ou si c'est le compte admin connu
+        if (user.email && user.email.toLowerCase() === 'harimalalajoseph@gmail.com') {
+          newProfile.categorie  = 'bureau';
+          newProfile.role       = 'Président';
+          newProfile.estPresident = true;
+          Object.assign(CP, newProfile);
+          fillDash();
+        }
+        await db.collection('users').doc(user.uid).set(newProfile);
       }
     } catch(e) {
       console.warn('Firestore profil:', e.message);
@@ -2800,8 +2813,32 @@ function toast(msg) {
 // Splash géré dans onAuthStateChanged
 
 // ── SERVICE WORKER ────────────────────────────────────────────────
+// Version token — changé à chaque session pour forcer le rechargement
+const APP_VERSION = 'v7.0';
+
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  // Désinscrire tous les anciens SW, puis enregistrer le nouveau
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(reg) { reg.unregister(); });
+  }).then(function() {
+    navigator.serviceWorker.register('sw.js').then(function(reg) {
+      // Forcer l'activation immédiate si une nouvelle version est en attente
+      if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      reg.addEventListener('updatefound', function() {
+        var newSW = reg.installing;
+        if (newSW) newSW.addEventListener('statechange', function() {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            // Nouvelle version disponible — rechargement automatique
+            window.location.reload();
+          }
+        });
+      });
+    }).catch(function(){});
+  });
+  // Si le SW prend le contrôle d'une nouvelle version, recharger la page
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    window.location.reload();
+  });
 }
 
 /* ════════════════════════════════════════════════════════════════
