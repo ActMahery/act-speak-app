@@ -508,6 +508,40 @@ input,select,textarea{font-family:inherit}
 .rtab.on{background:var(--gold);color:#fff;font-weight:600}
 .reun-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
 
+/* Mon Espace — Agenda (Bloc D) */
+.ag-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 20px 16px}
+.ag-hd-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.ag-title{font-size:22px;font-weight:700;color:#fff}
+.ag-sub{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px}
+.ag-add-btn{height:36px;padding:0 14px;background:var(--gold);color:#fff;border-radius:10px;font-size:13px;font-weight:600}
+.ag-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+.ag-legend{display:flex;gap:16px;padding:0 4px}
+.ag-legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--t3)}
+.ag-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.ag-dot.reun{background:var(--navy)}
+[data-dark] .ag-dot.reun{background:var(--gold)}
+.ag-dot.tache{background:#2E9E6C}
+.ag-dot.perso{background:#C0392B}
+.cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12.5px;color:var(--t2);cursor:pointer;border-radius:10px;position:relative;gap:2px}
+.cal-day.today{background:var(--surface2);font-weight:700;color:var(--navy)}
+[data-dark] .cal-day.today{color:var(--gold)}
+.cal-day.sel{background:var(--navy);color:#fff}
+[data-dark] .cal-day.sel{background:var(--gold)}
+.cal-day.other{opacity:.3}
+.cal-day-dots{display:flex;gap:2px}
+.cal-day-dots span{width:5px;height:5px;border-radius:50%}
+.cal-dow{text-align:center;font-size:10px;color:var(--t3);font-weight:600;padding-bottom:6px}
+.ag-ev-item{background:var(--surface);border-radius:var(--r14);padding:12px 14px;box-shadow:var(--sh);display:flex;gap:10px;align-items:center}
+.ag-ev-dot{width:4px;align-self:stretch;border-radius:2px;flex-shrink:0}
+.ag-ev-dot.reun{background:var(--navy)}
+[data-dark] .ag-ev-dot.reun{background:var(--gold)}
+.ag-ev-dot.tache{background:#2E9E6C}
+.ag-ev-dot.perso{background:#C0392B}
+.ag-ev-body{flex:1;min-width:0}
+.ag-ev-nom{font-size:13.5px;font-weight:600;color:var(--t1)}
+.ag-ev-meta{font-size:11px;color:var(--t3);margin-top:2px}
+.ag-ev-cat{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--surface2);color:var(--t2);flex-shrink:0}
+
 /* Carte réunion */
 .reun-card{background:var(--surface);border-radius:var(--r22);box-shadow:var(--sh);overflow:hidden;cursor:pointer;transition:transform var(--tr)}
 .reun-card:active{transform:scale(.99)}
@@ -1219,6 +1253,89 @@ input,select,textarea{font-family:inherit}
 
 
 <!-- ══ RÉUNIONS ══ -->
+<!-- ══ MON ESPACE — AGENDA PERSONNEL (Bloc D) ══ -->
+<div id="s-agenda" class="scr">
+  <div class="ag-hd">
+    <div class="ag-hd-top">
+      <div>
+        <div class="ag-title">Mon Agenda</div>
+        <div class="ag-sub" id="ag-sub">Vue personnelle</div>
+      </div>
+      <button class="ag-add-btn" onclick="openNewEventModal()">➕ Événement</button>
+    </div>
+    <div class="reun-tabs">
+      <button class="rtab on" onclick="switchAgTab(this,'calendrier')">🗓️ Calendrier</button>
+      <button class="rtab" onclick="switchAgTab(this,'liste')">📋 Liste</button>
+    </div>
+  </div>
+
+  <div id="ag-cal" class="ag-body">
+    <div class="cal-wrap">
+      <div class="cal-hd">
+        <div class="cal-nav" onclick="agCalNav(-1)">‹</div>
+        <div class="cal-month" id="ag-cal-month">—</div>
+        <div class="cal-nav" onclick="agCalNav(1)">›</div>
+      </div>
+      <div class="cal-grid" id="ag-cal-grid"></div>
+    </div>
+    <div class="ag-legend">
+      <div class="ag-legend-item"><span class="ag-dot reun"></span>Réunion</div>
+      <div class="ag-legend-item"><span class="ag-dot tache"></span>Tâche</div>
+      <div class="ag-legend-item"><span class="ag-dot perso"></span>Personnel</div>
+    </div>
+    <div class="sec-title" style="padding:0 2px">Événements du jour</div>
+    <div id="ag-events-day"></div>
+  </div>
+
+  <div id="ag-liste" class="ag-body" style="display:none">
+    <div class="filters" style="padding:14px 14px 0">
+      <button class="chip on" data-agf="tous" onclick="filterAgListe(this,'tous')">Tous</button>
+      <button class="chip" data-agf="reun" onclick="filterAgListe(this,'reun')">📅 Réunions</button>
+      <button class="chip" data-agf="tache" onclick="filterAgListe(this,'tache')">✅ Tâches</button>
+      <button class="chip" data-agf="perso" onclick="filterAgListe(this,'perso')">👤 Perso</button>
+    </div>
+    <div id="ag-liste-body" style="padding:14px"></div>
+  </div>
+
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- MODAL NOUVEL ÉVÉNEMENT PERSONNEL -->
+<div class="overlay" id="ov-event" onclick="closeOverlay('ov-event')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="ov-event-title">Nouvel événement</div>
+    <div class="mfield"><label>Titre *</label><input type="text" id="ev-nom" placeholder="Ex: Révision examen, RDV médecin..."></div>
+    <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>Date *</label><input type="date" id="ev-date"></div>
+      <div class="mfield" style="margin-bottom:0"><label>Heure</label><input type="time" id="ev-heure"></div>
+    </div>
+    <div class="mfield" style="margin-top:14px"><label>Catégorie</label>
+      <select id="ev-cat">
+        <option value="perso">👤 Personnel</option>
+        <option value="etude">📚 Études</option>
+        <option value="sport">🏃 Sport</option>
+        <option value="travail">💼 Travail</option>
+        <option value="famille">👨‍👩‍👧 Famille</option>
+        <option value="sante">🏥 Santé</option>
+        <option value="autre">📌 Autre</option>
+      </select>
+    </div>
+    <div class="mfield"><label>Note</label><textarea id="ev-note" placeholder="Optionnel..."></textarea></div>
+    <div class="mbtns">
+      <button class="bcnl" id="ev-delete-btn" style="display:none;background:#FDE8E8;color:#C0392B" onclick="deleteEvent()">🗑️ Supprimer</button>
+      <button class="bcnl" onclick="closeOverlay('ov-event')">Annuler</button>
+      <button class="bsub" onclick="saveEvent()"><span id="ev-save-lbl">Créer</span></button>
+    </div>
+  </div>
+</div>
+
 <div id="s-reunion" class="scr">
   <div class="reun-hd">
     <div class="reun-hd-top">
@@ -1906,9 +2023,9 @@ const CAT_SHORT = {
 // Classe CSS courte par catégorie (badges annuaire/admin)
 const CAT_CLASS = { bureau:'cat-bureau', actif:'cat-actif', benevole:'cat-benevole', honoraire:'cat-honoraire', bienfaiteur:'cat-bienfaiteur' };
 const QA = {
-  bureau:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🚀',lb:'Projets',bg:'#FFF7ED',fn:"go('projets')"},{ic:'📅',lb:'Réunion',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💰',lb:'Tréso',bg:'#F5F3FF',fn:"go('treso')"}],
-  actif:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"}],
-  benevole:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'👥',lb:'Annuaire',bg:'#F5F3FF',fn:"go('annuaire')"}],
+  bureau:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🚀',lb:'Projets',bg:'#FFF7ED',fn:"go('projets')"},{ic:'📅',lb:'Mon agenda',bg:'#F0FDF4',fn:"go('agenda')"},{ic:'💰',lb:'Tréso',bg:'#F5F3FF',fn:"go('treso')"}],
+  actif:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"}],
+  benevole:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'👥',lb:'Annuaire',bg:'#F5F3FF',fn:"go('annuaire')"}],
   honoraire:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"}],
   bienfaiteur:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'💰',lb:'Trésorerie',bg:'#F5F3FF',fn:"go('treso')"}]
 };
@@ -2003,6 +2120,7 @@ function go(screen) {
   if (screen === 'taches') loadTasks();
   if (screen === 'admin')  loadMembers();
   if (screen === 'supervision') loadSupervision();
+  if (screen === 'agenda') loadAgenda();
 }
 
 function navTo(btn, screen) {
@@ -2170,6 +2288,228 @@ function fillDash() {
   loadRecentTasks();
 }
 
+
+// ── MON ESPACE — AGENDA (Bloc D) ────────────────────────────────────
+let agViewDate = new Date();
+let agSelDate  = new Date();
+let agEvents   = []; // fusion réunions + tâches + perso, chargée une fois par mois affiché
+let agListeFilter = 'tous';
+let editingEventId = null;
+
+function switchAgTab(el, tab) {
+  document.querySelectorAll('#s-agenda .rtab').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('ag-cal').style.display   = tab === 'calendrier' ? 'block' : 'none';
+  document.getElementById('ag-liste').style.display = tab === 'liste' ? 'block' : 'none';
+  if (tab === 'liste') renderAgListe();
+}
+
+function filterAgListe(el, f) {
+  document.querySelectorAll('#ag-liste .chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  agListeFilter = f;
+  renderAgListe();
+}
+
+function agCalNav(delta) {
+  agViewDate = new Date(agViewDate.getFullYear(), agViewDate.getMonth() + delta, 1);
+  loadAgenda();
+}
+
+async function loadAgenda() {
+  if (!CU || !CP) return;
+  const sub = document.getElementById('ag-sub');
+  if (sub) sub.textContent = 'Événements associatifs et personnels réunis';
+
+  const y = agViewDate.getFullYear(), m = agViewDate.getMonth();
+  const monthLabel = agViewDate.toLocaleDateString('fr-FR', {month:'long', year:'numeric'});
+  const mEl = document.getElementById('ag-cal-month');
+  if (mEl) mEl.textContent = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+
+  agEvents = [];
+  try {
+    // Réunions (toutes — filtrage fin par canal non nécessaire, l'agenda perso montre tout ce qui est visible)
+    const rSnap = await db.collection('reunions').get();
+    rSnap.forEach(d => {
+      const r = d.data();
+      if (!r.date) return;
+      const dt = r.date?.toDate ? r.date.toDate() : new Date(r.date);
+      agEvents.push({ type:'reun', id:d.id, nom:r.nom||'Réunion', date:dt, heure:r.heure||'', cat:null });
+    });
+    // Tâches assignées à moi, avec échéance
+    const tSnap = await db.collection('taches').where('assigneeId','==',CU.uid).get();
+    tSnap.forEach(d => {
+      const t = d.data();
+      if (!t.echeance) return;
+      agEvents.push({ type:'tache', id:d.id, nom:t.nom||'Tâche', date:new Date(t.echeance), heure:'', cat:t.statut });
+    });
+    // Événements personnels
+    const eSnap = await db.collection('agenda').where('uid','==',CU.uid).get();
+    eSnap.forEach(d => {
+      const e = d.data();
+      if (!e.date) return;
+      agEvents.push({ type:'perso', id:d.id, nom:e.nom||'Événement', date:new Date(e.date), heure:e.heure||'', cat:e.categorie, note:e.note||'' });
+    });
+  } catch(err) { toast('Erreur agenda : ' + err.message); }
+
+  renderAgCalendar();
+  renderAgEventsDay();
+}
+
+function renderAgCalendar() {
+  const grid = document.getElementById('ag-cal-grid');
+  if (!grid) return;
+  const y = agViewDate.getFullYear(), m = agViewDate.getMonth();
+  const firstDow = (new Date(y, m, 1).getDay() + 6) % 7; // lundi = 0
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const daysInPrevMonth = new Date(y, m, 0).getDate();
+  const today = new Date();
+
+  let html = ['L','M','M','J','V','S','D'].map(d => `<div class="cal-dow">${d}</div>`).join('');
+
+  const cells = [];
+  for (let i = firstDow - 1; i >= 0; i--) cells.push({d:daysInPrevMonth-i, other:true});
+  for (let i = 1; i <= daysInMonth; i++) cells.push({d:i, other:false});
+  while (cells.length % 7 !== 0) cells.push({d:cells.length, other:true});
+
+  cells.forEach(c => {
+    const dateObj = c.other ? null : new Date(y, m, c.d);
+    const isToday = dateObj && dateObj.toDateString() === today.toDateString();
+    const isSel   = dateObj && dateObj.toDateString() === agSelDate.toDateString();
+    const dayEvents = dateObj ? agEvents.filter(e => e.date.toDateString() === dateObj.toDateString()) : [];
+    const dotsHtml = dayEvents.slice(0,3).map(e => `<span class="ag-dot ${e.type==='reun'?'reun':e.type==='tache'?'tache':'perso'}"></span>`).join('');
+    html += `<div class="cal-day ${c.other?'other':''} ${isToday?'today':''} ${isSel?'sel':''}" data-day="${c.d}" data-other="${c.other?1:0}">
+      <div>${c.d}</div><div class="cal-day-dots">${dotsHtml}</div>
+    </div>`;
+  });
+  grid.innerHTML = html;
+  grid.querySelectorAll('.cal-day').forEach(el => {
+    if (el.getAttribute('data-other') === '1') return;
+    el.addEventListener('click', () => {
+      agSelDate = new Date(y, m, parseInt(el.getAttribute('data-day')));
+      renderAgCalendar();
+      renderAgEventsDay();
+    });
+  });
+}
+
+function renderAgEventsDay() {
+  const el = document.getElementById('ag-events-day');
+  if (!el) return;
+  const dayEvents = agEvents.filter(e => e.date.toDateString() === agSelDate.toDateString())
+    .sort((a,b) => (a.heure||'').localeCompare(b.heure||''));
+  if (!dayEvents.length) {
+    el.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-b">Aucun événement ce jour.</div></div>';
+    return;
+  }
+  el.innerHTML = dayEvents.map(e => agEventItemHtml(e)).join('');
+  wireAgEventClicks(el);
+}
+
+function agEventItemHtml(e) {
+  const typeC = e.type === 'reun' ? 'reun' : e.type === 'tache' ? 'tache' : 'perso';
+  const icon  = e.type === 'reun' ? '📅' : e.type === 'tache' ? '✅' : '👤';
+  const catLabel = e.type === 'perso' && e.cat ? (EVENT_CAT_LABELS[e.cat] || e.cat) : (e.type === 'tache' ? (e.cat||'') : 'Réunion');
+  return `<div class="ag-ev-item" data-type="${e.type}" data-id="${e.id}">
+    <div class="ag-ev-dot ${typeC}"></div>
+    <div class="ag-ev-body">
+      <div class="ag-ev-nom">${icon} ${escHtml(e.nom)}</div>
+      <div class="ag-ev-meta">${e.heure ? e.heure + ' · ' : ''}${e.date.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}</div>
+    </div>
+    <div class="ag-ev-cat">${escHtml(catLabel)}</div>
+  </div>`;
+}
+
+const EVENT_CAT_LABELS = { perso:'👤 Personnel', etude:'📚 Études', sport:'🏃 Sport', travail:'💼 Travail', famille:'👨‍👩‍👧 Famille', sante:'🏥 Santé', autre:'📌 Autre' };
+
+function wireAgEventClicks(container) {
+  container.querySelectorAll('.ag-ev-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const type = el.getAttribute('data-type');
+      const id   = el.getAttribute('data-id');
+      if (type === 'reun') { openReunDetail(id); return; }
+      if (type === 'tache') { openDetail(id); go('detail'); return; }
+      if (type === 'perso') { openEditEventModal(id); }
+    });
+  });
+}
+
+function renderAgListe() {
+  const el = document.getElementById('ag-liste-body');
+  if (!el) return;
+  let list = [...agEvents].sort((a,b) => a.date - b.date);
+  if (agListeFilter !== 'tous') list = list.filter(e => e.type === agListeFilter);
+  const now = new Date(); now.setHours(0,0,0,0);
+  list = list.filter(e => e.date >= now);
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-t">Aucun événement à venir</div></div>'; return; }
+  el.innerHTML = list.map(e => agEventItemHtml(e)).join('');
+  wireAgEventClicks(el);
+}
+
+/* ── Événements personnels : création / édition / suppression ────── */
+window.openNewEventModal = function() {
+  editingEventId = null;
+  document.getElementById('ov-event-title').textContent = 'Nouvel événement';
+  document.getElementById('ev-nom').value = '';
+  document.getElementById('ev-date').value = agSelDate.toISOString().slice(0,10);
+  document.getElementById('ev-heure').value = '';
+  document.getElementById('ev-cat').value = 'perso';
+  document.getElementById('ev-note').value = '';
+  document.getElementById('ev-delete-btn').style.display = 'none';
+  document.getElementById('ev-save-lbl').textContent = 'Créer';
+  document.getElementById('ov-event').classList.add('on');
+};
+
+window.openEditEventModal = async function(id) {
+  const e = agEvents.find(x => x.id === id && x.type === 'perso');
+  if (!e) return;
+  editingEventId = id;
+  document.getElementById('ov-event-title').textContent = 'Modifier l\'événement';
+  document.getElementById('ev-nom').value = e.nom;
+  document.getElementById('ev-date').value = e.date.toISOString().slice(0,10);
+  document.getElementById('ev-heure').value = e.heure || '';
+  document.getElementById('ev-cat').value = e.cat || 'perso';
+  document.getElementById('ev-note').value = e.note || '';
+  document.getElementById('ev-delete-btn').style.display = 'block';
+  document.getElementById('ev-save-lbl').textContent = 'Enregistrer';
+  document.getElementById('ov-event').classList.add('on');
+};
+
+window.saveEvent = async function() {
+  const nom = document.getElementById('ev-nom').value.trim();
+  const date = document.getElementById('ev-date').value;
+  if (!nom || !date) { toast('Titre et date obligatoires'); return; }
+  const payload = {
+    uid: CU.uid, nom,
+    date, heure: document.getElementById('ev-heure').value || '',
+    categorie: document.getElementById('ev-cat').value,
+    note: document.getElementById('ev-note').value.trim(),
+    type: 'personnel'
+  };
+  try {
+    if (editingEventId) {
+      await db.collection('agenda').doc(editingEventId).update(payload);
+      toast('Événement mis à jour ✅');
+    } else {
+      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('agenda').add(payload);
+      toast('Événement ajouté ✅');
+    }
+    closeOverlay('ov-event');
+    loadAgenda();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+window.deleteEvent = async function() {
+  if (!editingEventId) return;
+  if (!confirm('Supprimer cet événement ?')) return;
+  try {
+    await db.collection('agenda').doc(editingEventId).delete();
+    toast('Événement supprimé');
+    closeOverlay('ov-event');
+    loadAgenda();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
 
 // ── TACHES ────────────────────────────────────────────────────────
 function loadRecentTasks() {
