@@ -542,6 +542,20 @@ input,select,textarea{font-family:inherit}
 .ag-ev-meta{font-size:11px;color:var(--t3);margin-top:2px}
 .ag-ev-cat{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--surface2);color:var(--t2);flex-shrink:0}
 
+/* Programmes & sections (Bloc E) */
+.prog-card{background:var(--surface);border-radius:var(--r22);padding:16px;box-shadow:var(--sh);margin-bottom:12px;cursor:pointer}
+.prog-nom{font-size:15px;font-weight:700;color:var(--t1)}
+.prog-dates{font-size:11px;color:var(--t3);margin-top:2px}
+.prog-pct-row{display:flex;justify-content:space-between;font-size:11px;color:var(--t3);margin-top:12px;margin-bottom:5px}
+.sec-row{padding:13px 16px;border-bottom:1px solid var(--surface2)}
+.sec-row:last-child{border-bottom:none}
+.sec-row-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.sec-nom{font-size:13.5px;font-weight:600;color:var(--t1)}
+.sec-obj{font-size:11px;color:var(--t3)}
+.sec-add-btn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:10px;background:var(--surface2);color:var(--t2)}
+.sec-entries{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.sec-entry-item{font-size:11px;color:var(--t3);display:flex;justify-content:space-between}
+
 /* Carte réunion */
 .reun-card{background:var(--surface);border-radius:var(--r22);box-shadow:var(--sh);overflow:hidden;cursor:pointer;transition:transform var(--tr)}
 .reun-card:active{transform:scale(.99)}
@@ -1266,6 +1280,7 @@ input,select,textarea{font-family:inherit}
     <div class="reun-tabs">
       <button class="rtab on" onclick="switchAgTab(this,'calendrier')">🗓️ Calendrier</button>
       <button class="rtab" onclick="switchAgTab(this,'liste')">📋 Liste</button>
+      <button class="rtab" onclick="switchAgTab(this,'programmes')">📚 Programmes</button>
     </div>
   </div>
 
@@ -1295,6 +1310,11 @@ input,select,textarea{font-family:inherit}
       <button class="chip" data-agf="perso" onclick="filterAgListe(this,'perso')">👤 Perso</button>
     </div>
     <div id="ag-liste-body" style="padding:14px"></div>
+  </div>
+
+  <div id="ag-programmes" class="ag-body" style="display:none">
+    <button class="ag-add-btn" style="width:100%;margin-bottom:12px" onclick="openNewProgModal()">➕ Nouveau programme</button>
+    <div id="prog-list"></div>
   </div>
 
   <nav class="bnav">
@@ -1332,6 +1352,84 @@ input,select,textarea{font-family:inherit}
       <button class="bcnl" id="ev-delete-btn" style="display:none;background:#FDE8E8;color:#C0392B" onclick="deleteEvent()">🗑️ Supprimer</button>
       <button class="bcnl" onclick="closeOverlay('ov-event')">Annuler</button>
       <button class="bsub" onclick="saveEvent()"><span id="ev-save-lbl">Créer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ÉCRAN DÉTAIL PROGRAMME (Bloc E) ══ -->
+<div id="s-prog-detail" class="scr">
+  <div class="rd-hd">
+    <div class="rd-back" onclick="go('agenda')">‹ Retour</div>
+    <div class="rd-title" id="pg-title">—</div>
+    <div class="rd-sub" id="pg-dates">—</div>
+  </div>
+  <div class="pd-body">
+    <div class="pd-card" id="pg-desc-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">Description</div>
+      <div style="padding:0 16px 14px;font-size:13px;color:var(--t2);line-height:1.5" id="pg-desc-txt"></div>
+    </div>
+    <div class="pd-card">
+      <div class="pd-card-t" style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span>Sections</span>
+        <button class="btn-rappel-new" onclick="openNewSectionModal()">➕ Section</button>
+      </div>
+      <div id="pg-sections-list"></div>
+    </div>
+    <div class="pd-card" style="padding:14px 16px">
+      <button class="btn-danger-full" onclick="deleteProgramme()">🗑️ Supprimer ce programme</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVEAU PROGRAMME -->
+<div class="overlay" id="ov-prog" onclick="closeOverlay('ov-prog')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouveau programme</div>
+    <div class="mfield"><label>Nom *</label><input type="text" id="pg-nom" placeholder="Ex: Préparation examen"></div>
+    <div class="mfield"><label>Description</label><textarea id="pg-desc" placeholder="Optionnel..."></textarea></div>
+    <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>Début</label><input type="date" id="pg-debut"></div>
+      <div class="mfield" style="margin-bottom:0"><label>Fin</label><input type="date" id="pg-fin"></div>
+    </div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-prog')">Annuler</button>
+      <button class="bsub" onclick="saveProgramme()"><span>Créer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE SECTION -->
+<div class="overlay" id="ov-section" onclick="closeOverlay('ov-section')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouvelle section</div>
+    <div class="mfield"><label>Nom *</label><input type="text" id="sec-nom" placeholder="Ex: Lecture, Exercices, Speaking..."></div>
+    <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>Objectif (quantité) *</label><input type="number" id="sec-cible" placeholder="Ex: 4"></div>
+      <div class="mfield" style="margin-bottom:0"><label>Unité</label><input type="text" id="sec-unite" placeholder="Ex: livres, pages, min"></div>
+    </div>
+    <div class="mfield" style="margin-top:14px"><label>Date limite</label><input type="date" id="sec-deadline"></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-section')">Annuler</button>
+      <button class="bsub" onclick="saveSection()"><span>Créer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE ENTRÉE (journal d'avancement) -->
+<div class="overlay" id="ov-entree" onclick="closeOverlay('ov-entree')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="entree-modal-title">Ajouter une entrée</div>
+    <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>Date *</label><input type="date" id="ent-date"></div>
+      <div class="mfield" style="margin-bottom:0"><label>Quantité réalisée *</label><input type="number" id="ent-qte" placeholder="Ex: 20"></div>
+    </div>
+    <div class="mfield" style="margin-top:14px"><label>Note</label><textarea id="ent-note" placeholder="Optionnel..."></textarea></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-entree')">Annuler</button>
+      <button class="bsub" onclick="saveEntree()"><span>Ajouter</span></button>
     </div>
   </div>
 </div>
@@ -2299,9 +2397,11 @@ let editingEventId = null;
 function switchAgTab(el, tab) {
   document.querySelectorAll('#s-agenda .rtab').forEach(b => b.classList.remove('on'));
   el.classList.add('on');
-  document.getElementById('ag-cal').style.display   = tab === 'calendrier' ? 'block' : 'none';
-  document.getElementById('ag-liste').style.display = tab === 'liste' ? 'block' : 'none';
+  document.getElementById('ag-cal').style.display        = tab === 'calendrier' ? 'block' : 'none';
+  document.getElementById('ag-liste').style.display      = tab === 'liste' ? 'block' : 'none';
+  document.getElementById('ag-programmes').style.display = tab === 'programmes' ? 'block' : 'none';
   if (tab === 'liste') renderAgListe();
+  if (tab === 'programmes') loadProgrammes();
 }
 
 function filterAgListe(el, f) {
@@ -2370,7 +2470,8 @@ function renderAgCalendar() {
   const cells = [];
   for (let i = firstDow - 1; i >= 0; i--) cells.push({d:daysInPrevMonth-i, other:true});
   for (let i = 1; i <= daysInMonth; i++) cells.push({d:i, other:false});
-  while (cells.length % 7 !== 0) cells.push({d:cells.length, other:true});
+  let nextDay = 1;
+  while (cells.length % 7 !== 0) cells.push({d:nextDay++, other:true});
 
   cells.forEach(c => {
     const dateObj = c.other ? null : new Date(y, m, c.d);
@@ -2508,6 +2609,185 @@ window.deleteEvent = async function() {
     toast('Événement supprimé');
     closeOverlay('ov-event');
     loadAgenda();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+// ── PROGRAMMES & SECTIONS (Bloc E) ──────────────────────────────────
+let curProgId = null, curProgData = null;
+let curSectionId = null; // pour ajouter une entrée sur une section précise
+
+async function loadProgrammes() {
+  const el = document.getElementById('prog-list');
+  if (!el || !CU) return;
+  el.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+  try {
+    const snap = await db.collection('programmes').where('uid','==',CU.uid).get();
+    const progs = [];
+    snap.forEach(d => progs.push({ id:d.id, ...d.data() }));
+    if (!progs.length) { el.innerHTML = '<div class="empty"><div class="empty-ic">📚</div><div class="empty-t">Aucun programme</div><div class="empty-b">Crée ton premier programme personnel.</div></div>'; return; }
+
+    let html = '';
+    for (const p of progs) {
+      const secSnap = await db.collection('programmes').doc(p.id).collection('sections').get();
+      let totalPct = 0, n = 0;
+      for (const sd of secSnap.docs) {
+        const s = sd.data();
+        const entSnap = await db.collection('programmes').doc(p.id).collection('sections').doc(sd.id).collection('entrees').get();
+        let sum = 0; entSnap.forEach(ed => sum += (ed.data().quantite||0));
+        const pct = s.cible ? Math.min(100, Math.round(sum / s.cible * 100)) : 0;
+        totalPct += pct; n++;
+      }
+      const avgPct = n ? Math.round(totalPct / n) : 0;
+      const dates = (p.debut ? new Date(p.debut).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '—') +
+                    ' → ' + (p.fin ? new Date(p.fin).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '—');
+      html += `<div class="prog-card" data-pid="${p.id}">
+        <div class="prog-nom">${escHtml(p.nom)}</div>
+        <div class="prog-dates">${dates} · ${n} section${n!==1?'s':''}</div>
+        <div class="prog-pct-row"><span>Avancement global</span><span>${avgPct}%</span></div>
+        <div class="proj-progress-bg"><div class="proj-progress-fill" style="width:${avgPct}%"></div></div>
+      </div>`;
+    }
+    el.innerHTML = html;
+    el.querySelectorAll('.prog-card').forEach(c => c.addEventListener('click', () => openProgDetail(c.getAttribute('data-pid'))));
+  } catch(e) { el.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>'; }
+}
+
+window.openNewProgModal = function() {
+  document.getElementById('pg-nom').value = '';
+  document.getElementById('pg-desc').value = '';
+  document.getElementById('pg-debut').value = '';
+  document.getElementById('pg-fin').value = '';
+  document.getElementById('ov-prog').classList.add('on');
+};
+window.saveProgramme = async function() {
+  const nom = document.getElementById('pg-nom').value.trim();
+  if (!nom) { toast('Le nom est obligatoire'); return; }
+  try {
+    await db.collection('programmes').add({
+      uid: CU.uid, nom,
+      description: document.getElementById('pg-desc').value.trim(),
+      debut: document.getElementById('pg-debut').value || null,
+      fin: document.getElementById('pg-fin').value || null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-prog');
+    toast('Programme créé ✅');
+    loadProgrammes();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+async function openProgDetail(id) {
+  curProgId = id;
+  try {
+    const snap = await db.collection('programmes').doc(id).get();
+    curProgData = { id, ...snap.data() };
+  } catch(e) { toast('Erreur : ' + e.message); return; }
+
+  document.getElementById('pg-title').textContent = curProgData.nom || '—';
+  const dates = (curProgData.debut ? new Date(curProgData.debut).toLocaleDateString('fr-FR',{day:'2-digit',month:'long'}) : '—') +
+                ' → ' + (curProgData.fin ? new Date(curProgData.fin).toLocaleDateString('fr-FR',{day:'2-digit',month:'long'}) : '—');
+  document.getElementById('pg-dates').textContent = dates;
+  const descCard = document.getElementById('pg-desc-card');
+  if (curProgData.description) { descCard.style.display = 'block'; document.getElementById('pg-desc-txt').textContent = curProgData.description; }
+  else { descCard.style.display = 'none'; }
+
+  await renderSections();
+  go('prog-detail');
+}
+
+async function renderSections() {
+  const el = document.getElementById('pg-sections-list');
+  const secSnap = await db.collection('programmes').doc(curProgId).collection('sections').get();
+  if (secSnap.empty) { el.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">Aucune section — ajoute-en une.</div></div>'; return; }
+
+  let html = '';
+  for (const sd of secSnap.docs) {
+    const s = sd.data();
+    const entSnap = await db.collection('programmes').doc(curProgId).collection('sections').doc(sd.id).collection('entrees').orderBy('date','desc').limit(5).get();
+    let sum = 0;
+    const entries = [];
+    entSnap.forEach(ed => { const e = ed.data(); sum += (e.quantite||0); entries.push(e); });
+    // recalcule la somme totale (pas seulement les 5 dernières) pour le %
+    const allEntSnap = await db.collection('programmes').doc(curProgId).collection('sections').doc(sd.id).collection('entrees').get();
+    let totalSum = 0; allEntSnap.forEach(ed => totalSum += (ed.data().quantite||0));
+    const pct = s.cible ? Math.min(100, Math.round(totalSum / s.cible * 100)) : 0;
+
+    html += `<div class="sec-row">
+      <div class="sec-row-top">
+        <div><div class="sec-nom">${escHtml(s.nom)}</div><div class="sec-obj">${totalSum}/${s.cible} ${escHtml(s.unite||'')} ${s.deadline ? '· éch. '+new Date(s.deadline).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : ''}</div></div>
+        <button class="sec-add-btn" data-action="add-entree" data-sid="${sd.id}">➕ ${pct}%</button>
+      </div>
+      <div class="proj-progress-bg"><div class="proj-progress-fill" style="width:${pct}%"></div></div>
+      <div class="sec-entries">${entries.map(e => `<div class="sec-entry-item"><span>${new Date(e.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}${e.note?' — '+escHtml(e.note):''}</span><span>+${e.quantite}</span></div>`).join('')}</div>
+    </div>`;
+  }
+  el.innerHTML = html;
+  el.querySelectorAll('[data-action="add-entree"]').forEach(btn => {
+    btn.addEventListener('click', () => openNewEntreeModal(btn.getAttribute('data-sid')));
+  });
+}
+
+window.openNewSectionModal = function() {
+  document.getElementById('sec-nom').value = '';
+  document.getElementById('sec-cible').value = '';
+  document.getElementById('sec-unite').value = '';
+  document.getElementById('sec-deadline').value = '';
+  document.getElementById('ov-section').classList.add('on');
+};
+window.saveSection = async function() {
+  const nom = document.getElementById('sec-nom').value.trim();
+  const cible = parseFloat(document.getElementById('sec-cible').value);
+  if (!nom || !cible || cible <= 0) { toast('Nom et objectif obligatoires'); return; }
+  try {
+    await db.collection('programmes').doc(curProgId).collection('sections').add({
+      nom, cible, unite: document.getElementById('sec-unite').value.trim() || 'unités',
+      deadline: document.getElementById('sec-deadline').value || null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-section');
+    toast('Section ajoutée ✅');
+    renderSections();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+window.openNewEntreeModal = function(sectionId) {
+  curSectionId = sectionId;
+  document.getElementById('ent-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('ent-qte').value = '';
+  document.getElementById('ent-note').value = '';
+  document.getElementById('ov-entree').classList.add('on');
+};
+window.saveEntree = async function() {
+  const date = document.getElementById('ent-date').value;
+  const qte  = parseFloat(document.getElementById('ent-qte').value);
+  if (!date || !qte) { toast('Date et quantité obligatoires'); return; }
+  try {
+    await db.collection('programmes').doc(curProgId).collection('sections').doc(curSectionId).collection('entrees').add({
+      date, quantite: qte, note: document.getElementById('ent-note').value.trim(),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-entree');
+    toast('Entrée ajoutée ✅');
+    renderSections();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+window.deleteProgramme = async function() {
+  if (!curProgId) return;
+  if (!confirm('Supprimer définitivement ce programme et toutes ses sections ? Action irréversible.')) return;
+  try {
+    const secSnap = await db.collection('programmes').doc(curProgId).collection('sections').get();
+    for (const sd of secSnap.docs) {
+      const entSnap = await db.collection('programmes').doc(curProgId).collection('sections').doc(sd.id).collection('entrees').get();
+      const batch = db.batch();
+      entSnap.forEach(ed => batch.delete(ed.ref));
+      await batch.commit();
+      await sd.ref.delete();
+    }
+    await db.collection('programmes').doc(curProgId).delete();
+    toast('Programme supprimé');
+    curProgId = null; curProgData = null;
+    go('agenda');
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
