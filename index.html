@@ -754,6 +754,28 @@ input,select,textarea{font-family:inherit}
 .solde-amount.pos{color:#6EE7B7}
 .solde-amount.neg{color:#FCA5A5}
 .solde-month{font-size:11px;color:rgba(255,255,255,.35);margin-top:4px}
+
+/* Créances/Dettes (Bloc H) */
+.fp-mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.fp-mini-item{background:rgba(255,255,255,.06);border-radius:12px;padding:10px 12px;text-align:center}
+.fp-mini-l{font-size:10px;color:rgba(255,255,255,.5)}
+.fp-mini-v{font-size:15px;font-weight:700;margin-top:2px}
+.fp-mini-v.pos{color:#6EE7B7}
+.fp-mini-v.neg{color:#FCA5A5}
+.fp-cd-card{background:var(--surface);border-radius:var(--r14);padding:14px 16px;box-shadow:var(--sh);margin-bottom:10px;cursor:pointer}
+.fp-cd-top{display:flex;justify-content:space-between;align-items:center}
+.fp-cd-nom{font-size:14px;font-weight:700;color:var(--t1)}
+.fp-cd-date{font-size:10.5px;color:var(--t3);margin-top:2px}
+.fp-cd-reste{font-size:15px;font-weight:700}
+.fp-cd-badge{font-size:10px;font-weight:600;padding:3px 9px;border-radius:10px;margin-top:8px;display:inline-block}
+.fp-cd-badge.paye{background:#D4EDDA;color:#155724}
+.fp-cd-badge.partiel{background:#FFF3CD;color:#856404}
+.fp-cd-badge.impaye{background:#FDE8E8;color:#C0392B}
+[data-dark] .fp-cd-badge.paye{background:rgba(21,87,36,.3);color:#6EE7B7}
+[data-dark] .fp-cd-badge.partiel{background:rgba(133,100,4,.4);color:#FCD34D}
+[data-dark] .fp-cd-badge.impaye{background:rgba(192,57,43,.25);color:#FCA5A5}
+.fpd-hist-item{display:flex;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--surface2);font-size:12.5px;color:var(--t2)}
+.fpd-hist-item:last-child{border-bottom:none}
 .treso-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
 
 /* Boutons entrée/dépense */
@@ -1561,8 +1583,18 @@ input,select,textarea{font-family:inherit}
       <div class="solde-amount" id="fp-solde">0 Ar</div>
       <div class="solde-month" id="fp-month">—</div>
     </div>
+    <div class="fp-mini-stats">
+      <div class="fp-mini-item"><div class="fp-mini-l">À recevoir</div><div class="fp-mini-v pos" id="fp-mini-recevoir">0 Ar</div></div>
+      <div class="fp-mini-item"><div class="fp-mini-l">Dû</div><div class="fp-mini-v neg" id="fp-mini-du">0 Ar</div></div>
+    </div>
+    <div class="reun-tabs" style="margin-top:14px">
+      <button class="rtab on" onclick="switchFpTab(this,'solde')">💰 Solde</button>
+      <button class="rtab" onclick="switchFpTab(this,'creances')">🤝 Créances</button>
+      <button class="rtab" onclick="switchFpTab(this,'dettes')">💳 Dettes</button>
+    </div>
   </div>
-  <div class="treso-body">
+
+  <div class="treso-body" id="fp-panel-solde">
     <div class="treso-actions">
       <button class="treso-btn entree" onclick="openModalTxPerso('entree')">📈 Entrée</button>
       <button class="treso-btn depense" onclick="openModalTxPerso('depense')">📉 Dépense</button>
@@ -1590,6 +1622,17 @@ input,select,textarea{font-family:inherit}
       <div class="card" id="fp-tx-list" style="overflow:hidden"></div>
     </div>
   </div>
+
+  <div class="treso-body" id="fp-panel-creances" style="display:none">
+    <button class="ag-add-btn" style="width:100%" onclick="openNewCreanceModal()">➕ Nouvelle créance (argent prêté)</button>
+    <div id="fp-creances-list"></div>
+  </div>
+
+  <div class="treso-body" id="fp-panel-dettes" style="display:none">
+    <button class="ag-add-btn" style="width:100%" onclick="openNewDetteModal()">➕ Nouvelle dette (argent emprunté)</button>
+    <div id="fp-dettes-list"></div>
+  </div>
+
   <nav class="bnav">
     <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
     <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
@@ -1597,6 +1640,80 @@ input,select,textarea{font-family:inherit}
     <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
     <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
   </nav>
+</div>
+
+<!-- ÉCRAN DÉTAIL CRÉANCE/DETTE -->
+<div id="s-fp-detail" class="scr">
+  <div class="rd-hd">
+    <div class="rd-back" onclick="closeFpDetail()">‹ Retour</div>
+    <div class="rd-title" id="fpd-title">—</div>
+    <div class="rd-sub" id="fpd-sub">—</div>
+  </div>
+  <div class="pd-body">
+    <div class="pd-card">
+      <div style="padding:18px 16px;text-align:center">
+        <div style="font-size:11px;color:var(--t3)">Reste à recevoir/payer</div>
+        <div style="font-size:28px;font-weight:800;color:var(--t1)" id="fpd-reste">0 Ar</div>
+        <div class="proj-progress-bg" style="margin-top:10px"><div class="proj-progress-fill" id="fpd-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="pd-card" style="padding:14px 16px">
+      <button class="btn-join-proj" onclick="openAddPaiementModal()">➕ Enregistrer un paiement</button>
+    </div>
+    <div class="pd-card">
+      <div class="pd-card-t" style="padding:13px 16px">Historique</div>
+      <div id="fpd-historique"></div>
+    </div>
+    <div class="pd-card" style="padding:14px 16px">
+      <button class="btn-danger-full" onclick="deleteFpItem()">🗑️ Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE CRÉANCE -->
+<div class="overlay" id="ov-creance" onclick="closeOverlay('ov-creance')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouvelle créance</div>
+    <div class="mfield"><label>Personne *</label><input type="text" id="cr-personne" placeholder="Ex: Rojo"></div>
+    <div class="mfield"><label>Montant prêté (Ar) *</label><input type="number" id="cr-montant" placeholder="0"></div>
+    <div class="mfield"><label>Date</label><input type="date" id="cr-date"></div>
+    <div class="mfield"><label>Note</label><textarea id="cr-note" placeholder="Optionnel..."></textarea></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-creance')">Annuler</button>
+      <button class="bsub" onclick="saveCreance()"><span>Créer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE DETTE -->
+<div class="overlay" id="ov-dette" onclick="closeOverlay('ov-dette')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouvelle dette</div>
+    <div class="mfield"><label>Créancier *</label><input type="text" id="dt-creancier" placeholder="Ex: Mom"></div>
+    <div class="mfield"><label>Montant emprunté (Ar) *</label><input type="number" id="dt-montant" placeholder="0"></div>
+    <div class="mfield"><label>Date</label><input type="date" id="dt-date"></div>
+    <div class="mfield"><label>Note</label><textarea id="dt-note" placeholder="Optionnel..."></textarea></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-dette')">Annuler</button>
+      <button class="bsub" onclick="saveDette()"><span>Créer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ENREGISTRER UN PAIEMENT (créance ou dette) -->
+<div class="overlay" id="ov-paiement" onclick="closeOverlay('ov-paiement')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Enregistrer un paiement</div>
+    <div class="mfield"><label>Montant (Ar) *</label><input type="number" id="pmt-montant" placeholder="0"></div>
+    <div class="mfield"><label>Date</label><input type="date" id="pmt-date"></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-paiement')">Annuler</button>
+      <button class="bsub" onclick="savePaiement()"><span>Enregistrer</span></button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL TRANSACTION PERSO -->
@@ -3321,6 +3438,7 @@ async function loadFinPerso() {
 
     computeFpSolde();
     renderFpTx();
+    updateFpMiniStats();
   } catch(e) { toast('Erreur finances : ' + e.message); }
 }
 
@@ -3431,6 +3549,207 @@ window.saveCatPerso = async function() {
     renderFpCatFilters();
     closeOverlay('ov-cat-perso');
     toast('Catégorie créée ✅');
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Créances / Dettes (Bloc H) ────────────────────────────────────── */
+let fpCreances = [], fpDettes = [];
+let fpDetailType = null; // 'creance' | 'dette'
+let fpDetailId   = null;
+let fpDetailData = null;
+
+function switchFpTab(el, tab) {
+  document.querySelectorAll('#s-finperso .rtab').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('fp-panel-solde').style.display    = tab === 'solde' ? 'block' : 'none';
+  document.getElementById('fp-panel-creances').style.display = tab === 'creances' ? 'block' : 'none';
+  document.getElementById('fp-panel-dettes').style.display   = tab === 'dettes' ? 'block' : 'none';
+  if (tab === 'creances') loadCreances();
+  if (tab === 'dettes') loadDettes();
+}
+
+function fpReste(item) {
+  const paye = (item.historique || []).reduce((s,h) => s + h.montant, 0);
+  return Math.max(0, (item.montant||0) - paye);
+}
+function fpStatutBadge(item) {
+  const reste = fpReste(item);
+  if (reste <= 0) return { c:'paye', l:'✅ Payé' };
+  if (reste < item.montant) return { c:'partiel', l:'⏳ Partiel' };
+  return { c:'impaye', l:'❌ Non payé' };
+}
+
+async function loadCreances() {
+  const el = document.getElementById('fp-creances-list');
+  try {
+    const snap = await db.collection('financesPerso_creances').where('uid','==',CU.uid).get();
+    fpCreances = []; snap.forEach(d => fpCreances.push({ id:d.id, ...d.data() }));
+    fpCreances.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    if (!fpCreances.length) { el.innerHTML = '<div class="empty"><div class="empty-ic">🤝</div><div class="empty-t">Aucune créance</div></div>'; }
+    else {
+      el.innerHTML = fpCreances.map(c => {
+        const reste = fpReste(c); const badge = fpStatutBadge(c);
+        return `<div class="fp-cd-card" data-id="${c.id}">
+          <div class="fp-cd-top">
+            <div><div class="fp-cd-nom">${escHtml(c.personne)}</div><div class="fp-cd-date">${c.date ? new Date(c.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—'}</div></div>
+            <div class="fp-cd-reste" style="color:#155724">${reste.toLocaleString('fr-FR')} Ar</div>
+          </div>
+          <div class="fp-cd-badge ${badge.c}">${badge.l}</div>
+        </div>`;
+      }).join('');
+      el.querySelectorAll('.fp-cd-card').forEach(c => c.addEventListener('click', () => openFpDetail('creance', c.getAttribute('data-id'))));
+    }
+    updateFpMiniStats();
+  } catch(e) { el.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>'; }
+}
+async function loadDettes() {
+  const el = document.getElementById('fp-dettes-list');
+  try {
+    const snap = await db.collection('financesPerso_dettes').where('uid','==',CU.uid).get();
+    fpDettes = []; snap.forEach(d => fpDettes.push({ id:d.id, ...d.data() }));
+    fpDettes.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    if (!fpDettes.length) { el.innerHTML = '<div class="empty"><div class="empty-ic">💳</div><div class="empty-t">Aucune dette</div></div>'; }
+    else {
+      el.innerHTML = fpDettes.map(d => {
+        const reste = fpReste(d); const badge = fpStatutBadge(d);
+        return `<div class="fp-cd-card" data-id="${d.id}">
+          <div class="fp-cd-top">
+            <div><div class="fp-cd-nom">${escHtml(d.creancier)}</div><div class="fp-cd-date">${d.date ? new Date(d.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—'}</div></div>
+            <div class="fp-cd-reste" style="color:#C0392B">${reste.toLocaleString('fr-FR')} Ar</div>
+          </div>
+          <div class="fp-cd-badge ${badge.c}">${badge.l}</div>
+        </div>`;
+      }).join('');
+      el.querySelectorAll('.fp-cd-card').forEach(c => c.addEventListener('click', () => openFpDetail('dette', c.getAttribute('data-id'))));
+    }
+    updateFpMiniStats();
+  } catch(e) { el.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>'; }
+}
+async function updateFpMiniStats() {
+  try {
+    if (!fpCreances.length) { const s = await db.collection('financesPerso_creances').where('uid','==',CU.uid).get(); fpCreances = []; s.forEach(d=>fpCreances.push({id:d.id,...d.data()})); }
+    if (!fpDettes.length) { const s = await db.collection('financesPerso_dettes').where('uid','==',CU.uid).get(); fpDettes = []; s.forEach(d=>fpDettes.push({id:d.id,...d.data()})); }
+    const totalRecevoir = fpCreances.reduce((s,c) => s + fpReste(c), 0);
+    const totalDu = fpDettes.reduce((s,d) => s + fpReste(d), 0);
+    document.getElementById('fp-mini-recevoir').textContent = totalRecevoir.toLocaleString('fr-FR') + ' Ar';
+    document.getElementById('fp-mini-du').textContent = totalDu.toLocaleString('fr-FR') + ' Ar';
+  } catch(e) { /* non bloquant */ }
+}
+
+window.openNewCreanceModal = function() {
+  document.getElementById('cr-personne').value = '';
+  document.getElementById('cr-montant').value = '';
+  document.getElementById('cr-date').value = todayStr();
+  document.getElementById('cr-note').value = '';
+  document.getElementById('ov-creance').classList.add('on');
+};
+window.saveCreance = async function() {
+  const personne = document.getElementById('cr-personne').value.trim();
+  const montant = parseFloat(document.getElementById('cr-montant').value);
+  if (!personne || !montant || montant <= 0) { toast('Personne et montant obligatoires'); return; }
+  try {
+    await db.collection('financesPerso_creances').add({
+      uid: CU.uid, personne, montant, date: document.getElementById('cr-date').value || todayStr(),
+      note: document.getElementById('cr-note').value.trim(), historique: [],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-creance');
+    toast('Créance créée ✅');
+    loadCreances();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+window.openNewDetteModal = function() {
+  document.getElementById('dt-creancier').value = '';
+  document.getElementById('dt-montant').value = '';
+  document.getElementById('dt-date').value = todayStr();
+  document.getElementById('dt-note').value = '';
+  document.getElementById('ov-dette').classList.add('on');
+};
+window.saveDette = async function() {
+  const creancier = document.getElementById('dt-creancier').value.trim();
+  const montant = parseFloat(document.getElementById('dt-montant').value);
+  if (!creancier || !montant || montant <= 0) { toast('Créancier et montant obligatoires'); return; }
+  try {
+    await db.collection('financesPerso_dettes').add({
+      uid: CU.uid, creancier, montant, date: document.getElementById('dt-date').value || todayStr(),
+      note: document.getElementById('dt-note').value.trim(), historique: [],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-dette');
+    toast('Dette créée ✅');
+    loadDettes();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+async function openFpDetail(type, id) {
+  fpDetailType = type; fpDetailId = id;
+  const coll = type === 'creance' ? 'financesPerso_creances' : 'financesPerso_dettes';
+  try {
+    const snap = await db.collection(coll).doc(id).get();
+    fpDetailData = { id, ...snap.data() };
+  } catch(e) { toast('Erreur : ' + e.message); return; }
+
+  const nom = type === 'creance' ? fpDetailData.personne : fpDetailData.creancier;
+  document.getElementById('fpd-title').textContent = escHtml(nom);
+  document.getElementById('fpd-sub').textContent = (type === 'creance' ? 'Créance — ' : 'Dette — ') +
+    Number(fpDetailData.montant).toLocaleString('fr-FR') + ' Ar au total';
+
+  renderFpDetail();
+  go('fp-detail');
+}
+function renderFpDetail() {
+  const reste = fpReste(fpDetailData);
+  const pct = fpDetailData.montant ? Math.min(100, Math.round((fpDetailData.montant - reste) / fpDetailData.montant * 100)) : 0;
+  document.getElementById('fpd-reste').textContent = reste.toLocaleString('fr-FR') + ' Ar';
+  document.getElementById('fpd-bar').style.width = pct + '%';
+
+  const hist = fpDetailData.historique || [];
+  const el = document.getElementById('fpd-historique');
+  el.innerHTML = hist.length
+    ? [...hist].reverse().map(h => `<div class="fpd-hist-item"><span>${new Date(h.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}</span><span><strong>${h.montant.toLocaleString('fr-FR')} Ar</strong></span></div>`).join('')
+    : '<div class="empty" style="padding:16px"><div class="empty-b">Aucun paiement enregistré.</div></div>';
+}
+window.closeFpDetail = function() {
+  const tab = fpDetailType === 'creance' ? 'creances' : 'dettes';
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById('s-finperso').classList.add('on');
+  document.querySelectorAll('#s-finperso .rtab').forEach(b => b.classList.remove('on'));
+  const idx = tab === 'creances' ? 1 : 2;
+  const tabBtn = document.querySelectorAll('#s-finperso .rtab')[idx];
+  if (tabBtn) switchFpTab(tabBtn, tab);
+};
+
+window.openAddPaiementModal = function() {
+  document.getElementById('pmt-montant').value = '';
+  document.getElementById('pmt-date').value = todayStr();
+  document.getElementById('ov-paiement').classList.add('on');
+};
+window.savePaiement = async function() {
+  const montant = parseFloat(document.getElementById('pmt-montant').value);
+  const date = document.getElementById('pmt-date').value || todayStr();
+  if (!montant || montant <= 0) { toast('Montant invalide'); return; }
+  const reste = fpReste(fpDetailData);
+  if (montant > reste) { toast('Le paiement dépasse le reste dû (' + reste.toLocaleString('fr-FR') + ' Ar)'); return; }
+  const coll = fpDetailType === 'creance' ? 'financesPerso_creances' : 'financesPerso_dettes';
+  try {
+    await db.collection(coll).doc(fpDetailId).update({
+      historique: firebase.firestore.FieldValue.arrayUnion({ montant, date })
+    });
+    fpDetailData.historique = (fpDetailData.historique||[]).concat([{montant,date}]);
+    closeOverlay('ov-paiement');
+    toast('Paiement enregistré ✅');
+    renderFpDetail();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+window.deleteFpItem = async function() {
+  if (!confirm('Supprimer définitivement cette ' + (fpDetailType === 'creance' ? 'créance' : 'dette') + ' ?')) return;
+  const coll = fpDetailType === 'creance' ? 'financesPerso_creances' : 'financesPerso_dettes';
+  try {
+    await db.collection(coll).doc(fpDetailId).delete();
+    toast('Supprimée');
+    closeFpDetail();
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
