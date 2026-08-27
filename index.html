@@ -554,6 +554,31 @@ input,select,textarea{font-family:inherit}
 .sec-obj{font-size:11px;color:var(--t3)}
 .sec-add-btn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:10px;background:var(--surface2);color:var(--t2)}
 .sec-entries{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.sec-status-row{display:flex;justify-content:space-between;align-items:center;margin-top:9px}
+.sec-status-btns{display:flex;gap:4px}
+.sec-status-btns button{width:28px;height:28px;border-radius:8px;background:var(--surface2);font-size:13px}
+
+/* Bloc F enrichi — tâches perso, règles, sessions, mesures */
+.tp-item{padding:11px 16px;border-bottom:1px solid var(--surface2)}
+.tp-item:last-child{border-bottom:none}
+.tp-item-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.tp-item-nom{font-size:13.5px;font-weight:600;color:var(--t1)}
+.tp-item-pts{font-size:10.5px;color:var(--gold);font-weight:600}
+.tp-item-btns{display:flex;gap:5px}
+.tp-item-btns button{flex:1;height:30px;border-radius:8px;font-size:10.5px;font-weight:600;background:var(--surface2);color:var(--t2)}
+.tp-item-btns button.on{background:var(--navy);color:#fff}
+[data-dark] .tp-item-btns button.on{background:var(--gold)}
+.tp-item-del{background:none;border:none;font-size:12px;opacity:.5;padding:2px 6px}
+.regle-item{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--surface2)}
+.regle-item:last-child{border-bottom:none}
+.regle-check{width:20px;height:20px;flex-shrink:0}
+.regle-txt{flex:1;font-size:13px;color:var(--t1)}
+.regle-txt.done{text-decoration:line-through;color:var(--t3)}
+.regle-pts{font-size:10.5px;color:var(--gold);font-weight:600}
+.sess-item{display:flex;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--surface2);font-size:12px;color:var(--t2)}
+.sess-item:last-child{border-bottom:none}
+.metr-item{display:flex;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--surface2);font-size:12px;color:var(--t2)}
+.metr-item:last-child{border-bottom:none}
 .sec-entry-item{font-size:11px;color:var(--t3);display:flex;justify-content:space-between}
 
 /* Carte réunion */
@@ -1281,6 +1306,7 @@ input,select,textarea{font-family:inherit}
       <button class="rtab on" onclick="switchAgTab(this,'calendrier')">🗓️ Calendrier</button>
       <button class="rtab" onclick="switchAgTab(this,'liste')">📋 Liste</button>
       <button class="rtab" onclick="switchAgTab(this,'programmes')">📚 Programmes</button>
+      <button class="rtab" onclick="switchAgTab(this,'today')">🎯 Aujourd'hui</button>
     </div>
   </div>
 
@@ -1315,6 +1341,62 @@ input,select,textarea{font-family:inherit}
   <div id="ag-programmes" class="ag-body" style="display:none">
     <button class="ag-add-btn" style="width:100%;margin-bottom:12px" onclick="openNewProgModal()">➕ Nouveau programme</button>
     <div id="prog-list"></div>
+  </div>
+
+  <div id="ag-today" class="ag-body" style="display:none">
+    <div class="sup-global-card" style="margin-bottom:12px">
+      <div class="sup-global-pct" id="tp-today-pts">0 pts</div>
+      <div class="sup-global-lbl">gagnés aujourd'hui</div>
+      <div class="sup-global-row" style="grid-template-columns:repeat(3,1fr)">
+        <div><div class="sup-global-n" id="tp-week-pts">0</div><div class="sup-global-l">Cette semaine</div></div>
+        <div><div class="sup-global-n" id="tp-month-pts">0</div><div class="sup-global-l">Ce mois</div></div>
+        <div><div class="sup-global-n" id="tp-total-pts">0</div><div class="sup-global-l">Total</div></div>
+      </div>
+    </div>
+
+    <div class="pd-card" style="margin-bottom:12px">
+      <div class="pd-card-t" style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span>Tâches du jour</span>
+        <button class="btn-rappel-new" onclick="openNewTpModal()">➕ Tâche</button>
+      </div>
+      <div id="tp-taches-list"></div>
+    </div>
+
+    <div class="pd-card" style="margin-bottom:12px">
+      <div class="pd-card-t" style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span>Règles bonus</span>
+        <button class="btn-rappel-new" onclick="openNewRegleModal()">➕ Règle</button>
+      </div>
+      <div id="tp-regles-list"></div>
+    </div>
+
+    <div class="pd-card" style="margin-bottom:12px">
+      <div class="pd-card-t" style="padding:13px 16px">Session en cours</div>
+      <div style="padding:0 16px 14px">
+        <div id="tp-session-timer" style="font-size:26px;font-weight:700;color:var(--t1);text-align:center;margin-bottom:10px">00:00:00</div>
+        <input type="text" id="tp-session-nom" placeholder="Nom de la session (optionnel)" style="width:100%;height:40px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:0 12px;font-size:13px;color:var(--t1);outline:none;margin-bottom:10px">
+        <button class="btn-join-proj" id="tp-session-btn" onclick="toggleSession()">▶️ Démarrer</button>
+      </div>
+      <div id="tp-sessions-list"></div>
+    </div>
+
+    <div class="pd-card" style="margin-bottom:12px">
+      <div class="pd-card-t" style="padding:13px 16px">Mesure du jour</div>
+      <div style="padding:0 16px 14px;display:flex;gap:8px">
+        <input type="text" id="tp-metrique-type" placeholder="Ex: Poids" style="flex:1;height:40px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:0 12px;font-size:13px;color:var(--t1);outline:none">
+        <input type="number" id="tp-metrique-val" placeholder="Valeur" style="width:90px;height:40px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:0 12px;font-size:13px;color:var(--t1);outline:none">
+        <button onclick="addMetrique()" style="width:44px;height:40px;background:var(--navy);color:#fff;border-radius:var(--r8);font-size:16px">➕</button>
+      </div>
+      <div id="tp-metriques-list"></div>
+    </div>
+
+    <div class="pd-card">
+      <div class="pd-card-t" style="padding:13px 16px">Note du jour</div>
+      <div style="padding:0 16px 14px">
+        <textarea id="tp-note" placeholder="Une réflexion, un résumé de ta journée..." style="width:100%;min-height:70px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:10px 12px;font-size:13px;color:var(--t1);outline:none;resize:vertical;font-family:inherit"></textarea>
+        <button onclick="saveNoteJour()" style="margin-top:8px;height:38px;padding:0 16px;background:var(--navy);color:#fff;border-radius:var(--r8);font-size:12.5px;font-weight:600">💾 Enregistrer</button>
+      </div>
+    </div>
   </div>
 
   <nav class="bnav">
@@ -1430,6 +1512,34 @@ input,select,textarea{font-family:inherit}
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-entree')">Annuler</button>
       <button class="bsub" onclick="saveEntree()"><span>Ajouter</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE TÂCHE DU JOUR (Bloc F enrichi) -->
+<div class="overlay" id="ov-tp" onclick="closeOverlay('ov-tp')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouvelle tâche du jour</div>
+    <div class="mfield"><label>Titre *</label><input type="text" id="tp-nom" placeholder="Ex: Sport, Lecture, Méditation..."></div>
+    <div class="mfield"><label>Valeur en points</label><input type="number" id="tp-points" value="1" min="1" max="10"></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-tp')">Annuler</button>
+      <button class="bsub" onclick="saveTacheJour()"><span>Ajouter</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE RÈGLE BONUS -->
+<div class="overlay" id="ov-regle" onclick="closeOverlay('ov-regle')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouvelle règle bonus</div>
+    <div class="mfield"><label>Description *</label><input type="text" id="regle-txt" placeholder="Ex: Faire tout le sport prévu"></div>
+    <div class="mfield"><label>Points bonus</label><input type="number" id="regle-pts" value="1" min="1" max="20"></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-regle')">Annuler</button>
+      <button class="bsub" onclick="saveRegle()"><span>Créer</span></button>
     </div>
   </div>
 </div>
@@ -2400,8 +2510,10 @@ function switchAgTab(el, tab) {
   document.getElementById('ag-cal').style.display        = tab === 'calendrier' ? 'block' : 'none';
   document.getElementById('ag-liste').style.display      = tab === 'liste' ? 'block' : 'none';
   document.getElementById('ag-programmes').style.display = tab === 'programmes' ? 'block' : 'none';
+  document.getElementById('ag-today').style.display      = tab === 'today' ? 'block' : 'none';
   if (tab === 'liste') renderAgListe();
   if (tab === 'programmes') loadProgrammes();
+  if (tab === 'today') loadToday();
 }
 
 function filterAgListe(el, f) {
@@ -2711,6 +2823,10 @@ async function renderSections() {
     const allEntSnap = await db.collection('programmes').doc(curProgId).collection('sections').doc(sd.id).collection('entrees').get();
     let totalSum = 0; allEntSnap.forEach(ed => totalSum += (ed.data().quantite||0));
     const pct = s.cible ? Math.min(100, Math.round(totalSum / s.cible * 100)) : 0;
+    // Statut : manuel si déjà choisi, sinon déduit automatiquement de la progression
+    const statut = s.statut || (pct >= 100 ? 'terminee' : pct > 0 ? 'en_cours' : 'a_faire');
+    const stC = statut === 'terminee' ? 'te' : statut === 'en_cours' ? 'ec' : 'af';
+    const stL = statut === 'terminee' ? 'Terminée' : statut === 'en_cours' ? 'En cours' : 'À faire';
 
     html += `<div class="sec-row">
       <div class="sec-row-top">
@@ -2718,6 +2834,14 @@ async function renderSections() {
         <button class="sec-add-btn" data-action="add-entree" data-sid="${sd.id}">➕ ${pct}%</button>
       </div>
       <div class="proj-progress-bg"><div class="proj-progress-fill" style="width:${pct}%"></div></div>
+      <div class="sec-status-row">
+        <span class="stt ${stC}">${stL}</span>
+        <div class="sec-status-btns">
+          <button data-action="set-sec-statut" data-sid="${sd.id}" data-st="a_faire" title="À faire">📋</button>
+          <button data-action="set-sec-statut" data-sid="${sd.id}" data-st="en_cours" title="En cours">⚡</button>
+          <button data-action="set-sec-statut" data-sid="${sd.id}" data-st="terminee" title="Terminée">✅</button>
+        </div>
+      </div>
       <div class="sec-entries">${entries.map(e => `<div class="sec-entry-item"><span>${new Date(e.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}${e.note?' — '+escHtml(e.note):''}</span><span>+${e.quantite}</span></div>`).join('')}</div>
     </div>`;
   }
@@ -2725,6 +2849,16 @@ async function renderSections() {
   el.querySelectorAll('[data-action="add-entree"]').forEach(btn => {
     btn.addEventListener('click', () => openNewEntreeModal(btn.getAttribute('data-sid')));
   });
+  el.querySelectorAll('[data-action="set-sec-statut"]').forEach(btn => {
+    btn.addEventListener('click', () => setSectionStatut(btn.getAttribute('data-sid'), btn.getAttribute('data-st')));
+  });
+}
+
+async function setSectionStatut(sectionId, statut) {
+  try {
+    await db.collection('programmes').doc(curProgId).collection('sections').doc(sectionId).update({ statut });
+    renderSections();
+  } catch(e) { toast('Erreur : ' + e.message); }
 }
 
 window.openNewSectionModal = function() {
@@ -2788,6 +2922,268 @@ window.deleteProgramme = async function() {
     toast('Programme supprimé');
     curProgId = null; curProgData = null;
     go('agenda');
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+// ── BLOC F ENRICHI — Tâches perso, Règles, Sessions, Mesures, Points ──
+const TP_CREDIT = { a_faire:0, en_cours:0, partielle:0.5, terminee:1, non_realisee:0 };
+const TP_DAILY_CAP = 40; // plafond quotidien anti-abus sur les points de tâches simples
+function todayStr() { return new Date().toISOString().slice(0,10); }
+
+let tpTasksToday = [];
+let tpReglesAll = [];
+let tpReglesCochesToday = [];
+let tpSessionsToday = [];
+let tpRunningSession = null;
+let tpTimerInterval = null;
+
+async function loadToday() {
+  if (!CU) return;
+  const date = todayStr();
+
+  // Tâches du jour
+  const tSnap = await db.collection('taches_perso').where('uid','==',CU.uid).where('date','==',date).get();
+  tpTasksToday = []; tSnap.forEach(d => tpTasksToday.push({ id:d.id, ...d.data() }));
+  renderTpTaches();
+
+  // Règles (liste persistante) + cochées du jour
+  const rSnap = await db.collection('reglesPerso').where('uid','==',CU.uid).get();
+  tpReglesAll = []; rSnap.forEach(d => tpReglesAll.push({ id:d.id, ...d.data() }));
+  const rcSnap = await db.collection('reglesPersoCoches').where('uid','==',CU.uid).where('date','==',date).get();
+  tpReglesCochesToday = []; rcSnap.forEach(d => tpReglesCochesToday.push(d.data().regleId));
+  renderTpRegles();
+
+  // Sessions du jour
+  const sSnap = await db.collection('sessions_perso').where('uid','==',CU.uid).where('date','==',date).get();
+  tpSessionsToday = []; sSnap.forEach(d => tpSessionsToday.push({ id:d.id, ...d.data() }));
+  tpRunningSession = tpSessionsToday.find(s => !s.fin) || null;
+  renderTpSessions();
+  startTimerIfRunning();
+
+  // Mesures du jour
+  const mSnap = await db.collection('metriquesPerso').where('uid','==',CU.uid).orderBy('createdAt','desc').limit(10).get();
+  const metriques = []; mSnap.forEach(d => metriques.push(d.data()));
+  renderTpMetriques(metriques);
+
+  // Note du jour
+  const nSnap = await db.collection('notesJourPerso').where('uid','==',CU.uid).where('date','==',date).limit(1).get();
+  document.getElementById('tp-note').value = nSnap.empty ? '' : (nSnap.docs[0].data().texte || '');
+
+  await computeTpPoints();
+}
+
+function tpTaskPoints(t) { return (t.points||1) * (TP_CREDIT[t.statut] || 0); }
+
+async function computeTpPoints() {
+  const date = todayStr();
+  // Aujourd'hui
+  const taskPtsRaw = tpTasksToday.reduce((s,t) => s + tpTaskPoints(t), 0);
+  const taskPtsCapped = Math.min(TP_DAILY_CAP, taskPtsRaw);
+  const reglePts = tpReglesAll.filter(r => tpReglesCochesToday.includes(r.id)).reduce((s,r) => s + (r.pointsBonus||1), 0);
+  const todayTotal = taskPtsCapped + reglePts;
+  document.getElementById('tp-today-pts').textContent = todayTotal.toFixed(2).replace(/\.00$/,'').replace(/(\.\d)0$/,'$1') + ' pts';
+
+  // Cette semaine / ce mois (requêtes sur date >= début période)
+  const now = new Date();
+  const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay() + 1); weekStart.setHours(0,0,0,0);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const weekStr = weekStart.toISOString().slice(0,10);
+  const monthStr = monthStart.toISOString().slice(0,10);
+
+  try {
+    const allTasksSnap = await db.collection('taches_perso').where('uid','==',CU.uid).get();
+    const allRcSnap = await db.collection('reglesPersoCoches').where('uid','==',CU.uid).get();
+    let weekPts = 0, monthPts = 0, totalPts = 0;
+    const byDate = {};
+    allTasksSnap.forEach(d => {
+      const t = d.data();
+      const pts = (t.points||1) * (TP_CREDIT[t.statut]||0);
+      byDate[t.date] = (byDate[t.date]||0) + pts;
+    });
+    // Applique le plafond par jour pour les tâches
+    Object.keys(byDate).forEach(d => { byDate[d] = Math.min(TP_DAILY_CAP, byDate[d]); });
+    Object.entries(byDate).forEach(([d,pts]) => {
+      totalPts += pts;
+      if (d >= weekStr) weekPts += pts;
+      if (d >= monthStr) monthPts += pts;
+    });
+    allRcSnap.forEach(d => {
+      const rc = d.data();
+      const regle = tpReglesAll.find(r => r.id === rc.regleId);
+      const pts = regle ? (regle.pointsBonus||1) : 1;
+      totalPts += pts;
+      if (rc.date >= weekStr) weekPts += pts;
+      if (rc.date >= monthStr) monthPts += pts;
+    });
+    document.getElementById('tp-week-pts').textContent  = Math.round(weekPts*100)/100;
+    document.getElementById('tp-month-pts').textContent = Math.round(monthPts*100)/100;
+    document.getElementById('tp-total-pts').textContent = Math.round(totalPts*100)/100;
+  } catch(e) { /* non bloquant */ }
+}
+
+function renderTpTaches() {
+  const el = document.getElementById('tp-taches-list');
+  if (!tpTasksToday.length) { el.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">Aucune tâche ajoutée aujourd\'hui.</div></div>'; return; }
+  el.innerHTML = tpTasksToday.map(t => `
+    <div class="tp-item">
+      <div class="tp-item-top"><span class="tp-item-nom">${escHtml(t.nom)}</span><span class="tp-item-pts">${t.points||1} pt${(t.points||1)>1?'s':''}</span></div>
+      <div class="tp-item-btns">
+        <button class="${t.statut==='a_faire'?'on':''}" data-action="tp-stt" data-id="${t.id}" data-st="a_faire">À faire</button>
+        <button class="${t.statut==='en_cours'?'on':''}" data-action="tp-stt" data-id="${t.id}" data-st="en_cours">En cours</button>
+        <button class="${t.statut==='partielle'?'on':''}" data-action="tp-stt" data-id="${t.id}" data-st="partielle">½ Fait</button>
+        <button class="${t.statut==='terminee'?'on':''}" data-action="tp-stt" data-id="${t.id}" data-st="terminee">✅ Fait</button>
+        <button class="tp-item-del" data-action="tp-del" data-id="${t.id}">🗑️</button>
+      </div>
+    </div>`).join('');
+  el.querySelectorAll('[data-action="tp-stt"]').forEach(b => b.addEventListener('click', () => setTpStatut(b.getAttribute('data-id'), b.getAttribute('data-st'))));
+  el.querySelectorAll('[data-action="tp-del"]').forEach(b => b.addEventListener('click', () => deleteTpTache(b.getAttribute('data-id'))));
+}
+
+window.openNewTpModal = function() {
+  document.getElementById('tp-nom').value = '';
+  document.getElementById('tp-points').value = 1;
+  document.getElementById('ov-tp').classList.add('on');
+};
+window.saveTacheJour = async function() {
+  const nom = document.getElementById('tp-nom').value.trim();
+  const points = parseFloat(document.getElementById('tp-points').value) || 1;
+  if (!nom) { toast('Titre obligatoire'); return; }
+  try {
+    await db.collection('taches_perso').add({ uid:CU.uid, nom, points, statut:'a_faire', date:todayStr(), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    closeOverlay('ov-tp');
+    toast('Tâche ajoutée ✅');
+    loadToday();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+async function setTpStatut(id, statut) {
+  try {
+    await db.collection('taches_perso').doc(id).update({ statut, heureFait: firebase.firestore.FieldValue.serverTimestamp() });
+    const t = tpTasksToday.find(x => x.id === id); if (t) t.statut = statut;
+    renderTpTaches();
+    computeTpPoints();
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+async function deleteTpTache(id) {
+  try { await db.collection('taches_perso').doc(id).delete(); loadToday(); } catch(e) { toast('Erreur : ' + e.message); }
+}
+
+function renderTpRegles() {
+  const el = document.getElementById('tp-regles-list');
+  if (!tpReglesAll.length) { el.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">Aucune règle définie — crée tes règles bonus personnelles.</div></div>'; return; }
+  el.innerHTML = tpReglesAll.map(r => {
+    const done = tpReglesCochesToday.includes(r.id);
+    return `<div class="regle-item">
+      <input type="checkbox" class="regle-check" data-action="regle-toggle" data-id="${r.id}" ${done?'checked':''}>
+      <span class="regle-txt ${done?'done':''}">${escHtml(r.texte)}</span>
+      <span class="regle-pts">+${r.pointsBonus||1}</span>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('[data-action="regle-toggle"]').forEach(cb => cb.addEventListener('change', () => toggleRegle(cb.getAttribute('data-id'), cb.checked)));
+}
+window.openNewRegleModal = function() {
+  document.getElementById('regle-txt').value = '';
+  document.getElementById('regle-pts').value = 1;
+  document.getElementById('ov-regle').classList.add('on');
+};
+window.saveRegle = async function() {
+  const texte = document.getElementById('regle-txt').value.trim();
+  const pointsBonus = parseFloat(document.getElementById('regle-pts').value) || 1;
+  if (!texte) { toast('Description obligatoire'); return; }
+  try {
+    await db.collection('reglesPerso').add({ uid:CU.uid, texte, pointsBonus, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    closeOverlay('ov-regle');
+    toast('Règle créée ✅');
+    loadToday();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+async function toggleRegle(regleId, checked) {
+  const date = todayStr();
+  const docId = CU.uid + '_' + regleId + '_' + date;
+  try {
+    if (checked) {
+      await db.collection('reglesPersoCoches').doc(docId).set({ uid:CU.uid, regleId, date });
+      tpReglesCochesToday.push(regleId);
+    } else {
+      await db.collection('reglesPersoCoches').doc(docId).delete();
+      tpReglesCochesToday = tpReglesCochesToday.filter(id => id !== regleId);
+    }
+    renderTpRegles();
+    computeTpPoints();
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+
+/* ── Sessions chronométrées ─────────────────────────────────────── */
+function renderTpSessions() {
+  const el = document.getElementById('tp-sessions-list');
+  const done = tpSessionsToday.filter(s => s.fin);
+  if (!done.length) { el.innerHTML = ''; }
+  else {
+    el.innerHTML = done.map(s => `<div class="sess-item"><span>${escHtml(s.nom||'Session')}</span><span>${s.dureeMin} min</span></div>`).join('');
+  }
+  document.getElementById('tp-session-btn').textContent = tpRunningSession ? '⏹️ Arrêter' : '▶️ Démarrer';
+  document.getElementById('tp-session-nom').disabled = !!tpRunningSession;
+  if (tpRunningSession) document.getElementById('tp-session-nom').value = tpRunningSession.nom || '';
+}
+function startTimerIfRunning() {
+  if (tpTimerInterval) clearInterval(tpTimerInterval);
+  if (!tpRunningSession) { document.getElementById('tp-session-timer').textContent = '00:00:00'; return; }
+  const debut = new Date(tpRunningSession.debut).getTime();
+  const tick = () => {
+    const diff = Math.max(0, Date.now() - debut);
+    const h = String(Math.floor(diff/3600000)).padStart(2,'0');
+    const m = String(Math.floor(diff/60000)%60).padStart(2,'0');
+    const s = String(Math.floor(diff/1000)%60).padStart(2,'0');
+    document.getElementById('tp-session-timer').textContent = `${h}:${m}:${s}`;
+  };
+  tick();
+  tpTimerInterval = setInterval(tick, 1000);
+}
+window.toggleSession = async function() {
+  try {
+    if (tpRunningSession) {
+      const debut = new Date(tpRunningSession.debut).getTime();
+      const dureeMin = Math.round((Date.now() - debut) / 60000);
+      await db.collection('sessions_perso').doc(tpRunningSession.id).update({ fin: new Date().toISOString(), dureeMin });
+      tpRunningSession = null;
+      if (tpTimerInterval) clearInterval(tpTimerInterval);
+      toast('Session terminée ✅');
+    } else {
+      const nom = document.getElementById('tp-session-nom').value.trim();
+      const ref = await db.collection('sessions_perso').add({ uid:CU.uid, nom, date:todayStr(), debut:new Date().toISOString(), fin:null, dureeMin:null });
+      tpRunningSession = { id: ref.id, nom, debut: new Date().toISOString(), fin:null };
+      toast('Session démarrée ⏱️');
+    }
+    loadToday();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Mesures (poids, etc.) ─────────────────────────────────────── */
+function renderTpMetriques(list) {
+  const el = document.getElementById('tp-metriques-list');
+  if (!list.length) { el.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">Aucune mesure enregistrée.</div></div>'; return; }
+  el.innerHTML = list.map(m => `<div class="metr-item"><span>${escHtml(m.type)} — ${new Date(m.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}</span><span><strong>${m.valeur}</strong></span></div>`).join('');
+}
+window.addMetrique = async function() {
+  const type = document.getElementById('tp-metrique-type').value.trim();
+  const valeur = parseFloat(document.getElementById('tp-metrique-val').value);
+  if (!type || isNaN(valeur)) { toast('Renseigne un type et une valeur'); return; }
+  try {
+    await db.collection('metriquesPerso').add({ uid:CU.uid, type, valeur, date:todayStr(), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    document.getElementById('tp-metrique-type').value = '';
+    document.getElementById('tp-metrique-val').value = '';
+    toast('Mesure ajoutée ✅');
+    loadToday();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Note de fin de journée ─────────────────────────────────────── */
+window.saveNoteJour = async function() {
+  const texte = document.getElementById('tp-note').value.trim();
+  const date = todayStr();
+  const docId = CU.uid + '_' + date;
+  try {
+    await db.collection('notesJourPerso').doc(docId).set({ uid:CU.uid, date, texte, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    toast('Note enregistrée ✅');
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
