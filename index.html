@@ -1125,6 +1125,11 @@ input,select,textarea{font-family:inherit}
       <div class="prow"><div class="prow-l"><div class="prow-ic" style="background:#F0FDF4">⭐</div><div><div class="prow-lbl">Score</div><div class="prow-sub" id="p-score-d">0 pts</div></div></div></div>
     </div>
     <div class="pcard">
+      <div class="pcard-t">Mon Espace</div>
+      <div class="prow" onclick="go('agenda')"><div class="prow-l"><div class="prow-ic" style="background:#F0FDF4">📅</div><div><div class="prow-lbl">Mon agenda</div><div class="prow-sub">Calendrier, programmes, points</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('finperso')"><div class="prow-l"><div class="prow-ic" style="background:#D4EDDA">💰</div><div><div class="prow-lbl">Mes finances</div><div class="prow-sub">Solde, entrées, dépenses personnelles</div></div></div><div class="prow-r">›</div></div>
+    </div>
+    <div class="pcard">
       <div class="pcard-t">Apparence</div>
       <div class="prow">
         <div class="prow-l"><div class="prow-ic" style="background:#F5F3FF">🌙</div><div><div class="prow-lbl">Mode nuit</div><div class="prow-sub">Thème sombre</div></div></div>
@@ -1540,6 +1545,92 @@ input,select,textarea{font-family:inherit}
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-regle')">Annuler</button>
       <button class="bsub" onclick="saveRegle()"><span>Créer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MON ESPACE — FINANCES PERSO (Bloc G) ══ -->
+<div id="s-finperso" class="scr">
+  <div class="treso-hd">
+    <div class="treso-hd-top">
+      <div class="rd-back" style="color:rgba(255,255,255,.5);margin-bottom:6px" onclick="go('profil')">‹ Retour</div>
+      <div><div class="treso-title">Mes Finances</div></div>
+    </div>
+    <div class="solde-box">
+      <div class="solde-label">Solde disponible</div>
+      <div class="solde-amount" id="fp-solde">0 Ar</div>
+      <div class="solde-month" id="fp-month">—</div>
+    </div>
+  </div>
+  <div class="treso-body">
+    <div class="treso-actions">
+      <button class="treso-btn entree" onclick="openModalTxPerso('entree')">📈 Entrée</button>
+      <button class="treso-btn depense" onclick="openModalTxPerso('depense')">📉 Dépense</button>
+    </div>
+    <div>
+      <div class="sec-title">Ce mois</div>
+      <div class="card" style="overflow:hidden">
+        <div style="display:grid;grid-template-columns:1fr 1fr;padding:14px 16px;gap:10px">
+          <div style="text-align:center">
+            <div style="font-size:11px;color:var(--t3);margin-bottom:4px">ENTRÉES</div>
+            <div style="font-size:18px;font-weight:700;color:#155724" id="fp-total-entrees">0 Ar</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:11px;color:var(--t3);margin-bottom:4px">DÉPENSES</div>
+            <div style="font-size:18px;font-weight:700;color:#C0392B" id="fp-total-depenses">0 Ar</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="filters" id="fp-cat-filters" style="padding:2px 0">
+      <button class="chip on" data-fpcat="tous" onclick="filterFpCat(this,'tous')">Toutes catégories</button>
+    </div>
+    <div>
+      <div class="sec-title">Transactions</div>
+      <div class="card" id="fp-tx-list" style="overflow:hidden"></div>
+    </div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- MODAL TRANSACTION PERSO -->
+<div class="overlay" id="ov-tx-perso" onclick="closeOverlay('ov-tx-perso')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="fp-tx-modal-title">Nouvelle entrée</div>
+    <div class="mfield"><label>Montant (Ar) *</label><input type="number" id="fp-tx-montant" placeholder="0"></div>
+    <div class="mfield"><label>Description *</label><input type="text" id="fp-tx-desc" placeholder="Ex: Salaire, Transport, Nourriture..."></div>
+    <div class="mfield">
+      <label>Catégorie</label>
+      <div style="display:flex;gap:8px">
+        <select id="fp-tx-cat" style="flex:1"></select>
+        <button type="button" onclick="openNewCatModal()" style="width:44px;height:44px;background:var(--surface2);border-radius:var(--r8);font-size:16px">➕</button>
+      </div>
+    </div>
+    <div class="mfield"><label>Date</label><input type="date" id="fp-tx-date"></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-tx-perso')">Annuler</button>
+      <button class="bsub" id="fp-tx-sub" onclick="submitTxPerso()"><span>Enregistrer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE CATÉGORIE PERSO -->
+<div class="overlay" id="ov-cat-perso" onclick="closeOverlay('ov-cat-perso')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouvelle catégorie</div>
+    <div class="mfield"><label>Nom *</label><input type="text" id="fp-cat-nom" placeholder="Ex: Association, Épargne..."></div>
+    <div class="mfield"><label>Icône (emoji)</label><input type="text" id="fp-cat-icone" placeholder="Ex: 💡" maxlength="4"></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-cat-perso')">Annuler</button>
+      <button class="bsub" onclick="saveCatPerso()"><span>Créer</span></button>
     </div>
   </div>
 </div>
@@ -2329,6 +2420,7 @@ function go(screen) {
   if (screen === 'admin')  loadMembers();
   if (screen === 'supervision') loadSupervision();
   if (screen === 'agenda') loadAgenda();
+  if (screen === 'finperso') loadFinPerso();
 }
 
 function navTo(btn, screen) {
@@ -3184,6 +3276,161 @@ window.saveNoteJour = async function() {
   try {
     await db.collection('notesJourPerso').doc(docId).set({ uid:CU.uid, date, texte, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     toast('Note enregistrée ✅');
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+// ── FINANCES PERSO (Bloc G) — indépendant de la trésorerie association ──
+const FP_DEFAULT_CATS = [
+  {nom:'Nourriture',icone:'🍽️'}, {nom:'Transport',icone:'🚗'}, {nom:'Études',icone:'📚'},
+  {nom:'Livres',icone:'📖'}, {nom:'Téléphone',icone:'📱'}, {nom:'Loisirs',icone:'🎮'},
+  {nom:'Famille',icone:'👨‍👩‍👧'}, {nom:'Association',icone:'🤝'}, {nom:'Épargne',icone:'🎯'}, {nom:'Autre',icone:'📌'}
+];
+let fpCats = [];
+let fpAllTx = [];
+let fpCatFilter = 'tous';
+let fpTxType = 'entree';
+
+async function loadFinPerso() {
+  if (!CU) return;
+  const now = new Date();
+  const label = now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  document.getElementById('fp-month').textContent = label.charAt(0).toUpperCase() + label.slice(1);
+
+  try {
+    // Catégories — seed par défaut si aucune encore créée
+    const catSnap = await db.collection('financesPerso_categories').where('uid','==',CU.uid).get();
+    if (catSnap.empty) {
+      const batch = db.batch();
+      FP_DEFAULT_CATS.forEach(c => {
+        const ref = db.collection('financesPerso_categories').doc();
+        batch.set(ref, { uid:CU.uid, nom:c.nom, icone:c.icone });
+      });
+      await batch.commit();
+      const reSnap = await db.collection('financesPerso_categories').where('uid','==',CU.uid).get();
+      fpCats = []; reSnap.forEach(d => fpCats.push({ id:d.id, ...d.data() }));
+    } else {
+      fpCats = []; catSnap.forEach(d => fpCats.push({ id:d.id, ...d.data() }));
+    }
+    renderFpCatFilters();
+    populateFpCatSelect();
+
+    // Transactions
+    const txSnap = await db.collection('financesPerso_transactions').where('uid','==',CU.uid).get();
+    fpAllTx = []; txSnap.forEach(d => fpAllTx.push({ id:d.id, ...d.data() }));
+    fpAllTx.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+    computeFpSolde();
+    renderFpTx();
+  } catch(e) { toast('Erreur finances : ' + e.message); }
+}
+
+function computeFpSolde() {
+  let solde = 0, entreesMois = 0, depensesMois = 0;
+  const monthPrefix = new Date().toISOString().slice(0,7);
+  fpAllTx.forEach(t => {
+    if (t.type === 'entree') solde += t.montant; else solde -= t.montant;
+    if ((t.date||'').startsWith(monthPrefix)) {
+      if (t.type === 'entree') entreesMois += t.montant; else depensesMois += t.montant;
+    }
+  });
+  document.getElementById('fp-solde').textContent = solde.toLocaleString('fr-FR') + ' Ar';
+  document.getElementById('fp-solde').className = 'solde-amount ' + (solde >= 0 ? 'pos' : 'neg');
+  document.getElementById('fp-total-entrees').textContent = entreesMois.toLocaleString('fr-FR') + ' Ar';
+  document.getElementById('fp-total-depenses').textContent = depensesMois.toLocaleString('fr-FR') + ' Ar';
+}
+
+function renderFpCatFilters() {
+  const el = document.getElementById('fp-cat-filters');
+  el.innerHTML = '<button class="chip on" data-fpcat="tous">Toutes catégories</button>' +
+    fpCats.map(c => `<button class="chip" data-fpcat="${c.id}">${c.icone||''} ${escHtml(c.nom)}</button>`).join('');
+  el.querySelectorAll('.chip').forEach(btn => {
+    btn.addEventListener('click', () => filterFpCat(btn, btn.getAttribute('data-fpcat')));
+  });
+}
+function filterFpCat(el, catId) {
+  document.querySelectorAll('#fp-cat-filters .chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  fpCatFilter = catId;
+  renderFpTx();
+}
+function populateFpCatSelect() {
+  const sel = document.getElementById('fp-tx-cat');
+  sel.innerHTML = fpCats.map(c => `<option value="${c.id}">${c.icone||''} ${escHtml(c.nom)}</option>`).join('');
+}
+
+function renderFpTx() {
+  const el = document.getElementById('fp-tx-list');
+  let list = fpCatFilter === 'tous' ? fpAllTx : fpAllTx.filter(t => t.categorieId === fpCatFilter);
+  if (!list.length) { el.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-b">Aucune transaction.</div></div>'; return; }
+  el.innerHTML = list.map(t => {
+    const cat = fpCats.find(c => c.id === t.categorieId);
+    const isE = t.type === 'entree';
+    const sign = isE ? '+' : '-';
+    const date = t.date ? new Date(t.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '—';
+    return `<div class="tx-item" data-id="${t.id}">
+      <div class="tx-ic ${isE?'e':'d'}">${cat?.icone || (isE?'📈':'📉')}</div>
+      <div class="tx-info">
+        <div class="tx-nom">${escHtml(t.description||'—')}</div>
+        <div class="tx-meta">${escHtml(cat?.nom||'—')} · ${date}</div>
+      </div>
+      <div class="tx-amount ${isE?'e':'d'}">${sign}${Number(t.montant).toLocaleString('fr-FR')} Ar</div>
+      <button class="tx-item-del" data-action="fp-tx-del" data-id="${t.id}" title="Supprimer">🗑️</button>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('[data-action="fp-tx-del"]').forEach(b => b.addEventListener('click', () => deleteTxPerso(b.getAttribute('data-id'))));
+}
+
+window.openModalTxPerso = function(type) {
+  fpTxType = type;
+  document.getElementById('fp-tx-modal-title').textContent = type === 'entree' ? 'Nouvelle entrée' : 'Nouvelle dépense';
+  document.getElementById('fp-tx-montant').value = '';
+  document.getElementById('fp-tx-desc').value = '';
+  document.getElementById('fp-tx-date').value = todayStr();
+  document.getElementById('ov-tx-perso').classList.add('on');
+};
+window.submitTxPerso = async function() {
+  const montant = parseFloat(document.getElementById('fp-tx-montant').value);
+  const desc = document.getElementById('fp-tx-desc').value.trim();
+  const catId = document.getElementById('fp-tx-cat').value;
+  const date = document.getElementById('fp-tx-date').value || todayStr();
+  if (!montant || montant <= 0) { toast('Montant invalide'); return; }
+  if (!desc) { toast('Description obligatoire'); return; }
+  const btn = document.getElementById('fp-tx-sub');
+  btn.disabled = true; btn.querySelector('span').textContent = '...';
+  try {
+    await db.collection('financesPerso_transactions').add({
+      uid: CU.uid, type: fpTxType, montant, description: desc, categorieId: catId || null, date,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-tx-perso');
+    toast((fpTxType === 'entree' ? 'Entrée' : 'Dépense') + ' enregistrée ✅');
+    loadFinPerso();
+  } catch(e) { toast('Erreur : ' + e.message); }
+  finally { btn.disabled = false; btn.querySelector('span').textContent = 'Enregistrer'; }
+};
+async function deleteTxPerso(id) {
+  if (!confirm('Supprimer cette transaction ?')) return;
+  try { await db.collection('financesPerso_transactions').doc(id).delete(); toast('Supprimée'); loadFinPerso(); }
+  catch(e) { toast('Erreur : ' + e.message); }
+}
+
+window.openNewCatModal = function() {
+  document.getElementById('fp-cat-nom').value = '';
+  document.getElementById('fp-cat-icone').value = '';
+  document.getElementById('ov-cat-perso').classList.add('on');
+};
+window.saveCatPerso = async function() {
+  const nom = document.getElementById('fp-cat-nom').value.trim();
+  const icone = document.getElementById('fp-cat-icone').value.trim() || '📌';
+  if (!nom) { toast('Nom obligatoire'); return; }
+  try {
+    const ref = await db.collection('financesPerso_categories').add({ uid: CU.uid, nom, icone });
+    fpCats.push({ id: ref.id, nom, icone });
+    populateFpCatSelect();
+    document.getElementById('fp-tx-cat').value = ref.id;
+    renderFpCatFilters();
+    closeOverlay('ov-cat-perso');
+    toast('Catégorie créée ✅');
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
