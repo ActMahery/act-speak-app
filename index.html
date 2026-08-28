@@ -776,6 +776,16 @@ input,select,textarea{font-family:inherit}
 [data-dark] .fp-cd-badge.impaye{background:rgba(192,57,43,.25);color:#FCA5A5}
 .fpd-hist-item{display:flex;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--surface2);font-size:12.5px;color:var(--t2)}
 .fpd-hist-item:last-child{border-bottom:none}
+
+/* Budgets (Bloc I) */
+.fp-bg-card{background:var(--surface);border-radius:var(--r14);padding:14px 16px;box-shadow:var(--sh);margin-bottom:10px;cursor:pointer}
+.fp-bg-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.fp-bg-nom{font-size:14px;font-weight:700;color:var(--t1)}
+.fp-bg-periode{font-size:10.5px;color:var(--t3);margin-top:2px}
+.fp-bg-pct{font-size:13px;font-weight:700}
+.bgd-jour-item{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--surface2);font-size:12.5px}
+.bgd-jour-item:last-child{border-bottom:none}
+.bgd-jour-badge{font-size:14px}
 .treso-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
 
 /* Boutons entrée/dépense */
@@ -1591,6 +1601,7 @@ input,select,textarea{font-family:inherit}
       <button class="rtab on" onclick="switchFpTab(this,'solde')">💰 Solde</button>
       <button class="rtab" onclick="switchFpTab(this,'creances')">🤝 Créances</button>
       <button class="rtab" onclick="switchFpTab(this,'dettes')">💳 Dettes</button>
+      <button class="rtab" onclick="switchFpTab(this,'budgets')">🎯 Budgets</button>
     </div>
   </div>
 
@@ -1631,6 +1642,11 @@ input,select,textarea{font-family:inherit}
   <div class="treso-body" id="fp-panel-dettes" style="display:none">
     <button class="ag-add-btn" style="width:100%" onclick="openNewDetteModal()">➕ Nouvelle dette (argent emprunté)</button>
     <div id="fp-dettes-list"></div>
+  </div>
+
+  <div class="treso-body" id="fp-panel-budgets" style="display:none">
+    <button class="ag-add-btn" style="width:100%" onclick="openNewBudgetModal()">➕ Nouveau budget</button>
+    <div id="fp-budgets-list"></div>
   </div>
 
   <nav class="bnav">
@@ -1712,6 +1728,60 @@ input,select,textarea{font-family:inherit}
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-paiement')">Annuler</button>
       <button class="bsub" onclick="savePaiement()"><span>Enregistrer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVEAU BUDGET -->
+<div class="overlay" id="ov-budget" onclick="closeOverlay('ov-budget')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouveau budget</div>
+    <div class="mfield"><label>Nom *</label><input type="text" id="bg-nom" placeholder="Ex: Budget nourriture, Argent de poche..."></div>
+    <div class="mfield">
+      <label>Période</label>
+      <select id="bg-type" onchange="onBudgetTypeChange()">
+        <option value="quotidien">Quotidien (max par jour)</option>
+        <option value="hebdo">Hebdomadaire</option>
+        <option value="mensuel">Mensuel</option>
+        <option value="personnalise">Personnalisé</option>
+      </select>
+    </div>
+    <div class="mrow" id="bg-custom-dates" style="display:none">
+      <div class="mfield" style="margin-bottom:0"><label>Du</label><input type="date" id="bg-debut"></div>
+      <div class="mfield" style="margin-bottom:0"><label>Au</label><input type="date" id="bg-fin"></div>
+    </div>
+    <div class="mfield" style="margin-top:14px"><label>Montant maximum (Ar) *</label><input type="number" id="bg-montant" placeholder="0"></div>
+    <div class="mfield"><label>Catégorie (optionnel — vide = toutes)</label><select id="bg-cat"><option value="">Toutes catégories</option></select></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-budget')">Annuler</button>
+      <button class="bsub" onclick="saveBudget()"><span>Créer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ÉCRAN DÉTAIL BUDGET -->
+<div id="s-fp-budget-detail" class="scr">
+  <div class="rd-hd">
+    <div class="rd-back" onclick="closeBudgetDetail()">‹ Retour</div>
+    <div class="rd-title" id="bgd-title">—</div>
+    <div class="rd-sub" id="bgd-sub">—</div>
+  </div>
+  <div class="pd-body">
+    <div class="pd-card">
+      <div style="padding:18px 16px;text-align:center">
+        <div style="font-size:11px;color:var(--t3)">Dépensé / Budget</div>
+        <div style="font-size:24px;font-weight:800;color:var(--t1)" id="bgd-montants">0 / 0 Ar</div>
+        <div class="proj-progress-bg" style="margin-top:10px"><div class="proj-progress-fill" id="bgd-bar" style="width:0%"></div></div>
+        <div id="bgd-alerte" style="display:none;margin-top:10px;padding:8px 12px;border-radius:10px;background:#FDE8E8;color:#C0392B;font-size:12px;font-weight:600">⚠️ Budget dépassé</div>
+      </div>
+    </div>
+    <div class="pd-card" id="bgd-jours-card">
+      <div class="pd-card-t" style="padding:13px 16px">Suivi quotidien</div>
+      <div id="bgd-jours-list"></div>
+    </div>
+    <div class="pd-card" style="padding:14px 16px">
+      <button class="btn-danger-full" onclick="deleteBudget()">🗑️ Supprimer ce budget</button>
     </div>
   </div>
 </div>
@@ -3564,8 +3634,10 @@ function switchFpTab(el, tab) {
   document.getElementById('fp-panel-solde').style.display    = tab === 'solde' ? 'block' : 'none';
   document.getElementById('fp-panel-creances').style.display = tab === 'creances' ? 'block' : 'none';
   document.getElementById('fp-panel-dettes').style.display   = tab === 'dettes' ? 'block' : 'none';
+  document.getElementById('fp-panel-budgets').style.display  = tab === 'budgets' ? 'block' : 'none';
   if (tab === 'creances') loadCreances();
   if (tab === 'dettes') loadDettes();
+  if (tab === 'budgets') loadBudgets();
 }
 
 function fpReste(item) {
@@ -3750,6 +3822,164 @@ window.deleteFpItem = async function() {
     await db.collection(coll).doc(fpDetailId).delete();
     toast('Supprimée');
     closeFpDetail();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Budgets + alertes (Bloc I) ────────────────────────────────────── */
+let fpBudgets = [];
+let curBudgetId = null, curBudgetData = null;
+
+function onBudgetTypeChange() {
+  document.getElementById('bg-custom-dates').style.display =
+    document.getElementById('bg-type').value === 'personnalise' ? 'flex' : 'none';
+}
+
+async function loadBudgets() {
+  const el = document.getElementById('fp-budgets-list');
+  try {
+    if (!fpCats.length) {
+      const cs = await db.collection('financesPerso_categories').where('uid','==',CU.uid).get();
+      fpCats = []; cs.forEach(d => fpCats.push({ id:d.id, ...d.data() }));
+    }
+    if (!fpAllTx.length) {
+      const ts = await db.collection('financesPerso_transactions').where('uid','==',CU.uid).get();
+      fpAllTx = []; ts.forEach(d => fpAllTx.push({ id:d.id, ...d.data() }));
+    }
+    const snap = await db.collection('financesPerso_budgets').where('uid','==',CU.uid).get();
+    fpBudgets = []; snap.forEach(d => fpBudgets.push({ id:d.id, ...d.data() }));
+
+    if (!fpBudgets.length) { el.innerHTML = '<div class="empty"><div class="empty-ic">🎯</div><div class="empty-t">Aucun budget</div><div class="empty-b">Crée un budget pour suivre tes dépenses.</div></div>'; return; }
+
+    el.innerHTML = fpBudgets.map(b => {
+      const { depense, max, pct } = budgetProgress(b);
+      const over = depense > max;
+      const periodeLabel = { quotidien:'Quotidien', hebdo:'Cette semaine', mensuel:'Ce mois', personnalise:'Période personnalisée' }[b.type] || b.type;
+      return `<div class="fp-bg-card" data-id="${b.id}">
+        <div class="fp-bg-top">
+          <div><div class="fp-bg-nom">${escHtml(b.nom)}</div><div class="fp-bg-periode">${periodeLabel}${b.categorieId ? ' · ' + escHtml((fpCats.find(c=>c.id===b.categorieId)||{}).nom||'') : ''}</div></div>
+          <div class="fp-bg-pct" style="color:${over?'#C0392B':'#155724'}">${pct}%</div>
+        </div>
+        <div class="proj-progress-bg"><div class="proj-progress-fill" style="width:${Math.min(100,pct)}%;${over?'background:#C0392B':''}"></div></div>
+        <div style="font-size:11px;color:var(--t3);margin-top:6px">${depense.toLocaleString('fr-FR')} / ${max.toLocaleString('fr-FR')} Ar</div>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('.fp-bg-card').forEach(c => c.addEventListener('click', () => openBudgetDetail(c.getAttribute('data-id'))));
+
+    checkBudgetAlerts();
+  } catch(e) { el.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>'; }
+}
+
+function budgetPeriodRange(b) {
+  const now = new Date();
+  if (b.type === 'quotidien') { const d = todayStr(); return { debut:d, fin:d }; }
+  if (b.type === 'hebdo') {
+    const start = new Date(now); start.setDate(now.getDate() - ((now.getDay()+6)%7)); start.setHours(0,0,0,0);
+    return { debut: start.toISOString().slice(0,10), fin: todayStr() };
+  }
+  if (b.type === 'mensuel') {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    return { debut: start.toISOString().slice(0,10), fin: todayStr() };
+  }
+  return { debut: b.dateDebut, fin: b.dateFin };
+}
+function budgetProgress(b) {
+  const { debut, fin } = budgetPeriodRange(b);
+  const depense = fpAllTx
+    .filter(t => t.type === 'depense' && t.date >= debut && t.date <= (fin||todayStr()))
+    .filter(t => !b.categorieId || t.categorieId === b.categorieId)
+    .reduce((s,t) => s + t.montant, 0);
+  const max = b.montantMax || 1;
+  return { depense, max, pct: Math.round(depense / max * 100) };
+}
+
+function checkBudgetAlerts() {
+  const overs = fpBudgets.filter(b => { const { depense, max } = budgetProgress(b); return depense > max; });
+  if (overs.length) toast('⚠️ ' + overs.length + ' budget' + (overs.length>1?'s':'') + ' dépassé' + (overs.length>1?'s':''));
+}
+
+window.openNewBudgetModal = function() {
+  document.getElementById('bg-nom').value = '';
+  document.getElementById('bg-type').value = 'quotidien';
+  document.getElementById('bg-debut').value = todayStr();
+  document.getElementById('bg-fin').value = todayStr();
+  document.getElementById('bg-montant').value = '';
+  onBudgetTypeChange();
+  const sel = document.getElementById('bg-cat');
+  sel.innerHTML = '<option value="">Toutes catégories</option>' + fpCats.map(c => `<option value="${c.id}">${c.icone||''} ${escHtml(c.nom)}</option>`).join('');
+  document.getElementById('ov-budget').classList.add('on');
+};
+window.saveBudget = async function() {
+  const nom = document.getElementById('bg-nom').value.trim();
+  const type = document.getElementById('bg-type').value;
+  const montantMax = parseFloat(document.getElementById('bg-montant').value);
+  if (!nom || !montantMax || montantMax <= 0) { toast('Nom et montant obligatoires'); return; }
+  const payload = { uid:CU.uid, nom, type, montantMax, categorieId: document.getElementById('bg-cat').value || null, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+  if (type === 'personnalise') {
+    payload.dateDebut = document.getElementById('bg-debut').value;
+    payload.dateFin = document.getElementById('bg-fin').value;
+    if (!payload.dateDebut || !payload.dateFin) { toast('Choisis les deux dates'); return; }
+  }
+  try {
+    await db.collection('financesPerso_budgets').add(payload);
+    closeOverlay('ov-budget');
+    toast('Budget créé ✅');
+    loadBudgets();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+async function openBudgetDetail(id) {
+  curBudgetId = id;
+  curBudgetData = fpBudgets.find(b => b.id === id);
+  if (!curBudgetData) return;
+
+  document.getElementById('bgd-title').textContent = curBudgetData.nom;
+  const periodeLabel = { quotidien:'Budget quotidien', hebdo:'Budget hebdomadaire', mensuel:'Budget mensuel', personnalise:'Budget personnalisé' }[curBudgetData.type];
+  document.getElementById('bgd-sub').textContent = periodeLabel;
+
+  const { depense, max, pct } = budgetProgress(curBudgetData);
+  document.getElementById('bgd-montants').textContent = depense.toLocaleString('fr-FR') + ' / ' + max.toLocaleString('fr-FR') + ' Ar';
+  document.getElementById('bgd-bar').style.width = Math.min(100,pct) + '%';
+  const alerte = document.getElementById('bgd-alerte');
+  alerte.style.display = depense > max ? 'block' : 'none';
+
+  // Suivi quotidien — uniquement pertinent pour le type "quotidien" (façon Commitment OK/KO)
+  const joursCard = document.getElementById('bgd-jours-card');
+  if (curBudgetData.type === 'quotidien') {
+    joursCard.style.display = 'block';
+    const jours = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const dStr = d.toISOString().slice(0,10);
+      const dep = fpAllTx.filter(t => t.type==='depense' && t.date===dStr && (!curBudgetData.categorieId || t.categorieId===curBudgetData.categorieId)).reduce((s,t)=>s+t.montant,0);
+      jours.push({ date: dStr, dep, ok: dep <= curBudgetData.montantMax });
+    }
+    document.getElementById('bgd-jours-list').innerHTML = jours.reverse().map(j => `
+      <div class="bgd-jour-item">
+        <span>${new Date(j.date).toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short'})}</span>
+        <span>${j.dep.toLocaleString('fr-FR')} Ar</span>
+        <span class="bgd-jour-badge">${j.dep === 0 ? '—' : j.ok ? '✅' : '❌'}</span>
+      </div>`).join('');
+  } else {
+    joursCard.style.display = 'none';
+  }
+
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById('s-fp-budget-detail').classList.add('on');
+}
+window.closeBudgetDetail = function() {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById('s-finperso').classList.add('on');
+  const tabBtn = document.querySelectorAll('#s-finperso .rtab')[3];
+  if (tabBtn) switchFpTab(tabBtn, 'budgets');
+};
+window.deleteBudget = async function() {
+  if (!curBudgetId) return;
+  if (!confirm('Supprimer ce budget ?')) return;
+  try {
+    await db.collection('financesPerso_budgets').doc(curBudgetId).delete();
+    toast('Budget supprimé');
+    closeBudgetDetail();
+    loadBudgets();
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
