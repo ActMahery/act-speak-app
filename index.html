@@ -803,6 +803,29 @@ input,select,textarea{font-family:inherit}
 .fp-cat-bar-bg{height:6px;background:var(--surface2);border-radius:4px;overflow:hidden}
 .fp-cat-bar-fill{height:100%;background:var(--navy);border-radius:4px}
 [data-dark] .fp-cat-bar-fill{background:var(--gold)}
+
+/* Bloc C3 — Étapes, Journal, Documents, CV, candidature enrichie */
+.etp-item{display:flex;gap:12px;padding:11px 16px;border-bottom:1px solid var(--surface2)}
+.etp-item:last-child{border-bottom:none}
+.etp-dot-wrap{display:flex;flex-direction:column;align-items:center}
+.etp-dot{width:12px;height:12px;border-radius:50%;background:var(--surface3);flex-shrink:0;margin-top:3px}
+.etp-dot.en_cours{background:#F5A623}
+.etp-dot.terminee{background:#2E9E6C}
+.etp-line{width:2px;flex:1;background:var(--surface3);margin-top:3px}
+.etp-body{flex:1;padding-bottom:2px}
+.etp-nom{font-size:13px;font-weight:600;color:var(--t1)}
+.etp-date{font-size:10.5px;color:var(--t3);margin-top:1px}
+.etp-stt-btns{display:flex;gap:5px;margin-top:6px}
+.etp-stt-btns button{font-size:10px;font-weight:600;padding:4px 9px;border-radius:8px;background:var(--surface2);color:var(--t2)}
+.etp-stt-btns button.on{background:var(--navy);color:#fff}
+[data-dark] .etp-stt-btns button.on{background:var(--gold)}
+.journal-item{padding:9px 16px;border-bottom:1px solid var(--surface2);font-size:12px;color:var(--t2)}
+.journal-item:last-child{border-bottom:none}
+.journal-item .t{color:var(--t3);font-size:10.5px;margin-left:6px}
+.pd-demande-cv{font-size:12px;color:var(--navy);font-weight:600;margin-top:6px;display:inline-block}
+[data-dark] .pd-demande-cv{color:var(--gold)}
+.pd-demande-acts button.autre{background:#F5F3FF;color:#5B21B6}
+.pd-demande-acts button.membre{background:#EFF6FF;color:#1C3557}
 .treso-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
 
 /* Boutons entrée/dépense */
@@ -2118,6 +2141,25 @@ input,select,textarea{font-family:inherit}
         <button class="pd-lc-statut" onclick="setProjetStatut('Terminé')">✅ Terminé</button>
       </div>
     </div>
+    <div class="pd-card" id="pd-etapes-card">
+      <div class="pd-card-t" style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span>Étapes du projet</span>
+        <button class="btn-rappel-new" id="pd-etape-add-btn" style="display:none" onclick="openNewEtapeModal()">➕ Étape</button>
+      </div>
+      <div id="pd-etapes-list"></div>
+    </div>
+    <div class="pd-card" id="pd-documents-card">
+      <div class="pd-card-t" style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span>Documents du projet</span>
+        <button class="btn-rappel-new" id="pd-doc-add-btn" style="display:none" onclick="document.getElementById('pd-doc-file').click()">➕ Ajouter</button>
+        <input type="file" id="pd-doc-file" style="display:none" onchange="uploadProjetDocument(this)">
+      </div>
+      <div id="pd-documents-list"></div>
+    </div>
+    <div class="pd-card" id="pd-journal-card">
+      <div class="pd-card-t" style="padding:13px 16px">Journal d'activité</div>
+      <div id="pd-journal-list"></div>
+    </div>
     <div class="pd-card" id="pd-join-card" style="display:none;padding:14px 16px">
       <button class="btn-join-proj" onclick="openJoinModal()">🙋 Rejoindre ce projet</button>
     </div>
@@ -2290,9 +2332,54 @@ input,select,textarea{font-family:inherit}
     </div>
     <div class="mfield"><label>Ta motivation *</label><textarea id="join-motivation-inp" placeholder="Pourquoi veux-tu rejoindre ce projet ?"></textarea></div>
     <div class="mfield"><label>Compétences / ce que tu peux apporter</label><textarea id="join-competences-inp" placeholder="Optionnel"></textarea></div>
+    <div class="mfield">
+      <label>CV (optionnel — visible par les responsables et le Bureau avant décision)</label>
+      <button type="button" class="btn-add-cr" onclick="document.getElementById('join-cv-file').click()" id="join-cv-btn">📎 Joindre un CV</button>
+      <input type="file" id="join-cv-file" style="display:none" onchange="handleJoinCvSelect(this)">
+    </div>
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-join-proj')">Annuler</button>
-      <button class="bsub" onclick="submitJoinRequest()"><span>Envoyer la demande</span></button>
+      <button class="bsub" id="join-sub-btn" onclick="submitJoinRequest()"><span>Envoyer la demande</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ACCEPTER POUR UN AUTRE POSTE -->
+<div class="overlay" id="ov-dem-autre-poste" onclick="closeOverlay('ov-dem-autre-poste')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Accepter pour un autre poste</div>
+    <div class="mfield"><label>Poste à proposer</label><select id="dem-autre-poste-sel"></select></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-dem-autre-poste')">Annuler</button>
+      <button class="bsub" onclick="confirmAccepterAutrePoste()"><span>Confirmer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REFUSER UNE DEMANDE (motivation obligatoire) -->
+<div class="overlay" id="ov-dem-refus" onclick="closeOverlay('ov-dem-refus')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Refuser la demande</div>
+    <div class="mfield"><label>Motif *</label><textarea id="dem-refus-motif" placeholder="Explique brièvement pourquoi..."></textarea></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-dem-refus')">Annuler</button>
+      <button class="bsub" onclick="confirmRefuserDemande()"><span>Refuser</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE ÉTAPE PROJET -->
+<div class="overlay" id="ov-etape" onclick="closeOverlay('ov-etape')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouvelle étape</div>
+    <div class="mfield"><label>Nom *</label><input type="text" id="etp-nom" placeholder="Ex: Logistique confirmée"></div>
+    <div class="mfield"><label>Date cible</label><input type="date" id="etp-date"></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-etape')">Annuler</button>
+      <button class="bsub" onclick="saveEtape()"><span>Ajouter</span></button>
     </div>
   </div>
 </div>
@@ -6103,6 +6190,20 @@ async function openProjDetail(id) {
   const joinCard = document.getElementById('pd-join-card');
   if (joinCard) joinCard.style.display = (!locked && p.statutPublication === 'publie' && !jeSuisMembre) ? 'block' : 'none';
 
+  // Étapes — visibles à tous, ajout réservé responsables/PRD/VP, jamais si archivé
+  const canManage = !locked && (respScope || isPresidentOrVP(CP));
+  const etapeAddBtn = document.getElementById('pd-etape-add-btn');
+  if (etapeAddBtn) etapeAddBtn.style.display = canManage ? 'inline-flex' : 'none';
+  renderEtapes();
+
+  // Documents — visibles à tous les membres, ajout réservé membres/responsables/PRD/VP, jamais si archivé
+  const docAddBtn = document.getElementById('pd-doc-add-btn');
+  if (docAddBtn) docAddBtn.style.display = (!locked && (jeSuisMembre || isBureau(CP))) ? 'inline-flex' : 'none';
+  renderDocuments();
+
+  // Journal d'activité — lecture seule, visible à tous
+  renderJournalVisuel();
+
   // Postes
   const postesCard = document.getElementById('pd-postes-card');
   if (postes.length) {
@@ -6242,7 +6343,17 @@ window.openJoinModal = function() {
     postes.map(p => `<option value="${p.id}">${escHtml(p.nom)}</option>`).join('');
   document.getElementById('join-motivation-inp').value = '';
   document.getElementById('join-competences-inp').value = '';
+  document.getElementById('join-cv-file').value = '';
+  document.getElementById('join-cv-btn').textContent = '📎 Joindre un CV';
+  joinCvFile = null;
   document.getElementById('ov-join-proj').classList.add('on');
+};
+let joinCvFile = null;
+window.handleJoinCvSelect = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  joinCvFile = file;
+  document.getElementById('join-cv-btn').textContent = '📎 ' + file.name;
 };
 window.submitJoinRequest = async function() {
   if (curProjData && isProjetVerrouille(curProjData)) { toast('Projet archivé — impossible de rejoindre'); return; }
@@ -6251,16 +6362,38 @@ window.submitJoinRequest = async function() {
   const motivation = (document.getElementById('join-motivation-inp').value || '').trim();
   const competences = (document.getElementById('join-competences-inp').value || '').trim();
   if (!motivation) { toast('Explique ta motivation'); return; }
+  const btn = document.getElementById('join-sub-btn');
+  btn.disabled = true; btn.querySelector('span').textContent = '...';
   try {
+    let cvUrl = null;
+    if (joinCvFile) cvUrl = await uploadToCloudinary(joinCvFile, 'cv/' + curProjId);
     await db.collection('projets').doc(curProjId).collection('demandes').add({
       uid: CU.uid, nom: CP.nom || CU.email,
       motivation, competences, posteSouhaiteId: posteId || null, posteSouhaiteNom: posteNom || '',
+      cvUrl: cvUrl || null,
       statut: 'attente', createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     closeOverlay('ov-join-proj');
     toast('Demande envoyée ✅');
   } catch(e) { toast('Erreur : ' + e.message); }
+  finally { btn.disabled = false; btn.querySelector('span').textContent = 'Envoyer la demande'; }
 };
+
+/* ── Message de bienvenue automatique (Bloc C3) ─────────────────────── */
+async function sendPrivateMessage(toUid, texte) {
+  try {
+    const ids = [CU.uid, toUid].sort();
+    const convId = 'priv_' + ids.join('_');
+    await db.collection('chat').doc(convId).collection('messages').add({
+      texte, auteurId: CU.uid, auteurNom: CP?.nom || CU.email, auteurPhoto: CP?.photo || '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(), reactions:{}, vu:false
+    });
+    await db.collection('chat').doc(convId).set({ lastMsg:texte, lastTime:firebase.firestore.FieldValue.serverTimestamp(), lastBy:CP?.nom||'' }, {merge:true});
+  } catch(e) { /* non bloquant */ }
+}
+function welcomeMessage(nom, projetNom, poste) {
+  return `Bienvenue dans le projet "${projetNom}" ${nom} ! 🎉 Ta candidature a été acceptée${poste ? ' pour le poste de ' + poste : ''}. N'hésite pas si tu as des questions.`;
+}
 
 async function loadDemandesProjet(projetId, postes) {
   const el = document.getElementById('pd-demandes-list');
@@ -6278,19 +6411,27 @@ async function loadDemandesProjet(projetId, postes) {
         </div>
         <div class="pd-demande-txt">💬 ${escHtml(r.motivation||'')}</div>
         ${r.competences ? `<div class="pd-demande-txt">🛠️ ${escHtml(r.competences)}</div>` : ''}
+        ${r.cvUrl ? `<a class="pd-demande-cv" href="${r.cvUrl}" target="_blank" rel="noopener">📎 Voir le CV</a>` : ''}
         <div class="pd-demande-acts">
-          <button class="acc" data-action="dem-accept" data-id="${d.id}" data-uid="${r.uid}" data-nom="${escHtml(r.nom||'')}" data-poste="${r.posteSouhaiteId||''}">✅ Accepter</button>
+          <button class="acc" data-action="dem-accept" data-id="${d.id}" data-uid="${r.uid}" data-nom="${escHtml(r.nom||'')}" data-poste="${r.posteSouhaiteId||''}">✅ Accepter (${escHtml(r.posteSouhaiteNom||'poste demandé')})</button>
+          <button class="autre" data-action="dem-autre" data-id="${d.id}" data-uid="${r.uid}" data-nom="${escHtml(r.nom||'')}">🔀 Autre poste</button>
+          <button class="membre" data-action="dem-membre" data-id="${d.id}" data-uid="${r.uid}" data-nom="${escHtml(r.nom||'')}">🙋 Membre du projet</button>
           <button class="ref" data-action="dem-reject" data-id="${d.id}">✕ Refuser</button>
         </div>
       </div>`;
     });
     el.innerHTML = html;
-    // Délégation d'événements — jamais d'onclick avec variable inline
     el.querySelectorAll('[data-action="dem-accept"]').forEach(btn => {
       btn.addEventListener('click', () => acceptDemande(btn.getAttribute('data-id'), btn.getAttribute('data-uid'), btn.getAttribute('data-nom'), btn.getAttribute('data-poste')));
     });
+    el.querySelectorAll('[data-action="dem-autre"]').forEach(btn => {
+      btn.addEventListener('click', () => openAutrePosteModal(btn.getAttribute('data-id'), btn.getAttribute('data-uid'), btn.getAttribute('data-nom')));
+    });
+    el.querySelectorAll('[data-action="dem-membre"]').forEach(btn => {
+      btn.addEventListener('click', () => acceptDemande(btn.getAttribute('data-id'), btn.getAttribute('data-uid'), btn.getAttribute('data-nom'), null));
+    });
     el.querySelectorAll('[data-action="dem-reject"]').forEach(btn => {
-      btn.addEventListener('click', () => rejectDemande(btn.getAttribute('data-id')));
+      btn.addEventListener('click', () => openRefusDemandeModal(btn.getAttribute('data-id')));
     });
   } catch(e) { el.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">'+e.message+'</div></div>'; }
 }
@@ -6298,24 +6439,142 @@ async function acceptDemande(demandeId, uid, nom, posteId) {
   if (!curProjData || !isProjectResponsable(curProjData, CU.uid)) { toast('Réservé au responsable du projet'); return; }
   if (isProjetVerrouille(curProjData)) { toast('Projet archivé — lecture seule'); return; }
   try {
+    const posteObj = posteId ? (curProjData.postes||[]).find(p=>p.id===posteId) : null;
+    const posteNom = posteObj ? posteObj.nom : 'Membre du projet';
     const postes = (curProjData.postes || []).map(p => p.id === posteId ? Object.assign({}, p, {pourvu:true, membreId:uid, membreNom:nom}) : p);
-    const membres = (curProjData.membres || []).concat([{ uid, nom, poste: posteId ? (postes.find(p=>p.id===posteId)||{}).nom : 'Membre du projet', dateAjout: new Date().toISOString() }]);
+    const membres = (curProjData.membres || []).concat([{ uid, nom, poste: posteNom, dateAjout: new Date().toISOString() }]);
     await db.collection('projets').doc(curProjId).update({ postes, membres });
     await db.collection('projets').doc(curProjId).collection('demandes').doc(demandeId).update({ statut:'acceptee' });
-    await pushJournal(curProjId, nom + ' a rejoint le projet');
+    await pushJournal(curProjId, nom + ' a rejoint le projet' + (posteId ? ' (' + posteNom + ')' : ''));
+    await sendPrivateMessage(uid, welcomeMessage(nom, curProjData.nom, posteId ? posteNom : null));
     toast(nom + ' a rejoint le projet ✅');
     openProjDetail(curProjId);
   } catch(e) { toast('Erreur : ' + e.message); }
 }
-async function rejectDemande(demandeId) {
+
+let demAutrePosteCtx = null;
+window.openAutrePosteModal = function(demandeId, uid, nom) {
+  demAutrePosteCtx = { demandeId, uid, nom };
+  const postes = (curProjData.postes || []).filter(p => !p.pourvu);
+  const sel = document.getElementById('dem-autre-poste-sel');
+  sel.innerHTML = postes.length
+    ? postes.map(p => `<option value="${p.id}">${escHtml(p.nom)}</option>`).join('')
+    : '<option value="">Aucun poste libre — sera ajouté comme Membre du projet</option>';
+  document.getElementById('ov-dem-autre-poste').classList.add('on');
+};
+window.confirmAccepterAutrePoste = async function() {
+  if (!demAutrePosteCtx) return;
+  const posteId = document.getElementById('dem-autre-poste-sel').value || null;
+  closeOverlay('ov-dem-autre-poste');
+  await acceptDemande(demAutrePosteCtx.demandeId, demAutrePosteCtx.uid, demAutrePosteCtx.nom, posteId);
+  demAutrePosteCtx = null;
+};
+
+let demRefusId = null;
+window.openRefusDemandeModal = function(demandeId) {
+  demRefusId = demandeId;
+  document.getElementById('dem-refus-motif').value = '';
+  document.getElementById('ov-dem-refus').classList.add('on');
+};
+window.confirmRefuserDemande = async function() {
+  const motif = (document.getElementById('dem-refus-motif').value || '').trim();
+  if (!motif) { toast('Le motif est obligatoire'); return; }
   if (!curProjData || !isProjectResponsable(curProjData, CU.uid)) { toast('Réservé au responsable du projet'); return; }
-  if (isProjetVerrouille(curProjData)) { toast('Projet archivé — lecture seule'); return; }
   try {
-    await db.collection('projets').doc(curProjId).collection('demandes').doc(demandeId).update({ statut:'refusee' });
+    await db.collection('projets').doc(curProjId).collection('demandes').doc(demRefusId).update({ statut:'refusee', motifRefus: motif });
+    closeOverlay('ov-dem-refus');
     toast('Demande refusée');
+    demRefusId = null;
     openProjDetail(curProjId);
   } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Étapes du projet (Bloc C3) ─────────────────────────────────────── */
+function renderEtapes() {
+  const el = document.getElementById('pd-etapes-list');
+  const etapes = (curProjData.etapes || []).slice().sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  if (!etapes.length) { el.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">Aucune étape définie.</div></div>'; return; }
+  el.innerHTML = etapes.map((e, i) => `
+    <div class="etp-item">
+      <div class="etp-dot-wrap"><div class="etp-dot ${e.statut}"></div>${i < etapes.length-1 ? '<div class="etp-line"></div>' : ''}</div>
+      <div class="etp-body">
+        <div class="etp-nom">${escHtml(e.nom)}</div>
+        ${e.date ? `<div class="etp-date">${new Date(e.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}</div>` : ''}
+        <div class="etp-stt-btns">
+          <button class="${e.statut==='a_venir'?'on':''}" data-action="etp-stt" data-id="${e.id}" data-st="a_venir">À venir</button>
+          <button class="${e.statut==='en_cours'?'on':''}" data-action="etp-stt" data-id="${e.id}" data-st="en_cours">En cours</button>
+          <button class="${e.statut==='terminee'?'on':''}" data-action="etp-stt" data-id="${e.id}" data-st="terminee">Terminée</button>
+        </div>
+      </div>
+    </div>`).join('');
+  el.querySelectorAll('[data-action="etp-stt"]').forEach(btn => {
+    btn.addEventListener('click', () => setEtapeStatut(btn.getAttribute('data-id'), btn.getAttribute('data-st')));
+  });
 }
+window.openNewEtapeModal = function() {
+  document.getElementById('etp-nom').value = '';
+  document.getElementById('etp-date').value = '';
+  document.getElementById('ov-etape').classList.add('on');
+};
+window.saveEtape = async function() {
+  const nom = document.getElementById('etp-nom').value.trim();
+  if (!nom) { toast('Nom obligatoire'); return; }
+  const etape = { id:'e'+Date.now(), nom, date: document.getElementById('etp-date').value || null, statut:'a_venir' };
+  try {
+    const etapes = (curProjData.etapes || []).concat([etape]);
+    await db.collection('projets').doc(curProjId).update({ etapes });
+    curProjData.etapes = etapes;
+    await pushJournal(curProjId, 'Étape ajoutée : ' + nom);
+    closeOverlay('ov-etape');
+    toast('Étape ajoutée ✅');
+    renderEtapes();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+async function setEtapeStatut(id, statut) {
+  try {
+    const etapes = (curProjData.etapes || []).map(e => e.id === id ? Object.assign({}, e, {statut}) : e);
+    await db.collection('projets').doc(curProjId).update({ etapes });
+    const etp = etapes.find(e => e.id === id);
+    curProjData.etapes = etapes;
+    if (statut === 'terminee' && etp) await pushJournal(curProjId, 'Étape terminée : ' + etp.nom);
+    renderEtapes();
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+
+/* ── Documents du projet — visibles à tous les membres (Bloc C3) ──── */
+function renderDocuments() {
+  const docs = curProjData.documents || [];
+  const el = document.getElementById('pd-documents-list');
+  el.innerHTML = docs.length
+    ? docs.map(d => `<div class="cr-item">📎 <a href="${d.url}" target="_blank" rel="noopener">${escHtml(d.nom)}</a><span style="font-size:10.5px;color:var(--t3)">${escHtml(d.ajoutePar||'')}</span></div>`).join('')
+    : '<div class="empty" style="padding:16px"><div class="empty-b">Aucun document.</div></div>';
+}
+window.uploadProjetDocument = async function(input) {
+  const file = input.files[0];
+  if (!file || !curProjId) return;
+  if (isProjetVerrouille(curProjData)) { toast('Projet archivé — lecture seule'); return; }
+  try {
+    const url = await uploadToCloudinary(file, 'documents/' + curProjId);
+    await db.collection('projets').doc(curProjId).update({
+      documents: firebase.firestore.FieldValue.arrayUnion({ nom:file.name, url, ajoutePar:CP.nom, at:new Date().toISOString() })
+    });
+    curProjData.documents = (curProjData.documents||[]).concat([{nom:file.name,url,ajoutePar:CP.nom}]);
+    await pushJournal(curProjId, 'Document ajouté : ' + file.name);
+    toast('Document ajouté ✅');
+    renderDocuments();
+  } catch(e) { toast('Erreur : ' + e.message); }
+  input.value = '';
+};
+
+/* ── Journal d'activité — affichage (Bloc C3) ───────────────────────── */
+function renderJournalVisuel() {
+  const el = document.getElementById('pd-journal-list');
+  const journal = (curProjData.journal || []).slice().reverse().slice(0, 20);
+  el.innerHTML = journal.length
+    ? journal.map(j => `<div class="journal-item">${escHtml(j.texte)}<span class="t">${escHtml(j.auteurNom||'')} · ${new Date(j.at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span></div>`).join('')
+    : '<div class="empty" style="padding:16px"><div class="empty-b">Aucune activité pour l\'instant.</div></div>';
+}
+
 
 /* ── Journal d'activité (v2.0) ─────────────────────────────────────── */
 function journalEntry(texte) {
