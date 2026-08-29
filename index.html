@@ -786,6 +786,23 @@ input,select,textarea{font-family:inherit}
 .bgd-jour-item{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--surface2);font-size:12.5px}
 .bgd-jour-item:last-child{border-bottom:none}
 .bgd-jour-badge{font-size:14px}
+
+/* Épargne + Stats (Bloc J) */
+.fp-ep-card{background:var(--surface);border-radius:var(--r14);padding:14px 16px;box-shadow:var(--sh);margin-bottom:10px;cursor:pointer}
+.fp-ep-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.fp-ep-nom{font-size:14px;font-weight:700;color:var(--t1)}
+.fp-ep-date{font-size:10.5px;color:var(--t3);margin-top:2px}
+.fp-ep-pct{font-size:13px;font-weight:700;color:var(--gold)}
+.fp-stat-row{display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--surface2);font-size:13px}
+.fp-stat-row:last-child{border-bottom:none}
+.fp-stat-row .l{color:var(--t3)}
+.fp-stat-row .v{font-weight:700;color:var(--t1)}
+.fp-cat-bar-row{padding:10px 16px;border-bottom:1px solid var(--surface2)}
+.fp-cat-bar-row:last-child{border-bottom:none}
+.fp-cat-bar-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
+.fp-cat-bar-bg{height:6px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.fp-cat-bar-fill{height:100%;background:var(--navy);border-radius:4px}
+[data-dark] .fp-cat-bar-fill{background:var(--gold)}
 .treso-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
 
 /* Boutons entrée/dépense */
@@ -1602,6 +1619,8 @@ input,select,textarea{font-family:inherit}
       <button class="rtab" onclick="switchFpTab(this,'creances')">🤝 Créances</button>
       <button class="rtab" onclick="switchFpTab(this,'dettes')">💳 Dettes</button>
       <button class="rtab" onclick="switchFpTab(this,'budgets')">🎯 Budgets</button>
+      <button class="rtab" onclick="switchFpTab(this,'epargne')">🏆 Épargne</button>
+      <button class="rtab" onclick="switchFpTab(this,'stats')">📊 Stats</button>
     </div>
   </div>
 
@@ -1647,6 +1666,28 @@ input,select,textarea{font-family:inherit}
   <div class="treso-body" id="fp-panel-budgets" style="display:none">
     <button class="ag-add-btn" style="width:100%" onclick="openNewBudgetModal()">➕ Nouveau budget</button>
     <div id="fp-budgets-list"></div>
+  </div>
+
+  <div class="treso-body" id="fp-panel-epargne" style="display:none">
+    <button class="ag-add-btn" style="width:100%" onclick="openNewEpargneModal()">➕ Nouvel objectif d'épargne</button>
+    <div id="fp-epargne-list"></div>
+  </div>
+
+  <div class="treso-body" id="fp-panel-stats" style="display:none">
+    <div>
+      <div class="sec-title">6 derniers mois</div>
+      <div class="card" style="overflow:hidden">
+        <div class="treso-chart" id="fp-chart"></div>
+      </div>
+    </div>
+    <div>
+      <div class="sec-title">Résumé du mois</div>
+      <div class="card" id="fp-stats-summary" style="overflow:hidden"></div>
+    </div>
+    <div>
+      <div class="sec-title">Dépenses par catégorie (ce mois)</div>
+      <div class="card" id="fp-stats-cats" style="overflow:hidden"></div>
+    </div>
   </div>
 
   <nav class="bnav">
@@ -1756,6 +1797,64 @@ input,select,textarea{font-family:inherit}
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-budget')">Annuler</button>
       <button class="bsub" onclick="saveBudget()"><span>Créer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVEL OBJECTIF D'ÉPARGNE -->
+<div class="overlay" id="ov-epargne" onclick="closeOverlay('ov-epargne')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouvel objectif d'épargne</div>
+    <div class="mfield"><label>Nom *</label><input type="text" id="ep-nom" placeholder="Ex: Acheter un ordinateur"></div>
+    <div class="mfield"><label>Montant cible (Ar) *</label><input type="number" id="ep-cible" placeholder="0"></div>
+    <div class="mfield"><label>Date cible (optionnel)</label><input type="date" id="ep-date"></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-epargne')">Annuler</button>
+      <button class="bsub" onclick="saveEpargne()"><span>Créer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AJOUTER À L'ÉPARGNE -->
+<div class="overlay" id="ov-ep-contrib" onclick="closeOverlay('ov-ep-contrib')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Ajouter à l'épargne</div>
+    <div class="mfield"><label>Montant (Ar) *</label><input type="number" id="ep-contrib-montant" placeholder="0"></div>
+    <div class="mfield"><label>Note</label><input type="text" id="ep-contrib-note" placeholder="Optionnel"></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-ep-contrib')">Annuler</button>
+      <button class="bsub" onclick="saveEpContrib()"><span>Ajouter</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ÉCRAN DÉTAIL ÉPARGNE -->
+<div id="s-fp-epargne-detail" class="scr">
+  <div class="rd-hd">
+    <div class="rd-back" onclick="closeEpargneDetail()">‹ Retour</div>
+    <div class="rd-title" id="epd-title">—</div>
+    <div class="rd-sub" id="epd-sub">—</div>
+  </div>
+  <div class="pd-body">
+    <div class="pd-card">
+      <div style="padding:18px 16px;text-align:center">
+        <div style="font-size:11px;color:var(--t3)">Épargné</div>
+        <div style="font-size:26px;font-weight:800;color:var(--t1)" id="epd-montants">0 / 0 Ar</div>
+        <div class="proj-progress-bg" style="margin-top:10px"><div class="proj-progress-fill" id="epd-bar" style="width:0%"></div></div>
+        <div style="font-size:12px;color:var(--gold);font-weight:700;margin-top:8px" id="epd-pct">0%</div>
+      </div>
+    </div>
+    <div class="pd-card" style="padding:14px 16px">
+      <button class="btn-join-proj" onclick="openEpContribModal()">➕ Ajouter un montant</button>
+    </div>
+    <div class="pd-card">
+      <div class="pd-card-t" style="padding:13px 16px">Historique des versements</div>
+      <div id="epd-historique"></div>
+    </div>
+    <div class="pd-card" style="padding:14px 16px">
+      <button class="btn-danger-full" onclick="deleteEpargne()">🗑️ Supprimer cet objectif</button>
     </div>
   </div>
 </div>
@@ -3635,9 +3734,13 @@ function switchFpTab(el, tab) {
   document.getElementById('fp-panel-creances').style.display = tab === 'creances' ? 'block' : 'none';
   document.getElementById('fp-panel-dettes').style.display   = tab === 'dettes' ? 'block' : 'none';
   document.getElementById('fp-panel-budgets').style.display  = tab === 'budgets' ? 'block' : 'none';
+  document.getElementById('fp-panel-epargne').style.display  = tab === 'epargne' ? 'block' : 'none';
+  document.getElementById('fp-panel-stats').style.display    = tab === 'stats' ? 'block' : 'none';
   if (tab === 'creances') loadCreances();
   if (tab === 'dettes') loadDettes();
   if (tab === 'budgets') loadBudgets();
+  if (tab === 'epargne') loadEpargne();
+  if (tab === 'stats') loadFpStats();
 }
 
 function fpReste(item) {
@@ -3982,6 +4085,184 @@ window.deleteBudget = async function() {
     loadBudgets();
   } catch(e) { toast('Erreur : ' + e.message); }
 };
+
+/* ── Épargne (Bloc J) ───────────────────────────────────────────── */
+let fpEpargnes = [];
+let curEpargneId = null, curEpargneData = null;
+
+function epMontantActuel(e) { return (e.historique||[]).reduce((s,h) => s + h.montant, 0); }
+
+async function loadEpargne() {
+  const el = document.getElementById('fp-epargne-list');
+  try {
+    const snap = await db.collection('financesPerso_epargne').where('uid','==',CU.uid).get();
+    fpEpargnes = []; snap.forEach(d => fpEpargnes.push({ id:d.id, ...d.data() }));
+    if (!fpEpargnes.length) { el.innerHTML = '<div class="empty"><div class="empty-ic">🏆</div><div class="empty-t">Aucun objectif</div><div class="empty-b">Crée ton premier objectif d\'épargne.</div></div>'; return; }
+    el.innerHTML = fpEpargnes.map(e => {
+      const actuel = epMontantActuel(e);
+      const pct = e.montantCible ? Math.min(100, Math.round(actuel / e.montantCible * 100)) : 0;
+      return `<div class="fp-ep-card" data-id="${e.id}">
+        <div class="fp-ep-top">
+          <div><div class="fp-ep-nom">${escHtml(e.nom)}</div>${e.dateCible ? `<div class="fp-ep-date">Objectif : ${new Date(e.dateCible).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}</div>` : ''}</div>
+          <div class="fp-ep-pct">${pct}%</div>
+        </div>
+        <div class="proj-progress-bg"><div class="proj-progress-fill" style="width:${pct}%"></div></div>
+        <div style="font-size:11px;color:var(--t3);margin-top:6px">${actuel.toLocaleString('fr-FR')} / ${Number(e.montantCible).toLocaleString('fr-FR')} Ar</div>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('.fp-ep-card').forEach(c => c.addEventListener('click', () => openEpargneDetail(c.getAttribute('data-id'))));
+  } catch(e) { el.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>'; }
+}
+
+window.openNewEpargneModal = function() {
+  document.getElementById('ep-nom').value = '';
+  document.getElementById('ep-cible').value = '';
+  document.getElementById('ep-date').value = '';
+  document.getElementById('ov-epargne').classList.add('on');
+};
+window.saveEpargne = async function() {
+  const nom = document.getElementById('ep-nom').value.trim();
+  const montantCible = parseFloat(document.getElementById('ep-cible').value);
+  if (!nom || !montantCible || montantCible <= 0) { toast('Nom et montant cible obligatoires'); return; }
+  try {
+    await db.collection('financesPerso_epargne').add({
+      uid: CU.uid, nom, montantCible, dateCible: document.getElementById('ep-date').value || null,
+      historique: [], createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-epargne');
+    toast('Objectif créé ✅');
+    loadEpargne();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+async function openEpargneDetail(id) {
+  curEpargneId = id;
+  curEpargneData = fpEpargnes.find(e => e.id === id);
+  if (!curEpargneData) return;
+  renderEpargneDetail();
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById('s-fp-epargne-detail').classList.add('on');
+}
+function renderEpargneDetail() {
+  const actuel = epMontantActuel(curEpargneData);
+  const cible = curEpargneData.montantCible || 1;
+  const pct = Math.min(100, Math.round(actuel / cible * 100));
+  document.getElementById('epd-title').textContent = curEpargneData.nom;
+  document.getElementById('epd-sub').textContent = curEpargneData.dateCible ? 'Objectif : ' + new Date(curEpargneData.dateCible).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) : 'Sans date cible';
+  document.getElementById('epd-montants').textContent = actuel.toLocaleString('fr-FR') + ' / ' + Number(curEpargneData.montantCible).toLocaleString('fr-FR') + ' Ar';
+  document.getElementById('epd-bar').style.width = pct + '%';
+  document.getElementById('epd-pct').textContent = pct + '%';
+  const hist = curEpargneData.historique || [];
+  document.getElementById('epd-historique').innerHTML = hist.length
+    ? [...hist].reverse().map(h => `<div class="fpd-hist-item"><span>${new Date(h.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}${h.note?' — '+escHtml(h.note):''}</span><span><strong>+${h.montant.toLocaleString('fr-FR')} Ar</strong></span></div>`).join('')
+    : '<div class="empty" style="padding:16px"><div class="empty-b">Aucun versement pour l\'instant.</div></div>';
+}
+window.closeEpargneDetail = function() {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById('s-finperso').classList.add('on');
+  const tabBtn = document.querySelectorAll('#s-finperso .rtab')[4];
+  if (tabBtn) switchFpTab(tabBtn, 'epargne');
+};
+window.openEpContribModal = function() {
+  document.getElementById('ep-contrib-montant').value = '';
+  document.getElementById('ep-contrib-note').value = '';
+  document.getElementById('ov-ep-contrib').classList.add('on');
+};
+window.saveEpContrib = async function() {
+  const montant = parseFloat(document.getElementById('ep-contrib-montant').value);
+  if (!montant || montant <= 0) { toast('Montant invalide'); return; }
+  const note = document.getElementById('ep-contrib-note').value.trim();
+  try {
+    await db.collection('financesPerso_epargne').doc(curEpargneId).update({
+      historique: firebase.firestore.FieldValue.arrayUnion({ montant, date: todayStr(), note })
+    });
+    curEpargneData.historique = (curEpargneData.historique||[]).concat([{montant,date:todayStr(),note}]);
+    closeOverlay('ov-ep-contrib');
+    toast('Versement ajouté ✅');
+    renderEpargneDetail();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.deleteEpargne = async function() {
+  if (!curEpargneId) return;
+  if (!confirm('Supprimer cet objectif d\'épargne ?')) return;
+  try {
+    await db.collection('financesPerso_epargne').doc(curEpargneId).delete();
+    toast('Objectif supprimé');
+    closeEpargneDetail();
+    loadEpargne();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Statistiques financières (Bloc J) ─────────────────────────── */
+async function loadFpStats() {
+  try {
+    if (!fpAllTx.length) {
+      const ts = await db.collection('financesPerso_transactions').where('uid','==',CU.uid).get();
+      fpAllTx = []; ts.forEach(d => fpAllTx.push({ id:d.id, ...d.data() }));
+    }
+    if (!fpCats.length) {
+      const cs = await db.collection('financesPerso_categories').where('uid','==',CU.uid).get();
+      fpCats = []; cs.forEach(d => fpCats.push({ id:d.id, ...d.data() }));
+    }
+  } catch(e) { /* non bloquant */ }
+
+  // Graphique 6 mois
+  const months = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ label: d.toLocaleDateString('fr-FR',{month:'short'}), prefix: d.toISOString().slice(0,7), e:0, d:0 });
+  }
+  fpAllTx.forEach(t => {
+    const m = months.find(mo => (t.date||'').startsWith(mo.prefix));
+    if (!m) return;
+    if (t.type === 'entree') m.e += t.montant; else m.d += t.montant;
+  });
+  let maxVal = 1;
+  months.forEach(m => { if (m.e > maxVal) maxVal = m.e; if (m.d > maxVal) maxVal = m.d; });
+  document.getElementById('fp-chart').innerHTML = months.map(m => {
+    const hE = Math.round((m.e / maxVal) * 50), hD = Math.round((m.d / maxVal) * 50);
+    return `<div class="chart-bar-wrap">
+      <div style="display:flex;gap:2px;align-items:flex-end;height:54px">
+        <div class="chart-bar e" style="height:${hE||2}px;flex:1"></div>
+        <div class="chart-bar d" style="height:${hD||2}px;flex:1"></div>
+      </div>
+      <div class="chart-bar-label">${m.label}</div>
+    </div>`;
+  }).join('');
+
+  // Résumé du mois
+  const monthPrefix = now.toISOString().slice(0,7);
+  const txMois = fpAllTx.filter(t => (t.date||'').startsWith(monthPrefix));
+  const depMois = txMois.filter(t => t.type === 'depense');
+  const totalDep = depMois.reduce((s,t) => s + t.montant, 0);
+  const nbJours = now.getDate();
+  const moyJour = nbJours ? Math.round(totalDep / nbJours) : 0;
+  const byCat = {};
+  depMois.forEach(t => { byCat[t.categorieId||'?'] = (byCat[t.categorieId||'?']||0) + t.montant; });
+  const topCatId = Object.keys(byCat).sort((a,b) => byCat[b]-byCat[a])[0];
+  const topCat = fpCats.find(c => c.id === topCatId);
+
+  document.getElementById('fp-stats-summary').innerHTML = `
+    <div class="fp-stat-row"><span class="l">Dépenses totales</span><span class="v">${totalDep.toLocaleString('fr-FR')} Ar</span></div>
+    <div class="fp-stat-row"><span class="l">Moyenne quotidienne</span><span class="v">${moyJour.toLocaleString('fr-FR')} Ar</span></div>
+    <div class="fp-stat-row"><span class="l">Plus grosse catégorie</span><span class="v">${topCat ? topCat.icone+' '+escHtml(topCat.nom) : '—'}</span></div>
+  `;
+
+  // Répartition par catégorie
+  const catsSorted = Object.entries(byCat).sort((a,b) => b[1]-a[1]);
+  const maxCat = catsSorted.length ? catsSorted[0][1] : 1;
+  document.getElementById('fp-stats-cats').innerHTML = catsSorted.length
+    ? catsSorted.map(([catId, val]) => {
+        const cat = fpCats.find(c => c.id === catId);
+        const pct = Math.round(val / maxCat * 100);
+        return `<div class="fp-cat-bar-row">
+          <div class="fp-cat-bar-top"><span>${cat ? cat.icone+' '+escHtml(cat.nom) : 'Sans catégorie'}</span><span><strong>${val.toLocaleString('fr-FR')} Ar</strong></span></div>
+          <div class="fp-cat-bar-bg"><div class="fp-cat-bar-fill" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('')
+    : '<div class="empty" style="padding:16px"><div class="empty-b">Aucune dépense ce mois-ci.</div></div>';
+}
 
 // ── TACHES ────────────────────────────────────────────────────────
 function loadRecentTasks() {
