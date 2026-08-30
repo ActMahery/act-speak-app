@@ -826,6 +826,25 @@ input,select,textarea{font-family:inherit}
 [data-dark] .pd-demande-cv{color:var(--gold)}
 .pd-demande-acts button.autre{background:#F5F3FF;color:#5B21B6}
 .pd-demande-acts button.membre{background:#EFF6FF;color:#1C3557}
+
+/* Bibliothèque */
+.bib-card{background:var(--surface);border-radius:var(--r14);padding:14px 16px;box-shadow:var(--sh);margin-bottom:10px;cursor:pointer}
+.bib-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.bib-titre{font-size:14px;font-weight:700;color:var(--t1)}
+.bib-auteur{font-size:11.5px;color:var(--t3);margin-top:2px}
+.bib-meta-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.bib-tag{font-size:10px;padding:3px 9px;border-radius:10px;background:var(--surface2);color:var(--t2)}
+.bib-stt{font-size:10px;font-weight:600;padding:3px 9px;border-radius:10px;flex-shrink:0}
+.bib-stt.dispo{background:#D4EDDA;color:#155724}
+.bib-stt.emprunte{background:#FDE8E8;color:#C0392B}
+.bib-stt.retard{background:#F5A623;color:#fff}
+[data-dark] .bib-stt.dispo{background:rgba(21,87,36,.3);color:#6EE7B7}
+[data-dark] .bib-stt.emprunte{background:rgba(192,57,43,.25);color:#FCA5A5}
+.bib-avis-item{padding:11px 16px;border-bottom:1px solid var(--surface2)}
+.bib-avis-item:last-child{border-bottom:none}
+.bib-avis-top{display:flex;justify-content:space-between;font-size:12px}
+.bib-avis-nom{font-weight:600;color:var(--t1)}
+.bib-avis-txt{font-size:12.5px;color:var(--t2);margin-top:4px;line-height:1.4}
 .treso-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
 
 /* Boutons entrée/dépense */
@@ -1200,6 +1219,10 @@ input,select,textarea{font-family:inherit}
       <div class="pcard-t">Mon Espace</div>
       <div class="prow" onclick="go('agenda')"><div class="prow-l"><div class="prow-ic" style="background:#F0FDF4">📅</div><div><div class="prow-lbl">Mon agenda</div><div class="prow-sub">Calendrier, programmes, points</div></div></div><div class="prow-r">›</div></div>
       <div class="prow" onclick="go('finperso')"><div class="prow-l"><div class="prow-ic" style="background:#D4EDDA">💰</div><div><div class="prow-lbl">Mes finances</div><div class="prow-sub">Solde, entrées, dépenses personnelles</div></div></div><div class="prow-r">›</div></div>
+    </div>
+    <div class="pcard">
+      <div class="pcard-t">Association</div>
+      <div class="prow" onclick="go('biblio')"><div class="prow-l"><div class="prow-ic" style="background:#FFF3CD">📚</div><div><div class="prow-lbl">Bibliothèque</div><div class="prow-sub">Emprunter un livre, avis, suggestions</div></div></div><div class="prow-r">›</div></div>
     </div>
     <div class="pcard">
       <div class="pcard-t">Apparence</div>
@@ -1940,6 +1963,115 @@ input,select,textarea{font-family:inherit}
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-cat-perso')">Annuler</button>
       <button class="bsub" onclick="saveCatPerso()"><span>Créer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BIBLIOTHÈQUE (Module additionnel) ══ -->
+<div id="s-biblio" class="scr">
+  <div class="proj-hd">
+    <div class="proj-hd-top">
+      <div><div class="proj-title">Bibliothèque</div><div class="proj-sub" id="bib-count">—</div></div>
+      <button class="btn-new-proj" id="bib-add-btn" style="display:none" onclick="openNewLivreModal()">➕ Livre</button>
+    </div>
+    <input type="text" class="proj-search" id="bib-search" placeholder="🔍 Titre, auteur..." oninput="renderBiblio()">
+    <div class="filters" style="padding:10px 0 0">
+      <button class="chip on" data-bibf="tous" onclick="filterBiblio(this,'tous')">Tous</button>
+      <button class="chip" data-bibf="dispo" onclick="filterBiblio(this,'dispo')">✅ Disponibles</button>
+      <button class="chip" data-bibf="emprunte" onclick="filterBiblio(this,'emprunte')">📕 Empruntés</button>
+      <button class="chip" data-bibf="mesemprunts" onclick="filterBiblio(this,'mesemprunts')">👤 Mes emprunts</button>
+    </div>
+  </div>
+  <div class="proj-body" id="bib-body"></div>
+  <div style="padding:0 14px 90px">
+    <button class="ag-add-btn" style="width:100%" onclick="openSuggestionModal()">💡 Suggérer un livre</button>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- DÉTAIL LIVRE -->
+<div id="s-biblio-detail" class="scr">
+  <div class="rd-hd">
+    <div class="rd-back" onclick="go('biblio')">‹ Retour</div>
+    <div class="rd-title" id="bibd-titre">—</div>
+    <div class="rd-sub" id="bibd-auteur">—</div>
+  </div>
+  <div class="pd-body">
+    <div class="pd-card">
+      <div class="det-row"><span class="det-row-l">Code référence</span><span class="det-row-v" id="bibd-code">—</span></div>
+      <div class="det-row"><span class="det-row-l">Langue</span><span class="det-row-v" id="bibd-langue">—</span></div>
+      <div class="det-row"><span class="det-row-l">Genre</span><span class="det-row-v" id="bibd-genre">—</span></div>
+      <div class="det-row"><span class="det-row-l">Statut</span><span class="det-row-v" id="bibd-statut">—</span></div>
+    </div>
+    <div class="pd-card" id="bibd-desc-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">Description</div>
+      <div style="padding:0 16px 14px;font-size:13px;color:var(--t2);line-height:1.5" id="bibd-desc"></div>
+    </div>
+    <div class="pd-card" style="padding:14px 16px;display:flex;gap:8px">
+      <button class="btn-join-proj" id="bibd-emprunt-btn" style="display:none" onclick="emprunterLivre()">📗 Emprunter (2 semaines)</button>
+      <button class="btn-join-proj" id="bibd-retour-btn" style="display:none;background:var(--navy)" onclick="retournerLivre()">↩️ Marquer comme rendu</button>
+    </div>
+    <div class="pd-card" style="padding:14px 16px">
+      <button id="bibd-like-btn" onclick="toggleLikeLivre()" style="width:100%;height:40px;background:var(--surface2);border-radius:var(--r8);font-size:13px;font-weight:600;color:var(--t1)">🤍 J'aime — <span id="bibd-likes-count">0</span></button>
+    </div>
+    <div class="pd-card">
+      <div class="pd-card-t" style="padding:13px 16px">Avis</div>
+      <div style="padding:0 16px 14px">
+        <textarea id="bibd-avis-txt" placeholder="Ton avis sur ce livre..." style="width:100%;min-height:60px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:10px;font-size:13px;color:var(--t1);outline:none;resize:vertical;font-family:inherit;margin-bottom:8px"></textarea>
+        <select id="bibd-avis-note" style="width:100%;height:40px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r8);padding:0 12px;font-size:13px;color:var(--t1);margin-bottom:8px">
+          <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+          <option value="4">⭐⭐⭐⭐ Très bien</option>
+          <option value="3">⭐⭐⭐ Bien</option>
+          <option value="2">⭐⭐ Moyen</option>
+          <option value="1">⭐ Décevant</option>
+        </select>
+        <button onclick="saveAvisLivre()" style="width:100%;height:38px;background:var(--navy);color:#fff;border-radius:var(--r8);font-size:12.5px;font-weight:600">Publier l'avis</button>
+      </div>
+      <div id="bibd-avis-list"></div>
+    </div>
+    <div class="pd-card" id="bibd-admin-card" style="display:none;padding:14px 16px">
+      <button class="btn-danger-full" onclick="deleteLivre()">🗑️ Supprimer ce livre</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVEAU LIVRE -->
+<div class="overlay" id="ov-livre" onclick="closeOverlay('ov-livre')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouveau livre</div>
+    <div class="mfield"><label>Titre *</label><input type="text" id="lv-titre" placeholder="Titre du livre"></div>
+    <div class="mfield"><label>Auteur *</label><input type="text" id="lv-auteur" placeholder="Nom de l'auteur"></div>
+    <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>Langue</label><input type="text" id="lv-langue" placeholder="Ex: Français"></div>
+      <div class="mfield" style="margin-bottom:0"><label>Genre</label><input type="text" id="lv-genre" placeholder="Ex: Roman"></div>
+    </div>
+    <div class="mfield" style="margin-top:14px"><label>Code référence</label><input type="text" id="lv-code" placeholder="Ex: LIV-001 (auto si vide)"></div>
+    <div class="mfield"><label>Description</label><textarea id="lv-desc" placeholder="Optionnel..."></textarea></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-livre')">Annuler</button>
+      <button class="bsub" onclick="saveLivre()"><span>Ajouter</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SUGGÉRER UN LIVRE -->
+<div class="overlay" id="ov-suggestion" onclick="closeOverlay('ov-suggestion')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Suggérer un livre</div>
+    <div class="mfield"><label>Titre *</label><input type="text" id="sg-titre" placeholder="Titre du livre"></div>
+    <div class="mfield"><label>Auteur</label><input type="text" id="sg-auteur" placeholder="Optionnel"></div>
+    <div class="mfield"><label>Pourquoi ce livre ?</label><textarea id="sg-motif" placeholder="Optionnel..."></textarea></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-suggestion')">Annuler</button>
+      <button class="bsub" onclick="saveSuggestion()"><span>Envoyer</span></button>
     </div>
   </div>
 </div>
@@ -2794,6 +2926,7 @@ function go(screen) {
   if (screen === 'supervision') loadSupervision();
   if (screen === 'agenda') loadAgenda();
   if (screen === 'finperso') loadFinPerso();
+  if (screen === 'biblio') loadBiblio();
 }
 
 function navTo(btn, screen) {
@@ -6573,6 +6706,238 @@ function renderJournalVisuel() {
   el.innerHTML = journal.length
     ? journal.map(j => `<div class="journal-item">${escHtml(j.texte)}<span class="t">${escHtml(j.auteurNom||'')} · ${new Date(j.at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span></div>`).join('')
     : '<div class="empty" style="padding:16px"><div class="empty-b">Aucune activité pour l\'instant.</div></div>';
+}
+
+// ── BIBLIOTHÈQUE (Module additionnel) ───────────────────────────────
+const BIB_EMPRUNT_JOURS = 14;
+let allLivres = [], curLivreId = null, curLivreData = null, bibFilter = 'tous';
+
+async function loadBiblio() {
+  const body = document.getElementById('bib-body');
+  body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+  if (CP && isBureau(CP)) document.getElementById('bib-add-btn').style.display = 'flex';
+  try {
+    const snap = await db.collection('bibliotheque').get();
+    allLivres = []; snap.forEach(d => allLivres.push({ id:d.id, ...d.data() }));
+    const c = allLivres.length;
+    document.getElementById('bib-count').textContent = c + ' livre' + (c!==1?'s':'');
+    renderBiblio();
+    if (isBureau(CP)) renderBibSuggestionsAdmin();
+  } catch(e) { body.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>'; }
+}
+function filterBiblio(el, f) {
+  document.querySelectorAll('#s-biblio .chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  bibFilter = f;
+  renderBiblio();
+}
+function renderBiblio() {
+  const body = document.getElementById('bib-body');
+  const q = (document.getElementById('bib-search')?.value || '').trim().toLowerCase();
+  let list = allLivres.filter(l => {
+    if (bibFilter === 'dispo' && !l.disponible) return false;
+    if (bibFilter === 'emprunte' && l.disponible) return false;
+    if (bibFilter === 'mesemprunts' && l.emprunteurId !== CU?.uid) return false;
+    if (q && !(l.titre||'').toLowerCase().includes(q) && !(l.auteur||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if (!list.length) { body.innerHTML = '<div class="empty"><div class="empty-ic">📚</div><div class="empty-t">Aucun livre</div></div>'; return; }
+  body.innerHTML = list.map(l => {
+    const enRetard = !l.disponible && l.dateRetourPrevue && new Date(l.dateRetourPrevue) < new Date();
+    const sttC = l.disponible ? 'dispo' : enRetard ? 'retard' : 'emprunte';
+    const sttL = l.disponible ? '✅ Disponible' : enRetard ? '⏰ En retard' : '📕 Emprunté';
+    const likesN = (l.likes||[]).length;
+    return `<div class="bib-card" data-id="${l.id}">
+      <div class="bib-card-top">
+        <div><div class="bib-titre">${escHtml(l.titre)}</div><div class="bib-auteur">${escHtml(l.auteur||'—')}</div></div>
+        <div class="bib-stt ${sttC}">${sttL}</div>
+      </div>
+      <div class="bib-meta-row">
+        ${l.langue ? `<span class="bib-tag">${escHtml(l.langue)}</span>` : ''}
+        ${l.genre ? `<span class="bib-tag">${escHtml(l.genre)}</span>` : ''}
+        ${l.code ? `<span class="bib-tag">${escHtml(l.code)}</span>` : ''}
+        ${likesN ? `<span class="bib-tag">❤️ ${likesN}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  body.querySelectorAll('.bib-card').forEach(c => c.addEventListener('click', () => openLivreDetail(c.getAttribute('data-id'))));
+}
+
+window.openNewLivreModal = function() {
+  document.getElementById('lv-titre').value = '';
+  document.getElementById('lv-auteur').value = '';
+  document.getElementById('lv-langue').value = '';
+  document.getElementById('lv-genre').value = '';
+  document.getElementById('lv-code').value = '';
+  document.getElementById('lv-desc').value = '';
+  document.getElementById('ov-livre').classList.add('on');
+};
+window.saveLivre = async function() {
+  const titre = document.getElementById('lv-titre').value.trim();
+  const auteur = document.getElementById('lv-auteur').value.trim();
+  if (!titre || !auteur) { toast('Titre et auteur obligatoires'); return; }
+  let code = document.getElementById('lv-code').value.trim();
+  if (!code) code = 'LIV-' + String(allLivres.length + 1).padStart(3,'0');
+  try {
+    await db.collection('bibliotheque').add({
+      titre, auteur, code,
+      langue: document.getElementById('lv-langue').value.trim(),
+      genre: document.getElementById('lv-genre').value.trim(),
+      description: document.getElementById('lv-desc').value.trim(),
+      disponible: true, emprunteurId: null, emprunteurNom: null, dateEmprunt: null, dateRetourPrevue: null,
+      avis: [], likes: [], ajoutePar: CP.nom, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-livre');
+    toast('Livre ajouté ✅');
+    loadBiblio();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+async function openLivreDetail(id) {
+  curLivreId = id;
+  try {
+    const snap = await db.collection('bibliotheque').doc(id).get();
+    curLivreData = { id, ...snap.data() };
+  } catch(e) { toast('Erreur : ' + e.message); return; }
+  renderLivreDetail();
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById('s-biblio-detail').classList.add('on');
+}
+function renderLivreDetail() {
+  const l = curLivreData;
+  document.getElementById('bibd-titre').textContent = l.titre;
+  document.getElementById('bibd-auteur').textContent = l.auteur || '—';
+  document.getElementById('bibd-code').textContent = l.code || '—';
+  document.getElementById('bibd-langue').textContent = l.langue || '—';
+  document.getElementById('bibd-genre').textContent = l.genre || '—';
+  const enRetard = !l.disponible && l.dateRetourPrevue && new Date(l.dateRetourPrevue) < new Date();
+  document.getElementById('bibd-statut').textContent = l.disponible ? '✅ Disponible' : enRetard ? '⏰ En retard (' + escHtml(l.emprunteurNom||'') + ')' : '📕 Emprunté par ' + (l.emprunteurNom||'—');
+
+  const descCard = document.getElementById('bibd-desc-card');
+  if (l.description) { descCard.style.display = 'block'; document.getElementById('bibd-desc').textContent = l.description; }
+  else descCard.style.display = 'none';
+
+  document.getElementById('bibd-emprunt-btn').style.display = l.disponible ? 'block' : 'none';
+  document.getElementById('bibd-retour-btn').style.display = (!l.disponible && (l.emprunteurId === CU?.uid || isBureau(CP))) ? 'block' : 'none';
+  document.getElementById('bibd-admin-card').style.display = isBureau(CP) ? 'block' : 'none';
+
+  const likes = l.likes || [];
+  const jaime = likes.includes(CU?.uid);
+  document.getElementById('bibd-like-btn').innerHTML = (jaime ? '❤️ Aimé' : '🤍 J\'aime') + ' — <span id="bibd-likes-count">' + likes.length + '</span>';
+
+  const avis = l.avis || [];
+  document.getElementById('bibd-avis-list').innerHTML = avis.length
+    ? avis.slice().reverse().map(a => `<div class="bib-avis-item"><div class="bib-avis-top"><span class="bib-avis-nom">${escHtml(a.nom)}</span><span>${'⭐'.repeat(a.note||0)}</span></div>${a.commentaire ? `<div class="bib-avis-txt">${escHtml(a.commentaire)}</div>` : ''}</div>`).join('')
+    : '<div class="empty" style="padding:16px"><div class="empty-b">Aucun avis pour l\'instant.</div></div>';
+}
+
+window.emprunterLivre = async function() {
+  try {
+    const dateRetourPrevue = new Date(); dateRetourPrevue.setDate(dateRetourPrevue.getDate() + BIB_EMPRUNT_JOURS);
+    await db.collection('bibliotheque').doc(curLivreId).update({
+      disponible: false, emprunteurId: CU.uid, emprunteurNom: CP.nom,
+      dateEmprunt: new Date().toISOString(), dateRetourPrevue: dateRetourPrevue.toISOString()
+    });
+    toast('Livre emprunté pour 2 semaines ✅');
+    openLivreDetail(curLivreId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.retournerLivre = async function() {
+  try {
+    await db.collection('bibliotheque').doc(curLivreId).update({
+      disponible: true, emprunteurId: null, emprunteurNom: null, dateEmprunt: null, dateRetourPrevue: null
+    });
+    toast('Livre marqué comme rendu ✅');
+    openLivreDetail(curLivreId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.toggleLikeLivre = async function() {
+  try {
+    const likes = curLivreData.likes || [];
+    const idx = likes.indexOf(CU.uid);
+    if (idx > -1) likes.splice(idx, 1); else likes.push(CU.uid);
+    await db.collection('bibliotheque').doc(curLivreId).update({ likes });
+    curLivreData.likes = likes;
+    renderLivreDetail();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.saveAvisLivre = async function() {
+  const commentaire = document.getElementById('bibd-avis-txt').value.trim();
+  const note = parseInt(document.getElementById('bibd-avis-note').value);
+  try {
+    let avis = (curLivreData.avis || []).filter(a => a.uid !== CU.uid);
+    avis.push({ uid: CU.uid, nom: CP.nom, note, commentaire, at: new Date().toISOString() });
+    await db.collection('bibliotheque').doc(curLivreId).update({ avis });
+    curLivreData.avis = avis;
+    document.getElementById('bibd-avis-txt').value = '';
+    toast('Avis publié ✅');
+    renderLivreDetail();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.deleteLivre = async function() {
+  if (!isBureau(CP)) { toast('Réservé au Bureau'); return; }
+  if (!confirm('Supprimer définitivement ce livre ?')) return;
+  try {
+    await db.collection('bibliotheque').doc(curLivreId).delete();
+    toast('Livre supprimé');
+    go('biblio');
+    loadBiblio();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Suggestions de livres ──────────────────────────────────────── */
+window.openSuggestionModal = function() {
+  document.getElementById('sg-titre').value = '';
+  document.getElementById('sg-auteur').value = '';
+  document.getElementById('sg-motif').value = '';
+  document.getElementById('ov-suggestion').classList.add('on');
+};
+window.saveSuggestion = async function() {
+  const titre = document.getElementById('sg-titre').value.trim();
+  if (!titre) { toast('Titre obligatoire'); return; }
+  try {
+    await db.collection('bibliotheque_suggestions').add({
+      uid: CU.uid, nom: CP.nom, titre, auteur: document.getElementById('sg-auteur').value.trim(),
+      motif: document.getElementById('sg-motif').value.trim(), statut:'attente',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-suggestion');
+    toast('Suggestion envoyée ✅');
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+async function renderBibSuggestionsAdmin() {
+  try {
+    const snap = await db.collection('bibliotheque_suggestions').where('statut','==','attente').get();
+    if (snap.empty) return;
+    const body = document.getElementById('bib-body');
+    let html = '<div class="sec-title" style="padding:0 2px 6px">💡 Suggestions en attente</div>';
+    snap.forEach(d => {
+      const s = d.data();
+      html += `<div class="fp-cd-card" style="cursor:default">
+        <div class="fp-cd-top"><div><div class="fp-cd-nom">${escHtml(s.titre)}</div><div class="fp-cd-date">${escHtml(s.auteur||'')} · par ${escHtml(s.nom)}</div></div></div>
+        ${s.motif ? `<div style="font-size:12px;color:var(--t2);margin-top:6px">${escHtml(s.motif)}</div>` : ''}
+        <div class="pd-demande-acts" style="margin-top:9px">
+          <button class="acc" data-action="sug-accept" data-id="${d.id}" data-titre="${escHtml(s.titre)}" data-auteur="${escHtml(s.auteur||'')}">✅ Ajouter au catalogue</button>
+          <button class="ref" data-action="sug-reject" data-id="${d.id}">✕ Ignorer</button>
+        </div>
+      </div>`;
+    });
+    body.insertAdjacentHTML('afterbegin', html);
+    body.querySelectorAll('[data-action="sug-accept"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        db.collection('bibliotheque_suggestions').doc(btn.getAttribute('data-id')).update({ statut:'acceptee' });
+        openNewLivreModal();
+        document.getElementById('lv-titre').value = btn.getAttribute('data-titre');
+        document.getElementById('lv-auteur').value = btn.getAttribute('data-auteur');
+      });
+    });
+    body.querySelectorAll('[data-action="sug-reject"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        db.collection('bibliotheque_suggestions').doc(btn.getAttribute('data-id')).update({ statut:'refusee' });
+        loadBiblio();
+      });
+    });
+  } catch(e) { /* non bloquant */ }
 }
 
 
