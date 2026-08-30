@@ -845,6 +845,31 @@ input,select,textarea{font-family:inherit}
 .bib-avis-top{display:flex;justify-content:space-between;font-size:12px}
 .bib-avis-nom{font-weight:600;color:var(--t1)}
 .bib-avis-txt{font-size:12.5px;color:var(--t2);margin-top:4px;line-height:1.4}
+
+/* Apprentissage des langues */
+.lg-langues-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lg-lang-card{background:var(--surface);border-radius:var(--r22);padding:20px 14px;box-shadow:var(--sh);text-align:center;cursor:pointer}
+.lg-lang-flag{font-size:32px;margin-bottom:8px}
+.lg-lang-nom{font-size:14px;font-weight:700;color:var(--t1)}
+.lg-lang-count{font-size:11px;color:var(--t3);margin-top:2px}
+.lec-card{background:var(--surface);border-radius:var(--r14);padding:14px 16px;box-shadow:var(--sh);margin-bottom:10px;cursor:pointer}
+.lec-card-top{display:flex;justify-content:space-between;align-items:center}
+.lec-card-titre{font-size:14px;font-weight:600;color:var(--t1)}
+.lec-niveau-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:#F5F3FF;color:#5B21B6}
+[data-dark] .lec-niveau-badge{background:rgba(91,33,182,.35);color:#C4B5FD}
+.lec-auteur{font-size:10.5px;color:var(--t3);margin-top:6px}
+.flip-card{background:var(--surface2);border-radius:var(--r14);padding:16px;cursor:pointer;text-align:center;min-height:56px;display:flex;align-items:center;justify-content:center}
+.flip-card .q{font-size:13.5px;font-weight:600;color:var(--t1)}
+.flip-card .r{font-size:13.5px;font-weight:600;color:var(--gold);display:none}
+.flip-card.flipped .q{display:none}
+.flip-card.flipped .r{display:block}
+.dic-item{padding:12px 16px;border-bottom:1px solid var(--surface2)}
+.dic-item:last-child{border-bottom:none}
+.dic-mot{font-size:14px;font-weight:700;color:var(--t1)}
+.dic-trad{font-size:12.5px;color:var(--navy);font-weight:600;margin-top:1px}
+[data-dark] .dic-trad{color:var(--gold)}
+.dic-ex{font-size:11.5px;color:var(--t3);font-style:italic;margin-top:3px}
+.dic-langue-tag{font-size:9.5px;color:var(--t3);float:right}
 .treso-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
 
 /* Boutons entrée/dépense */
@@ -1223,6 +1248,7 @@ input,select,textarea{font-family:inherit}
     <div class="pcard">
       <div class="pcard-t">Association</div>
       <div class="prow" onclick="go('biblio')"><div class="prow-l"><div class="prow-ic" style="background:#FFF3CD">📚</div><div><div class="prow-lbl">Bibliothèque</div><div class="prow-sub">Emprunter un livre, avis, suggestions</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('langues')"><div class="prow-l"><div class="prow-ic" style="background:#F5F3FF">🗣️</div><div><div class="prow-lbl">Langues</div><div class="prow-sub">Leçons, quiz, dictionnaire</div></div></div><div class="prow-r">›</div></div>
     </div>
     <div class="pcard">
       <div class="pcard-t">Apparence</div>
@@ -2072,6 +2098,140 @@ input,select,textarea{font-family:inherit}
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-suggestion')">Annuler</button>
       <button class="bsub" onclick="saveSuggestion()"><span>Envoyer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APPRENTISSAGE DES LANGUES (Module additionnel) ══ -->
+<div id="s-langues" class="scr">
+  <div class="proj-hd">
+    <div class="proj-hd-top">
+      <div><div class="proj-title">Langues</div><div class="proj-sub">Malgache · Anglais · Français · Allemand · Mandarin</div></div>
+    </div>
+  </div>
+  <div class="proj-body">
+    <div id="lg-langues-grid" class="lg-langues-grid"></div>
+    <button class="ag-add-btn" style="width:100%;margin-top:4px" onclick="go('dictionnaire')">📖 Dictionnaire</button>
+    <div id="lg-pending-card" style="display:none;margin-top:14px">
+      <div class="sec-title">💡 Leçons à valider</div>
+      <div id="lg-pending-list"></div>
+    </div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- NIVEAUX & LEÇONS D'UNE LANGUE -->
+<div id="s-langue-detail" class="scr">
+  <div class="proj-hd">
+    <div class="proj-hd-top">
+      <div class="rd-back" style="color:rgba(255,255,255,.5);margin-bottom:6px" onclick="go('langues')">‹ Retour</div>
+      <div><div class="proj-title" id="lgd-titre">—</div></div>
+      <button class="btn-new-proj" style="display:flex" onclick="openNewLeconModal()">➕ Leçon</button>
+    </div>
+    <div class="filters" id="lgd-niveaux" style="padding:10px 0 0"></div>
+  </div>
+  <div class="proj-body" id="lgd-lecons-list"></div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- DÉTAIL D'UNE LEÇON -->
+<div id="s-lecon-detail" class="scr">
+  <div class="rd-hd">
+    <div class="rd-back" onclick="closeLeconDetail()">‹ Retour</div>
+    <div class="rd-title" id="lec-titre">—</div>
+    <div class="rd-sub" id="lec-sub">—</div>
+  </div>
+  <div class="pd-body">
+    <div class="pd-card" id="lec-media-card" style="display:none;padding:14px 16px"></div>
+    <div class="pd-card">
+      <div style="padding:16px;font-size:13.5px;color:var(--t2);line-height:1.6" id="lec-contenu"></div>
+    </div>
+    <div class="pd-card" id="lec-quiz-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">Cartes de révision <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--t3)">(touche pour révéler)</span></div>
+      <div id="lec-quiz-list" style="padding:0 16px 16px;display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <div class="pd-card" id="lec-admin-card" style="display:none;padding:14px 16px;display:flex;gap:8px"></div>
+  </div>
+</div>
+
+<!-- DICTIONNAIRE -->
+<div id="s-dictionnaire" class="scr">
+  <div class="proj-hd">
+    <div class="proj-hd-top">
+      <div class="rd-back" style="color:rgba(255,255,255,.5);margin-bottom:6px" onclick="go('langues')">‹ Retour</div>
+      <div><div class="proj-title">Dictionnaire</div></div>
+      <button class="btn-new-proj" style="display:flex" onclick="openNewMotModal()">➕ Mot</button>
+    </div>
+    <input type="text" class="proj-search" id="dic-search" placeholder="🔍 Rechercher un mot..." oninput="renderDictionnaire()">
+    <div class="filters" id="dic-langue-filters" style="padding:10px 0 0"></div>
+  </div>
+  <div class="proj-body" id="dic-list"></div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- MODAL NOUVELLE LEÇON -->
+<div class="overlay" id="ov-lecon" onclick="closeOverlay('ov-lecon')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouvelle leçon</div>
+    <div class="mfield"><label>Titre *</label><input type="text" id="lec-titre-inp" placeholder="Ex: Les salutations"></div>
+    <div class="mfield"><label>Niveau</label>
+      <select id="lec-niveau-inp"><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select>
+    </div>
+    <div class="mfield"><label>Contenu *</label><textarea id="lec-contenu-inp" placeholder="Le contenu de la leçon..." style="min-height:100px"></textarea></div>
+    <div class="mfield">
+      <label>Audio ou vidéo (optionnel)</label>
+      <button type="button" class="btn-add-cr" onclick="document.getElementById('lec-media-file').click()" id="lec-media-btn">📎 Joindre un fichier</button>
+      <input type="file" id="lec-media-file" accept="audio/*,video/*" style="display:none" onchange="handleLeconMediaSelect(this)">
+    </div>
+    <div class="mfield">
+      <label>Cartes de révision (question / réponse)</label>
+      <div id="lec-cards-draft"></div>
+      <div class="p-poste-add-row">
+        <input type="text" id="lec-card-q" placeholder="Question">
+        <input type="text" id="lec-card-r" placeholder="Réponse" style="flex:1">
+        <button type="button" onclick="addLeconCardDraft()">➕</button>
+      </div>
+    </div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-lecon')">Annuler</button>
+      <button class="bsub" id="lec-sub-btn" onclick="saveLecon()"><span>Proposer</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVEAU MOT (DICTIONNAIRE) -->
+<div class="overlay" id="ov-mot" onclick="closeOverlay('ov-mot')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouveau mot</div>
+    <div class="mfield"><label>Langue</label>
+      <select id="mot-langue-inp"><option>Malgache</option><option>Anglais</option><option>Français</option><option>Allemand</option><option>Mandarin</option></select>
+    </div>
+    <div class="mfield"><label>Mot / expression *</label><input type="text" id="mot-mot-inp" placeholder="Ex: Manao ahoana"></div>
+    <div class="mfield"><label>Traduction *</label><input type="text" id="mot-trad-inp" placeholder="Ex: Bonjour"></div>
+    <div class="mfield"><label>Exemple</label><input type="text" id="mot-ex-inp" placeholder="Optionnel"></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-mot')">Annuler</button>
+      <button class="bsub" onclick="saveMot()"><span>Ajouter</span></button>
     </div>
   </div>
 </div>
@@ -2927,6 +3087,8 @@ function go(screen) {
   if (screen === 'agenda') loadAgenda();
   if (screen === 'finperso') loadFinPerso();
   if (screen === 'biblio') loadBiblio();
+  if (screen === 'langues') loadLangues();
+  if (screen === 'dictionnaire') loadDictionnaire();
 }
 
 function navTo(btn, screen) {
@@ -6940,6 +7102,246 @@ async function renderBibSuggestionsAdmin() {
   } catch(e) { /* non bloquant */ }
 }
 
+
+// ── APPRENTISSAGE DES LANGUES (Module additionnel) ──────────────────
+const LANGUES = {
+  malgache:{ic:'🇲🇬',nom:'Malgache'}, anglais:{ic:'🇬🇧',nom:'Anglais'}, francais:{ic:'🇫🇷',nom:'Français'},
+  allemand:{ic:'🇩🇪',nom:'Allemand'}, mandarin:{ic:'🇨🇳',nom:'Mandarin'}
+};
+const NIVEAUX_LANGUE = ['A1','A2','B1','B2','C1','C2'];
+let curLangue = null, curNiveau = 'A1', allLecons = [], curLeconId = null, curLeconData = null;
+let leconCardsDraft = [], leconMediaFile = null;
+
+async function loadLangues() {
+  const grid = document.getElementById('lg-langues-grid');
+  grid.innerHTML = Object.keys(LANGUES).map(k => `<div class="lg-lang-card" data-langue="${k}"><div class="lg-lang-flag">${LANGUES[k].ic}</div><div class="lg-lang-nom">${LANGUES[k].nom}</div><div class="lg-lang-count" id="lg-count-${k}">—</div></div>`).join('');
+  grid.querySelectorAll('.lg-lang-card').forEach(c => c.addEventListener('click', () => openLangueDetail(c.getAttribute('data-langue'))));
+  try {
+    for (const k of Object.keys(LANGUES)) {
+      const snap = await db.collection('langues_lecons').where('langue','==',k).where('statut','==','publiee').get();
+      const el = document.getElementById('lg-count-'+k);
+      if (el) el.textContent = snap.size + ' leçon' + (snap.size!==1?'s':'');
+    }
+    if (isBureau(CP)) {
+      const pSnap = await db.collection('langues_lecons').where('statut','==','attente').get();
+      const card = document.getElementById('lg-pending-card');
+      if (!pSnap.empty) {
+        card.style.display = 'block';
+        document.getElementById('lg-pending-list').innerHTML = pSnap.docs.map(d => {
+          const l = d.data();
+          return `<div class="lec-card" data-id="${d.id}"><div class="lec-card-top"><div class="lec-card-titre">${escHtml(l.titre)}</div><span class="lec-niveau-badge">${l.niveau}</span></div><div class="lec-auteur">${LANGUES[l.langue]?.nom||l.langue} · par ${escHtml(l.auteurNom||'—')}</div></div>`;
+        }).join('');
+        document.querySelectorAll('#lg-pending-list .lec-card').forEach(c => c.addEventListener('click', () => openLeconDetail(c.getAttribute('data-id'))));
+      } else card.style.display = 'none';
+    }
+  } catch(e) { /* non bloquant */ }
+}
+
+async function openLangueDetail(langueKey) {
+  curLangue = langueKey; curNiveau = 'A1';
+  document.getElementById('lgd-titre').textContent = LANGUES[langueKey].ic + ' ' + LANGUES[langueKey].nom;
+  const tabsEl = document.getElementById('lgd-niveaux');
+  tabsEl.innerHTML = NIVEAUX_LANGUE.map(n => `<button class="chip ${n==='A1'?'on':''}" data-niv="${n}">${n}</button>`).join('');
+  tabsEl.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => switchNiveauLangue(c)));
+  try {
+    const snap = await db.collection('langues_lecons').where('langue','==',langueKey).get();
+    allLecons = []; snap.forEach(d => allLecons.push({ id:d.id, ...d.data() }));
+    renderLecons();
+  } catch(e) { toast('Erreur : ' + e.message); }
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById('s-langue-detail').classList.add('on');
+}
+function switchNiveauLangue(el) {
+  document.querySelectorAll('#lgd-niveaux .chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  curNiveau = el.getAttribute('data-niv');
+  renderLecons();
+}
+function renderLecons() {
+  const el = document.getElementById('lgd-lecons-list');
+  const list = allLecons.filter(l => l.niveau === curNiveau && (l.statut === 'publiee' || (isBureau(CP) && l.statut === 'attente')));
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-ic">🗣️</div><div class="empty-t">Aucune leçon</div><div class="empty-b">Niveau ' + curNiveau + '</div></div>'; return; }
+  el.innerHTML = list.map(l => `<div class="lec-card" data-id="${l.id}">
+    <div class="lec-card-top"><div class="lec-card-titre">${escHtml(l.titre)}</div><span class="lec-niveau-badge">${l.statut==='attente'?'⏳ '+l.niveau:l.niveau}</span></div>
+    <div class="lec-auteur">Par ${escHtml(l.auteurNom||'—')}${l.mediaUrl?' · 🎧 média joint':''}${(l.cards||[]).length?' · '+l.cards.length+' cartes':''}</div>
+  </div>`).join('');
+  el.querySelectorAll('.lec-card').forEach(c => c.addEventListener('click', () => openLeconDetail(c.getAttribute('data-id'))));
+}
+
+window.openNewLeconModal = function() {
+  document.getElementById('lec-titre-inp').value = '';
+  document.getElementById('lec-niveau-inp').value = curNiveau;
+  document.getElementById('lec-contenu-inp').value = '';
+  document.getElementById('lec-media-file').value = '';
+  document.getElementById('lec-media-btn').textContent = '📎 Joindre un fichier';
+  leconMediaFile = null; leconCardsDraft = [];
+  renderLeconCardsDraft();
+  document.getElementById('ov-lecon').classList.add('on');
+};
+window.handleLeconMediaSelect = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  leconMediaFile = file;
+  document.getElementById('lec-media-btn').textContent = '📎 ' + file.name;
+};
+window.addLeconCardDraft = function() {
+  const q = document.getElementById('lec-card-q').value.trim();
+  const r = document.getElementById('lec-card-r').value.trim();
+  if (!q || !r) return;
+  leconCardsDraft.push({ question:q, reponse:r });
+  document.getElementById('lec-card-q').value = '';
+  document.getElementById('lec-card-r').value = '';
+  renderLeconCardsDraft();
+};
+function renderLeconCardsDraft() {
+  const el = document.getElementById('lec-cards-draft');
+  el.innerHTML = leconCardsDraft.length
+    ? leconCardsDraft.map((c,i) => `<span class="p-poste-chip">${escHtml(c.question)} → ${escHtml(c.reponse)}<button type="button" data-i="${i}">✕</button></span>`).join('')
+    : '<div style="font-size:11.5px;color:var(--t3)">Aucune carte — optionnel.</div>';
+  el.querySelectorAll('button[data-i]').forEach(b => b.addEventListener('click', () => { leconCardsDraft.splice(parseInt(b.getAttribute('data-i')),1); renderLeconCardsDraft(); }));
+}
+window.saveLecon = async function() {
+  const titre = document.getElementById('lec-titre-inp').value.trim();
+  const contenu = document.getElementById('lec-contenu-inp').value.trim();
+  if (!titre || !contenu) { toast('Titre et contenu obligatoires'); return; }
+  const btn = document.getElementById('lec-sub-btn');
+  btn.disabled = true; btn.querySelector('span').textContent = '...';
+  try {
+    let mediaUrl = null;
+    if (leconMediaFile) mediaUrl = await uploadToCloudinary(leconMediaFile, 'langues/' + curLangue);
+    await db.collection('langues_lecons').add({
+      langue: curLangue, niveau: document.getElementById('lec-niveau-inp').value, titre, contenu,
+      mediaUrl, cards: leconCardsDraft,
+      statut: isBureau(CP) ? 'publiee' : 'attente',
+      auteurId: CU.uid, auteurNom: CP.nom, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-lecon');
+    toast(isBureau(CP) ? 'Leçon publiée ✅' : 'Leçon proposée — en attente de validation ✅');
+    openLangueDetail(curLangue);
+  } catch(e) { toast('Erreur : ' + e.message); }
+  finally { btn.disabled = false; btn.querySelector('span').textContent = 'Proposer'; }
+};
+
+async function openLeconDetail(id) {
+  curLeconId = id;
+  try {
+    const snap = await db.collection('langues_lecons').doc(id).get();
+    curLeconData = { id, ...snap.data() };
+  } catch(e) { toast('Erreur : ' + e.message); return; }
+  const l = curLeconData;
+  document.getElementById('lec-titre').textContent = l.titre;
+  document.getElementById('lec-sub').textContent = (LANGUES[l.langue]?.nom||l.langue) + ' · ' + l.niveau + (l.statut==='attente' ? ' · ⏳ En attente de validation' : '');
+  document.getElementById('lec-contenu').textContent = l.contenu;
+
+  const mediaCard = document.getElementById('lec-media-card');
+  if (l.mediaUrl) {
+    mediaCard.style.display = 'block';
+    const isVideo = /\.(mp4|webm|mov)/i.test(l.mediaUrl) || l.mediaUrl.includes('/video/');
+    mediaCard.innerHTML = isVideo
+      ? `<video controls style="width:100%;border-radius:10px"><source src="${l.mediaUrl}"></video>`
+      : `<audio controls style="width:100%"><source src="${l.mediaUrl}"></audio>`;
+  } else mediaCard.style.display = 'none';
+
+  const quizCard = document.getElementById('lec-quiz-card');
+  const cards = l.cards || [];
+  if (cards.length) {
+    quizCard.style.display = 'block';
+    document.getElementById('lec-quiz-list').innerHTML = cards.map(c => `<div class="flip-card" data-q="${escHtml(c.question)}" data-r="${escHtml(c.reponse)}"><span class="q">${escHtml(c.question)}</span><span class="r">${escHtml(c.reponse)}</span></div>`).join('');
+    document.querySelectorAll('#lec-quiz-list .flip-card').forEach(el => el.addEventListener('click', () => el.classList.toggle('flipped')));
+  } else quizCard.style.display = 'none';
+
+  const adminCard = document.getElementById('lec-admin-card');
+  if (isBureau(CP)) {
+    adminCard.style.display = 'flex';
+    let html = '';
+    if (l.statut === 'attente') html += `<button class="btn-join-proj" style="flex:1" onclick="validerLecon()">✅ Valider</button>`;
+    html += `<button class="btn-danger-full" style="flex:1" onclick="deleteLecon()">🗑️ Supprimer</button>`;
+    adminCard.innerHTML = html;
+  } else adminCard.style.display = 'none';
+
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById('s-lecon-detail').classList.add('on');
+}
+window.closeLeconDetail = function() {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  if (curLangue) { document.getElementById('s-langue-detail').classList.add('on'); }
+  else { document.getElementById('s-langues').classList.add('on'); }
+};
+window.validerLecon = async function() {
+  try {
+    await db.collection('langues_lecons').doc(curLeconId).update({ statut:'publiee' });
+    toast('Leçon publiée ✅');
+    openLeconDetail(curLeconId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.deleteLecon = async function() {
+  if (!confirm('Supprimer cette leçon ?')) return;
+  try {
+    await db.collection('langues_lecons').doc(curLeconId).delete();
+    toast('Leçon supprimée');
+    closeLeconDetail();
+    if (curLangue) openLangueDetail(curLangue);
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Dictionnaire ──────────────────────────────────────────────── */
+let allMots = [], dicLangueFilter = 'tous';
+async function loadDictionnaire() {
+  const filtersEl = document.getElementById('dic-langue-filters');
+  filtersEl.innerHTML = '<button class="chip on" data-dl="tous">Toutes langues</button>' +
+    Object.keys(LANGUES).map(k => `<button class="chip" data-dl="${k}">${LANGUES[k].ic} ${LANGUES[k].nom}</button>`).join('');
+  filtersEl.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => filterDictionnaire(c)));
+  try {
+    const snap = await db.collection('langues_dictionnaire').get();
+    allMots = []; snap.forEach(d => allMots.push({ id:d.id, ...d.data() }));
+    renderDictionnaire();
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+function filterDictionnaire(el) {
+  document.querySelectorAll('#dic-langue-filters .chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  dicLangueFilter = el.getAttribute('data-dl');
+  renderDictionnaire();
+}
+function renderDictionnaire() {
+  const el = document.getElementById('dic-list');
+  const q = (document.getElementById('dic-search')?.value || '').trim().toLowerCase();
+  let list = allMots.filter(m => {
+    if (dicLangueFilter !== 'tous' && m.langueKey !== dicLangueFilter) return false;
+    if (q && !(m.mot||'').toLowerCase().includes(q) && !(m.traduction||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="empty-ic">📖</div><div class="empty-t">Aucun mot</div></div>'; return; }
+  el.innerHTML = `<div class="card" style="overflow:hidden">` + list.map(m => `
+    <div class="dic-item">
+      <span class="dic-langue-tag">${LANGUES[m.langueKey]?.nom||''}</span>
+      <div class="dic-mot">${escHtml(m.mot)}</div>
+      <div class="dic-trad">${escHtml(m.traduction)}</div>
+      ${m.exemple ? `<div class="dic-ex">"${escHtml(m.exemple)}"</div>` : ''}
+    </div>`).join('') + `</div>`;
+}
+window.openNewMotModal = function() {
+  document.getElementById('mot-mot-inp').value = '';
+  document.getElementById('mot-trad-inp').value = '';
+  document.getElementById('mot-ex-inp').value = '';
+  document.getElementById('ov-mot').classList.add('on');
+};
+window.saveMot = async function() {
+  const mot = document.getElementById('mot-mot-inp').value.trim();
+  const traduction = document.getElementById('mot-trad-inp').value.trim();
+  if (!mot || !traduction) { toast('Mot et traduction obligatoires'); return; }
+  const langueNom = document.getElementById('mot-langue-inp').value;
+  const langueKey = Object.keys(LANGUES).find(k => LANGUES[k].nom === langueNom) || 'francais';
+  try {
+    await db.collection('langues_dictionnaire').add({
+      langueKey, mot, traduction, exemple: document.getElementById('mot-ex-inp').value.trim(),
+      ajoutePar: CP.nom, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-mot');
+    toast('Mot ajouté ✅');
+    loadDictionnaire();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
 
 /* ── Journal d'activité (v2.0) ─────────────────────────────────────── */
 function journalEntry(texte) {
