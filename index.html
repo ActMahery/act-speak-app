@@ -2026,10 +2026,19 @@ input,select,textarea{font-family:inherit}
       <button class="chip" data-bibf="emprunte" onclick="filterBiblio(this,'emprunte')">📕 Empruntés</button>
       <button class="chip" data-bibf="mesemprunts" onclick="filterBiblio(this,'mesemprunts')">👤 Mes emprunts</button>
     </div>
+    <div class="filters" id="bib-cat-filters" style="padding:8px 0 0"></div>
   </div>
-  <div class="proj-body" id="bib-body"></div>
-  <div style="padding:0 14px 90px">
-    <button class="ag-add-btn" style="width:100%" onclick="openSuggestionModal()">💡 Suggérer un livre</button>
+  <div class="proj-body">
+    <div class="card" id="bib-overview-card" style="overflow:hidden;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;padding:14px 16px;gap:10px">
+        <div style="text-align:center"><div style="font-size:11px;color:var(--t3)">EN RAYON</div><div style="font-size:19px;font-weight:700;color:var(--t1)" id="bib-ov-dispo">0</div></div>
+        <div style="text-align:center"><div style="font-size:11px;color:var(--t3)">EN ACQUISITION</div><div style="font-size:19px;font-weight:700;color:var(--gold)" id="bib-ov-acquisition">0</div></div>
+      </div>
+      <div id="bib-ov-annees" style="padding:0 16px 14px;font-size:11.5px;color:var(--t3)"></div>
+      <button id="bib-resp-btn" style="display:none;width:100%;height:40px;background:var(--surface2);color:var(--t1);border-top:1px solid var(--surface3);font-size:12px;font-weight:600" onclick="openBiblioRespModal()">⚙️ Gérer les responsables</button>
+    </div>
+    <div id="bib-body"></div>
+    <button class="ag-add-btn" style="width:100%;margin-top:4px" onclick="openSuggestionModal()">💡 Suggérer un livre</button>
   </div>
   <nav class="bnav">
     <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
@@ -2048,17 +2057,22 @@ input,select,textarea{font-family:inherit}
     <div class="rd-sub" id="bibd-auteur">—</div>
   </div>
   <div class="pd-body">
+    <div id="bibd-cover-wrap" style="display:none;text-align:center"><img id="bibd-cover" style="max-width:160px;border-radius:12px;box-shadow:var(--sh)"></div>
+    <div class="pd-card" id="bibd-formats-card" style="padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap"></div>
     <div class="pd-card">
       <div class="det-row"><span class="det-row-l">Code référence</span><span class="det-row-v" id="bibd-code">—</span></div>
       <div class="det-row"><span class="det-row-l">Langue</span><span class="det-row-v" id="bibd-langue">—</span></div>
       <div class="det-row"><span class="det-row-l">Genre</span><span class="det-row-v" id="bibd-genre">—</span></div>
+      <div class="det-row"><span class="det-row-l">Catégorie</span><span class="det-row-v" id="bibd-categorie">—</span></div>
+      <div class="det-row"><span class="det-row-l">État</span><span class="det-row-v" id="bibd-etat">—</span></div>
       <div class="det-row"><span class="det-row-l">Statut</span><span class="det-row-v" id="bibd-statut">—</span></div>
     </div>
     <div class="pd-card" id="bibd-desc-card" style="display:none">
       <div class="pd-card-t" style="padding:13px 16px">Description</div>
       <div style="padding:0 16px 14px;font-size:13px;color:var(--t2);line-height:1.5" id="bibd-desc"></div>
     </div>
-    <div class="pd-card" style="padding:14px 16px;display:flex;gap:8px">
+    <div class="pd-card" style="padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-join-proj" id="bibd-lire-btn" style="display:none" onclick="ouvrirLecteur(curLivreData.pdfUrl, curLivreData.titre, 'livre_'+curLivreId)">📖 Lire le PDF</button>
       <button class="btn-join-proj" id="bibd-emprunt-btn" style="display:none" onclick="emprunterLivre()">📗 Emprunter (2 semaines)</button>
       <button class="btn-join-proj" id="bibd-retour-btn" style="display:none;background:var(--navy)" onclick="retournerLivre()">↩️ Marquer comme rendu</button>
     </div>
@@ -2097,11 +2111,58 @@ input,select,textarea{font-family:inherit}
       <div class="mfield" style="margin-bottom:0"><label>Langue</label><input type="text" id="lv-langue" placeholder="Ex: Français"></div>
       <div class="mfield" style="margin-bottom:0"><label>Genre</label><input type="text" id="lv-genre" placeholder="Ex: Roman"></div>
     </div>
-    <div class="mfield" style="margin-top:14px"><label>Code référence</label><input type="text" id="lv-code" placeholder="Ex: LIV-001 (auto si vide)"></div>
+    <div class="mfield" style="margin-top:14px"><label>Catégorie</label><select id="lv-categorie"></select></div>
+    <div class="mfield"><label>Code référence</label><input type="text" id="lv-code" placeholder="Ex: LIV-001 (auto si vide)"></div>
+    <div class="mfield"><label>État du livre</label>
+      <select id="lv-etat"><option>Neuf</option><option>Bon état</option><option>Usé</option><option>Abîmé</option></select>
+    </div>
     <div class="mfield"><label>Description</label><textarea id="lv-desc" placeholder="Optionnel..."></textarea></div>
+
+    <div class="mfield">
+      <label>Couverture (photo)</label>
+      <button type="button" class="btn-add-cr" onclick="document.getElementById('lv-cover-file').click()" id="lv-cover-btn">📷 Ajouter une couverture</button>
+      <input type="file" id="lv-cover-file" accept="image/*" style="display:none" onchange="handleLvCoverSelect(this)">
+    </div>
+    <div class="mfield">
+      <label>Version PDF (optionnel)</label>
+      <button type="button" class="btn-add-cr" onclick="document.getElementById('lv-pdf-file').click()" id="lv-pdf-btn">📄 Joindre le PDF</button>
+      <input type="file" id="lv-pdf-file" accept="application/pdf" style="display:none" onchange="handleLvPdfSelect(this)">
+    </div>
+
+    <label style="display:flex;align-items:center;gap:9px;padding:12px 0 4px;font-size:13px;color:var(--t1);cursor:pointer">
+      <input type="checkbox" id="lv-physique-chk" checked onchange="toggleLvPhysiqueDate()" style="width:18px;height:18px">
+      Exemplaire physique disponible dès maintenant
+    </label>
+    <div class="mfield" id="lv-physique-date-wrap" style="display:none">
+      <label>Disponible physiquement à partir du</label><input type="date" id="lv-physique-date">
+    </div>
+
+    <label style="display:flex;align-items:center;gap:9px;padding:8px 0 4px;font-size:13px;color:var(--t1);cursor:pointer">
+      <input type="checkbox" id="lv-acquisition-chk" onchange="toggleLvAcquisitionYear()" style="width:18px;height:18px">
+      En cours d'acquisition (pas encore reçu du tout)
+    </label>
+    <div class="mfield" id="lv-acquisition-year-wrap" style="display:none">
+      <label>Année attendue</label><input type="text" id="lv-acquisition-year" placeholder="Ex: 2026">
+    </div>
+
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-livre')">Annuler</button>
-      <button class="bsub" onclick="saveLivre()"><span>Ajouter</span></button>
+      <button class="bsub" id="lv-sub-btn" onclick="saveLivre()"><span>Ajouter</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESPONSABLES BIBLIOTHÈQUE -->
+<div class="overlay" id="ov-biblio-resp" onclick="closeOverlay('ov-biblio-resp')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Responsables de la bibliothèque</div>
+    <div class="mfield" style="font-size:12px;color:var(--t3)">Maximum 2 responsables — seuls eux peuvent confirmer les emprunts/retours et envoyer des rappels.</div>
+    <div class="mfield"><label>Responsable 1</label><select id="bibresp-1"><option value="">— Aucun —</option></select></div>
+    <div class="mfield"><label>Responsable 2</label><select id="bibresp-2"><option value="">— Aucun —</option></select></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-biblio-resp')">Annuler</button>
+      <button class="bsub" onclick="saveBiblioResponsables()"><span>Enregistrer</span></button>
     </div>
   </div>
 </div>
@@ -3067,11 +3128,11 @@ const CAT_SHORT = {
 // Classe CSS courte par catégorie (badges annuaire/admin)
 const CAT_CLASS = { bureau:'cat-bureau', actif:'cat-actif', benevole:'cat-benevole', honoraire:'cat-honoraire', bienfaiteur:'cat-bienfaiteur' };
 const QA = {
-  bureau:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🚀',lb:'Projets',bg:'#FFF7ED',fn:"go('projets')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Mon agenda',bg:'#F0FDF4',fn:"go('agenda')"},{ic:'💰',lb:'Trésorerie',bg:'#D4EDDA',fn:"go('treso')"}],
-  actif:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"}],
-  benevole:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'👥',lb:'Annuaire',bg:'#F5F3FF',fn:"go('annuaire')"}],
-  honoraire:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"}],
-  bienfaiteur:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'💰',lb:'Trésorerie',bg:'#F5F3FF',fn:"go('treso')"}]
+  bureau:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🚀',lb:'Projets',bg:'#FFF7ED',fn:"go('projets')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Mon agenda',bg:'#F0FDF4',fn:"go('agenda')"},{ic:'💰',lb:'Trésorerie',bg:'#D4EDDA',fn:"go('treso')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
+  actif:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
+  benevole:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'👥',lb:'Annuaire',bg:'#F5F3FF',fn:"go('annuaire')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
+  honoraire:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
+  bienfaiteur:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'💰',lb:'Trésorerie',bg:'#F5F3FF',fn:"go('treso')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}]
 };
 // ── Catégories — helpers de migration douce niveau → categorie ─────
 // Une catégorie non reconnue retombe sur 'benevole' (accès sûr, non-admin).
@@ -6953,31 +7014,99 @@ function renderJournalVisuel() {
 
 // ── BIBLIOTHÈQUE (Module additionnel) ───────────────────────────────
 const BIB_EMPRUNT_JOURS = 14;
-let allLivres = [], curLivreId = null, curLivreData = null, bibFilter = 'tous';
+const BIB_CATEGORIES = {
+  roman:'Roman', essai:'Essai', science:'Sciences', histoire:'Histoire', jeunesse:'Jeunesse',
+  langues:'Apprentissage des langues', developpement:'Développement personnel', spiritualite:'Spiritualité', autre:'Autre'
+};
+let allLivres = [], curLivreId = null, curLivreData = null, bibFilter = 'tous', bibCatFilter = 'tous';
+let bibResponsables = { resp1Id:null, resp1Nom:null, resp2Id:null, resp2Nom:null };
+let lvCoverFile = null, lvPdfFile = null;
+
+function isBiblioResponsable(uid) {
+  if (!uid) return false;
+  return uid === bibResponsables.resp1Id || uid === bibResponsables.resp2Id;
+}
+
+async function loadBiblioResponsablesConfig() {
+  try {
+    const snap = await db.collection('association_config').doc('bibliotheque').get();
+    if (snap.exists) bibResponsables = snap.data();
+  } catch(e) { /* non bloquant */ }
+}
 
 async function loadBiblio() {
   const body = document.getElementById('bib-body');
   body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
   if (CP && isBureau(CP)) document.getElementById('bib-add-btn').style.display = 'flex';
+  await loadBiblioResponsablesConfig();
+  if (isPresidentOrVP(CP)) document.getElementById('bib-resp-btn').style.display = 'block';
   try {
     const snap = await db.collection('bibliotheque').get();
     allLivres = []; snap.forEach(d => allLivres.push({ id:d.id, ...d.data() }));
-    const c = allLivres.length;
-    document.getElementById('bib-count').textContent = c + ' livre' + (c!==1?'s':'');
+    const dispoLivres = allLivres.filter(l => l.statutAcquisition !== 'acquisition' && !l.retire);
+    document.getElementById('bib-count').textContent = dispoLivres.length + ' livre' + (dispoLivres.length!==1?'s':'');
+
+    renderBibOverview();
+    renderBibCatFilters();
     renderBiblio();
     if (isBureau(CP)) renderBibSuggestionsAdmin();
   } catch(e) { body.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>'; }
 }
+
+function renderBibOverview() {
+  const dispo = allLivres.filter(l => l.statutAcquisition !== 'acquisition' && !l.retire);
+  const acquisition = allLivres.filter(l => l.statutAcquisition === 'acquisition');
+  document.getElementById('bib-ov-dispo').textContent = dispo.length;
+  document.getElementById('bib-ov-acquisition').textContent = acquisition.length;
+  const parAnnee = {};
+  acquisition.forEach(l => { const a = l.anneeAttendue || 'Non précisée'; parAnnee[a] = (parAnnee[a]||0)+1; });
+  const annEl = document.getElementById('bib-ov-annees');
+  const entries = Object.entries(parAnnee);
+  annEl.innerHTML = entries.length
+    ? 'En attente : ' + entries.map(([a,n]) => n + ' pour ' + a).join(' · ')
+    : '';
+}
+
+function renderBibCatFilters() {
+  const el = document.getElementById('bib-cat-filters');
+  const isResp = isBureau(CP);
+  const counts = {};
+  allLivres.filter(l => l.statutAcquisition !== 'acquisition' && !l.retire).forEach(l => {
+    const c = l.categorie || 'autre';
+    counts[c] = (counts[c]||0) + 1;
+  });
+  let html = `<button class="chip on" data-bibc="tous">Tout (${allLivres.filter(l=>l.statutAcquisition!=='acquisition'&&!l.retire).length})</button>`;
+  Object.keys(BIB_CATEGORIES).forEach(k => {
+    const n = counts[k] || 0;
+    if (n === 0 && !isResp) return; // masqué aux membres si vide, visible aux responsables/Bureau
+    html += `<button class="chip" data-bibc="${k}">${BIB_CATEGORIES[k]} (${n})</button>`;
+  });
+  el.innerHTML = html;
+  el.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+    el.querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
+    c.classList.add('on');
+    bibCatFilter = c.getAttribute('data-bibc');
+    renderBiblio();
+  }));
+}
+
 function filterBiblio(el, f) {
-  document.querySelectorAll('#s-biblio .chip').forEach(c => c.classList.remove('on'));
+  document.querySelectorAll('#s-biblio .filters:first-of-type .chip, #s-biblio .filters:nth-of-type(1) .chip').forEach(c => {});
+  document.querySelectorAll('#bib-body').forEach(()=>{});
+  const parent = el.closest('.filters');
+  parent.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
   el.classList.add('on');
   bibFilter = f;
   renderBiblio();
 }
+
 function renderBiblio() {
   const body = document.getElementById('bib-body');
   const q = (document.getElementById('bib-search')?.value || '').trim().toLowerCase();
   let list = allLivres.filter(l => {
+    if (l.statutAcquisition === 'acquisition') return bibFilter === 'tous' && bibCatFilter === 'tous' && false; // masqués de la liste normale, visibles via vue d'ensemble uniquement
+    if (l.retire && !isBureau(CP)) return false;
+    if (bibCatFilter !== 'tous' && (l.categorie||'autre') !== bibCatFilter) return false;
     if (bibFilter === 'dispo' && !l.disponible) return false;
     if (bibFilter === 'emprunte' && l.disponible) return false;
     if (bibFilter === 'mesemprunts' && l.emprunteurId !== CU?.uid) return false;
@@ -6987,24 +7116,47 @@ function renderBiblio() {
   if (!list.length) { body.innerHTML = '<div class="empty"><div class="empty-ic">📚</div><div class="empty-t">Aucun livre</div></div>'; return; }
   body.innerHTML = list.map(l => {
     const enRetard = !l.disponible && l.dateRetourPrevue && new Date(l.dateRetourPrevue) < new Date();
-    const sttC = l.disponible ? 'dispo' : enRetard ? 'retard' : 'emprunte';
-    const sttL = l.disponible ? '✅ Disponible' : enRetard ? '⏰ En retard' : '📕 Emprunté';
+    const sttC = l.retire ? 'emprunte' : l.disponible ? 'dispo' : enRetard ? 'retard' : 'emprunte';
+    const sttL = l.retire ? '🔧 Retiré (réparation)' : l.disponible ? '✅ Disponible' : enRetard ? '⏰ En retard' : '📕 Emprunté';
     const likesN = (l.likes||[]).length;
-    return `<div class="bib-card" data-id="${l.id}">
-      <div class="bib-card-top">
-        <div><div class="bib-titre">${escHtml(l.titre)}</div><div class="bib-auteur">${escHtml(l.auteur||'—')}</div></div>
-        <div class="bib-stt ${sttC}">${sttL}</div>
-      </div>
-      <div class="bib-meta-row">
-        ${l.langue ? `<span class="bib-tag">${escHtml(l.langue)}</span>` : ''}
-        ${l.genre ? `<span class="bib-tag">${escHtml(l.genre)}</span>` : ''}
-        ${l.code ? `<span class="bib-tag">${escHtml(l.code)}</span>` : ''}
-        ${likesN ? `<span class="bib-tag">❤️ ${likesN}</span>` : ''}
+    const formats = [];
+    if (l.hasPhysique) formats.push('📕 Physique');
+    if (l.hasPdf) formats.push('📄 PDF');
+    return `<div class="bib-card" data-id="${l.id}" style="display:flex;gap:12px;align-items:flex-start">
+      ${l.couvertureUrl ? `<img src="${l.couvertureUrl}" style="width:44px;height:62px;object-fit:cover;border-radius:6px;flex-shrink:0">` : ''}
+      <div style="flex:1;min-width:0">
+        <div class="bib-card-top">
+          <div><div class="bib-titre">${escHtml(l.titre)}</div><div class="bib-auteur">${escHtml(l.auteur||'—')}</div></div>
+          <div class="bib-stt ${sttC}">${sttL}</div>
+        </div>
+        <div class="bib-meta-row">
+          ${l.langue ? `<span class="bib-tag">${escHtml(l.langue)}</span>` : ''}
+          ${l.genre ? `<span class="bib-tag">${escHtml(l.genre)}</span>` : ''}
+          ${formats.map(f=>`<span class="bib-tag">${f}</span>`).join('')}
+          ${likesN ? `<span class="bib-tag">❤️ ${likesN}</span>` : ''}
+        </div>
       </div>
     </div>`;
   }).join('');
   body.querySelectorAll('.bib-card').forEach(c => c.addEventListener('click', () => openLivreDetail(c.getAttribute('data-id'))));
 }
+
+window.toggleLvPhysiqueDate = function() {
+  document.getElementById('lv-physique-date-wrap').style.display = document.getElementById('lv-physique-chk').checked ? 'none' : 'block';
+};
+window.toggleLvAcquisitionYear = function() {
+  document.getElementById('lv-acquisition-year-wrap').style.display = document.getElementById('lv-acquisition-chk').checked ? 'block' : 'none';
+};
+window.handleLvCoverSelect = function(input) {
+  const file = input.files[0]; if (!file) return;
+  lvCoverFile = file;
+  document.getElementById('lv-cover-btn').textContent = '📷 ' + file.name;
+};
+window.handleLvPdfSelect = function(input) {
+  const file = input.files[0]; if (!file) return;
+  lvPdfFile = file;
+  document.getElementById('lv-pdf-btn').textContent = '📄 ' + file.name;
+};
 
 window.openNewLivreModal = function() {
   document.getElementById('lv-titre').value = '';
@@ -7012,7 +7164,15 @@ window.openNewLivreModal = function() {
   document.getElementById('lv-langue').value = '';
   document.getElementById('lv-genre').value = '';
   document.getElementById('lv-code').value = '';
+  document.getElementById('lv-etat').value = 'Neuf';
   document.getElementById('lv-desc').value = '';
+  document.getElementById('lv-categorie').innerHTML = Object.keys(BIB_CATEGORIES).map(k => `<option value="${k}">${BIB_CATEGORIES[k]}</option>`).join('');
+  document.getElementById('lv-cover-file').value = ''; document.getElementById('lv-cover-btn').textContent = '📷 Ajouter une couverture'; lvCoverFile = null;
+  document.getElementById('lv-pdf-file').value = ''; document.getElementById('lv-pdf-btn').textContent = '📄 Joindre le PDF'; lvPdfFile = null;
+  document.getElementById('lv-physique-chk').checked = true;
+  document.getElementById('lv-physique-date-wrap').style.display = 'none';
+  document.getElementById('lv-acquisition-chk').checked = false;
+  document.getElementById('lv-acquisition-year-wrap').style.display = 'none';
   document.getElementById('ov-livre').classList.add('on');
 };
 window.saveLivre = async function() {
@@ -7021,18 +7181,57 @@ window.saveLivre = async function() {
   if (!titre || !auteur) { toast('Titre et auteur obligatoires'); return; }
   let code = document.getElementById('lv-code').value.trim();
   if (!code) code = 'LIV-' + String(allLivres.length + 1).padStart(3,'0');
+  const hasPhysique = document.getElementById('lv-physique-chk').checked;
+  const enAcquisition = document.getElementById('lv-acquisition-chk').checked;
+
+  const btn = document.getElementById('lv-sub-btn');
+  btn.disabled = true; btn.querySelector('span').textContent = '...';
   try {
+    let couvertureUrl = null, pdfUrl = null;
+    if (lvCoverFile) couvertureUrl = await uploadToCloudinary(lvCoverFile, 'biblio/couvertures');
+    if (lvPdfFile) pdfUrl = await uploadToCloudinary(lvPdfFile, 'biblio/pdf');
     await db.collection('bibliotheque').add({
       titre, auteur, code,
       langue: document.getElementById('lv-langue').value.trim(),
       genre: document.getElementById('lv-genre').value.trim(),
+      categorie: document.getElementById('lv-categorie').value,
+      etat: document.getElementById('lv-etat').value,
       description: document.getElementById('lv-desc').value.trim(),
-      disponible: true, emprunteurId: null, emprunteurNom: null, dateEmprunt: null, dateRetourPrevue: null,
-      avis: [], likes: [], ajoutePar: CP.nom, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      couvertureUrl, pdfUrl, hasPdf: !!pdfUrl,
+      hasPhysique, dateDisponibilitePhysique: hasPhysique ? null : (document.getElementById('lv-physique-date').value || null),
+      statutAcquisition: enAcquisition ? 'acquisition' : 'disponible',
+      anneeAttendue: enAcquisition ? document.getElementById('lv-acquisition-year').value.trim() : null,
+      disponible: hasPhysique && !enAcquisition, emprunteurId: null, emprunteurNom: null, dateEmprunt: null, dateRetourPrevue: null,
+      retire: false, avis: [], likes: [], ajoutePar: CP.nom, createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     closeOverlay('ov-livre');
-    toast('Livre ajouté ✅');
+    toast(enAcquisition ? 'Livre ajouté (en acquisition) ✅' : 'Livre ajouté ✅');
     loadBiblio();
+  } catch(e) { toast('Erreur : ' + e.message); }
+  finally { btn.disabled = false; btn.querySelector('span').textContent = 'Ajouter'; }
+};
+
+window.openBiblioRespModal = async function() {
+  if (!memsCache.length) {
+    const snap = await db.collection('users').get();
+    snap.forEach(d => memsCache.push(d.data()));
+  }
+  const opts = '<option value="">— Aucun —</option>' + memsCache.map(m => `<option value="${m.uid}">${escHtml(m.nom||m.email)}</option>`).join('');
+  document.getElementById('bibresp-1').innerHTML = opts;
+  document.getElementById('bibresp-2').innerHTML = opts;
+  document.getElementById('bibresp-1').value = bibResponsables.resp1Id || '';
+  document.getElementById('bibresp-2').value = bibResponsables.resp2Id || '';
+  document.getElementById('ov-biblio-resp').classList.add('on');
+};
+window.saveBiblioResponsables = async function() {
+  if (!isPresidentOrVP(CP)) { toast('Réservé au Président et au Vice-Président'); return; }
+  const id1 = document.getElementById('bibresp-1').value, id2 = document.getElementById('bibresp-2').value;
+  const m1 = memsCache.find(m => m.uid === id1), m2 = memsCache.find(m => m.uid === id2);
+  try {
+    bibResponsables = { resp1Id: id1||null, resp1Nom: m1?m1.nom:null, resp2Id: id2||null, resp2Nom: m2?m2.nom:null };
+    await db.collection('association_config').doc('bibliotheque').set(bibResponsables);
+    closeOverlay('ov-biblio-resp');
+    toast('Responsables enregistrés ✅');
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
@@ -7053,16 +7252,37 @@ function renderLivreDetail() {
   document.getElementById('bibd-code').textContent = l.code || '—';
   document.getElementById('bibd-langue').textContent = l.langue || '—';
   document.getElementById('bibd-genre').textContent = l.genre || '—';
-  const enRetard = !l.disponible && l.dateRetourPrevue && new Date(l.dateRetourPrevue) < new Date();
-  document.getElementById('bibd-statut').textContent = l.disponible ? '✅ Disponible' : enRetard ? '⏰ En retard (' + escHtml(l.emprunteurNom||'') + ')' : '📕 Emprunté par ' + (l.emprunteurNom||'—');
+  document.getElementById('bibd-categorie').textContent = BIB_CATEGORIES[l.categorie] || '—';
+  document.getElementById('bibd-etat').textContent = l.etat || '—';
+
+  const coverWrap = document.getElementById('bibd-cover-wrap');
+  if (l.couvertureUrl) { coverWrap.style.display = 'block'; document.getElementById('bibd-cover').src = l.couvertureUrl; }
+  else coverWrap.style.display = 'none';
+
+  const formatsCard = document.getElementById('bibd-formats-card');
+  let formatsHtml = '';
+  if (l.hasPhysique) formatsHtml += `<span class="bib-tag" style="font-size:11px">📕 Exemplaire physique</span>`;
+  else if (l.dateDisponibilitePhysique) formatsHtml += `<span class="bib-tag" style="font-size:11px">📕 Physique dispo le ${new Date(l.dateDisponibilitePhysique).toLocaleDateString('fr-FR')}</span>`;
+  if (l.hasPdf) formatsHtml += `<span class="bib-tag" style="font-size:11px">📄 Version PDF</span>`;
+  formatsCard.innerHTML = formatsHtml || '<span style="font-size:12px;color:var(--t3)">Aucun format renseigné</span>';
+
+  let statutTxt;
+  if (l.statutAcquisition === 'acquisition') statutTxt = '🕓 En acquisition' + (l.anneeAttendue ? ' (' + l.anneeAttendue + ')' : '');
+  else if (l.retire) statutTxt = '🔧 Retiré du rayon';
+  else {
+    const enRetard = !l.disponible && l.dateRetourPrevue && new Date(l.dateRetourPrevue) < new Date();
+    statutTxt = l.disponible ? '✅ Disponible' : enRetard ? '⏰ En retard (' + escHtml(l.emprunteurNom||'') + ')' : '📕 Emprunté par ' + (l.emprunteurNom||'—');
+  }
+  document.getElementById('bibd-statut').textContent = statutTxt;
 
   const descCard = document.getElementById('bibd-desc-card');
   if (l.description) { descCard.style.display = 'block'; document.getElementById('bibd-desc').textContent = l.description; }
   else descCard.style.display = 'none';
 
-  document.getElementById('bibd-emprunt-btn').style.display = l.disponible ? 'block' : 'none';
-  document.getElementById('bibd-retour-btn').style.display = (!l.disponible && (l.emprunteurId === CU?.uid || isBureau(CP))) ? 'block' : 'none';
-  document.getElementById('bibd-admin-card').style.display = isBureau(CP) ? 'block' : 'none';
+  document.getElementById('bibd-lire-btn').style.display = l.hasPdf ? 'block' : 'none';
+  document.getElementById('bibd-emprunt-btn').style.display = (l.hasPhysique && l.disponible && !l.retire) ? 'block' : 'none';
+  document.getElementById('bibd-retour-btn').style.display = (!l.disponible && l.hasPhysique && (l.emprunteurId === CU?.uid || isBiblioResponsable(CU?.uid))) ? 'block' : 'none';
+  document.getElementById('bibd-admin-card').style.display = isBiblioResponsable(CU?.uid) ? 'block' : 'none';
 
   const likes = l.likes || [];
   const jaime = likes.includes(CU?.uid);
@@ -7086,6 +7306,7 @@ window.emprunterLivre = async function() {
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 window.retournerLivre = async function() {
+  if (!isBiblioResponsable(CU?.uid) && curLivreData.emprunteurId !== CU?.uid) { toast('Réservé aux responsables de la bibliothèque'); return; }
   try {
     await db.collection('bibliotheque').doc(curLivreId).update({
       disponible: true, emprunteurId: null, emprunteurNom: null, dateEmprunt: null, dateRetourPrevue: null
@@ -7118,7 +7339,7 @@ window.saveAvisLivre = async function() {
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 window.deleteLivre = async function() {
-  if (!isBureau(CP)) { toast('Réservé au Bureau'); return; }
+  if (!isBiblioResponsable(CU?.uid)) { toast('Réservé aux responsables de la bibliothèque'); return; }
   if (!confirm('Supprimer définitivement ce livre ?')) return;
   try {
     await db.collection('bibliotheque').doc(curLivreId).delete();
@@ -7126,6 +7347,12 @@ window.deleteLivre = async function() {
     go('biblio');
     loadBiblio();
   } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Lecteur (placeholder Partie 1 — sera remplacé Partie 3) ──────── */
+window.ouvrirLecteur = function(url, titre) {
+  if (!url) { toast('Aucun fichier disponible'); return; }
+  window.open(url, '_blank');
 };
 
 /* ── Suggestions de livres ──────────────────────────────────────── */
@@ -7182,6 +7409,7 @@ async function renderBibSuggestionsAdmin() {
     });
   } catch(e) { /* non bloquant */ }
 }
+
 
 
 // ── APPRENTISSAGE DES LANGUES (Module additionnel) ──────────────────
