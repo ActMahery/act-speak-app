@@ -870,6 +870,24 @@ input,select,textarea{font-family:inherit}
 [data-dark] .dic-trad{color:var(--gold)}
 .dic-ex{font-size:11.5px;color:var(--t3);font-style:italic;margin-top:3px}
 .dic-langue-tag{font-size:9.5px;color:var(--t3);float:right}
+
+/* Statuts & Administration */
+.st-objets-txt{font-size:13.5px;color:var(--t2);line-height:1.8;white-space:pre-wrap}
+.hist-item{display:flex;gap:12px;padding:11px 16px;border-bottom:1px solid var(--surface2)}
+.hist-item:last-child{border-bottom:none}
+.hist-dot-wrap{display:flex;flex-direction:column;align-items:center}
+.hist-dot{width:11px;height:11px;border-radius:50%;background:var(--navy);flex-shrink:0;margin-top:3px}
+[data-dark] .hist-dot{background:var(--gold)}
+.hist-line{width:2px;flex:1;background:var(--surface3);margin-top:3px}
+.hist-body{flex:1;padding-bottom:2px}
+.hist-titre{font-size:13.5px;font-weight:600;color:var(--t1)}
+.hist-date{font-size:10.5px;color:var(--t3);margin-top:1px}
+.hist-desc{font-size:12px;color:var(--t2);margin-top:4px;line-height:1.4}
+@media print {
+  body * { visibility:hidden; }
+  #print-area, #print-area * { visibility:visible; }
+  #print-area { position:absolute; top:0; left:0; width:100%; padding:20px; }
+}
 .treso-body{padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
 
 /* Boutons entrée/dépense */
@@ -1249,6 +1267,7 @@ input,select,textarea{font-family:inherit}
       <div class="pcard-t">Association</div>
       <div class="prow" onclick="go('biblio')"><div class="prow-l"><div class="prow-ic" style="background:#FFF3CD">📚</div><div><div class="prow-lbl">Bibliothèque</div><div class="prow-sub">Emprunter un livre, avis, suggestions</div></div></div><div class="prow-r">›</div></div>
       <div class="prow" onclick="go('langues')"><div class="prow-l"><div class="prow-ic" style="background:#F5F3FF">🗣️</div><div><div class="prow-lbl">Langues</div><div class="prow-sub">Leçons, quiz, dictionnaire</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('statuts')"><div class="prow-l"><div class="prow-ic" style="background:#EFF6FF">📜</div><div><div class="prow-lbl">Statuts & Historique</div><div class="prow-sub">Objets, règlement intérieur, historique</div></div></div><div class="prow-r">›</div></div>
     </div>
     <div class="pcard">
       <div class="pcard-t">Apparence</div>
@@ -2236,6 +2255,67 @@ input,select,textarea{font-family:inherit}
   </div>
 </div>
 
+<!-- ══ STATUTS & ADMINISTRATION (Module additionnel) ══ -->
+<div id="s-statuts" class="scr">
+  <div class="proj-hd">
+    <div class="proj-hd-top">
+      <div><div class="proj-title">📜 Statuts</div><div class="proj-sub">ACT &amp; SPEAK</div></div>
+      <button class="btn-new-proj" style="display:flex" onclick="exporterStatutsPDF()">📄 Export PDF</button>
+    </div>
+    <div class="reun-tabs" style="margin-top:10px">
+      <button class="rtab on" onclick="switchStatutsTab(this,'objets')">Objets</button>
+      <button class="rtab" onclick="switchStatutsTab(this,'reglement')">Règlement intérieur</button>
+      <button class="rtab" onclick="switchStatutsTab(this,'historique')">Historique</button>
+    </div>
+  </div>
+  <div class="proj-body" id="st-panel-objets">
+    <div class="card" style="overflow:hidden">
+      <div style="padding:16px" id="st-objets-view"></div>
+    </div>
+    <div id="st-objets-edit-wrap" style="display:none">
+      <textarea id="st-objets-edit" style="width:100%;min-height:260px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r14);padding:14px;font-size:13px;color:var(--t1);outline:none;resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+      <button onclick="saveStatutsTexte('objets')" style="width:100%;height:42px;margin-top:10px;background:var(--navy);color:#fff;border-radius:var(--r8);font-size:13px;font-weight:600">💾 Enregistrer</button>
+    </div>
+    <button id="st-objets-edit-btn" style="display:none;width:100%;height:40px;margin-top:10px;background:var(--surface2);color:var(--t1);border-radius:var(--r8);font-size:12.5px;font-weight:600" onclick="toggleEditStatuts('objets')">✏️ Modifier</button>
+  </div>
+  <div class="proj-body" id="st-panel-reglement" style="display:none">
+    <div class="card" style="overflow:hidden">
+      <div style="padding:16px" id="st-reglement-view"></div>
+    </div>
+    <div id="st-reglement-edit-wrap" style="display:none">
+      <textarea id="st-reglement-edit" style="width:100%;min-height:260px;background:var(--surface2);border:1.5px solid var(--surface3);border-radius:var(--r14);padding:14px;font-size:13px;color:var(--t1);outline:none;resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+      <button onclick="saveStatutsTexte('reglement')" style="width:100%;height:42px;margin-top:10px;background:var(--navy);color:#fff;border-radius:var(--r8);font-size:13px;font-weight:600">💾 Enregistrer</button>
+    </div>
+    <button id="st-reglement-edit-btn" style="display:none;width:100%;height:40px;margin-top:10px;background:var(--surface2);color:var(--t1);border-radius:var(--r8);font-size:12.5px;font-weight:600" onclick="toggleEditStatuts('reglement')">✏️ Modifier</button>
+  </div>
+  <div class="proj-body" id="st-panel-historique" style="display:none">
+    <button class="ag-add-btn" id="st-hist-add-btn" style="display:none;width:100%" onclick="openNewHistoModal()">➕ Ajouter un événement</button>
+    <div id="st-historique-list"></div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- MODAL NOUVEL ÉVÉNEMENT HISTORIQUE -->
+<div class="overlay" id="ov-histo" onclick="closeOverlay('ov-histo')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouvel événement</div>
+    <div class="mfield"><label>Titre *</label><input type="text" id="hs-titre" placeholder="Ex: Légalisation de l'association"></div>
+    <div class="mfield"><label>Date</label><input type="date" id="hs-date"></div>
+    <div class="mfield"><label>Description</label><textarea id="hs-desc" placeholder="Optionnel..."></textarea></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-histo')">Annuler</button>
+      <button class="bsub" onclick="saveHisto()"><span>Ajouter</span></button>
+    </div>
+  </div>
+</div>
+
 <div id="s-reunion" class="scr">
   <div class="reun-hd">
     <div class="reun-hd-top">
@@ -3089,6 +3169,7 @@ function go(screen) {
   if (screen === 'biblio') loadBiblio();
   if (screen === 'langues') loadLangues();
   if (screen === 'dictionnaire') loadDictionnaire();
+  if (screen === 'statuts') loadStatuts();
 }
 
 function navTo(btn, screen) {
@@ -7341,6 +7422,126 @@ window.saveMot = async function() {
     toast('Mot ajouté ✅');
     loadDictionnaire();
   } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+// ── STATUTS & ADMINISTRATION (Module additionnel) ────────────────────
+const STATUTS_OBJETS_DEFAULT = `L'association a pour objet de :
+
+- Promouvoir la culture, les arts et la créativité en organisant des événements, débats, concours d'éloquence, expression orale et scénique, et toute activité artistique ou expressive visant à renforcer la capacité d'expression des jeunes et des communautés locales ;
+
+- Développer l'apprentissage des langues, notamment le malgache comme langue d'identité et de transmission culturelle, l'anglais, le français, l'allemand et le chinois mandarin ainsi que l'éducation interculturelle, à travers des clubs de conversation, ateliers pédagogiques, cours et séances d'enseignement animés par des membres qualifiés, et toute activité favorisant la maîtrise linguistique ;
+
+- Encourager l'engagement citoyen, le développement personnel et les compétences transversales des jeunes, notamment la prise de parole en public, le leadership, la pensée critique et l'esprit d'équipe dans un cadre bienveillant et inclusif, ouvert à tous sans distinction de parcours ou d'origine ;
+
+- Sensibiliser les jeunes et les communautés locales aux enjeux environnementaux et au développement durable, à travers des débats, conférences, projets collectifs et toute activité favorisant une prise de conscience citoyenne et responsable.`;
+
+let statutsData = { objets:'', reglement:'' };
+
+async function loadStatuts() {
+  try {
+    const snap = await db.collection('association_config').doc('statuts').get();
+    if (snap.exists) {
+      statutsData = snap.data();
+    } else {
+      statutsData = { objets: STATUTS_OBJETS_DEFAULT, reglement:'' };
+      await db.collection('association_config').doc('statuts').set(statutsData);
+    }
+  } catch(e) { statutsData = { objets: STATUTS_OBJETS_DEFAULT, reglement:'' }; }
+
+  document.getElementById('st-objets-view').innerHTML = `<div class="st-objets-txt">${escHtml(statutsData.objets||'').replace(/\n/g,'<br>')}</div>`;
+  document.getElementById('st-reglement-view').innerHTML = statutsData.reglement
+    ? `<div class="st-objets-txt">${escHtml(statutsData.reglement).replace(/\n/g,'<br>')}</div>`
+    : `<div class="empty" style="padding:10px"><div class="empty-b">Aucun règlement intérieur renseigné pour l'instant.</div></div>`;
+
+  const canEdit = isPresidentOrVP(CP);
+  document.getElementById('st-objets-edit-btn').style.display = canEdit ? 'block' : 'none';
+  document.getElementById('st-reglement-edit-btn').style.display = canEdit ? 'block' : 'none';
+  document.getElementById('st-hist-add-btn').style.display = canEdit ? 'block' : 'none';
+
+  loadHistorique();
+}
+function switchStatutsTab(el, tab) {
+  document.querySelectorAll('#s-statuts .rtab').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('st-panel-objets').style.display     = tab === 'objets' ? 'block' : 'none';
+  document.getElementById('st-panel-reglement').style.display  = tab === 'reglement' ? 'block' : 'none';
+  document.getElementById('st-panel-historique').style.display = tab === 'historique' ? 'block' : 'none';
+}
+window.toggleEditStatuts = function(type) {
+  document.getElementById('st-'+type+'-edit').value = statutsData[type] || '';
+  document.getElementById('st-'+type+'-edit-wrap').style.display = 'block';
+  document.getElementById('st-'+type+'-view').parentElement.style.display = 'none';
+};
+window.saveStatutsTexte = async function(type) {
+  if (!isPresidentOrVP(CP)) { toast('Réservé au Président et au Vice-Président'); return; }
+  const texte = document.getElementById('st-'+type+'-edit').value;
+  try {
+    await db.collection('association_config').doc('statuts').set({ [type]: texte, updatedBy: CP.nom, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+    statutsData[type] = texte;
+    document.getElementById('st-'+type+'-edit-wrap').style.display = 'none';
+    document.getElementById('st-'+type+'-view').parentElement.style.display = 'block';
+    document.getElementById('st-'+type+'-view').innerHTML = `<div class="st-objets-txt">${escHtml(texte).replace(/\n/g,'<br>')}</div>`;
+    toast('Enregistré ✅');
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+async function loadHistorique() {
+  const el = document.getElementById('st-historique-list');
+  try {
+    const snap = await db.collection('association_historique').get();
+    const events = [];
+    snap.forEach(d => events.push({ id:d.id, ...d.data() }));
+    events.sort((a,b) => (a.date||'').localeCompare(b.date||''));
+    if (!events.length) { el.innerHTML = '<div class="empty"><div class="empty-ic">📜</div><div class="empty-t">Aucun événement</div></div>'; return; }
+    el.innerHTML = `<div class="card" style="overflow:hidden">` + events.map((e,i) => `
+      <div class="hist-item">
+        <div class="hist-dot-wrap"><div class="hist-dot"></div>${i<events.length-1?'<div class="hist-line"></div>':''}</div>
+        <div class="hist-body">
+          <div class="hist-titre">${escHtml(e.titre)}</div>
+          ${e.date ? `<div class="hist-date">${new Date(e.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})}</div>` : ''}
+          ${e.description ? `<div class="hist-desc">${escHtml(e.description)}</div>` : ''}
+        </div>
+      </div>`).join('') + `</div>`;
+  } catch(e) { el.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>'; }
+}
+window.openNewHistoModal = function() {
+  document.getElementById('hs-titre').value = '';
+  document.getElementById('hs-date').value = '';
+  document.getElementById('hs-desc').value = '';
+  document.getElementById('ov-histo').classList.add('on');
+};
+window.saveHisto = async function() {
+  if (!isPresidentOrVP(CP)) { toast('Réservé au Président et au Vice-Président'); return; }
+  const titre = document.getElementById('hs-titre').value.trim();
+  if (!titre) { toast('Titre obligatoire'); return; }
+  try {
+    await db.collection('association_historique').add({
+      titre, date: document.getElementById('hs-date').value || null,
+      description: document.getElementById('hs-desc').value.trim(),
+      createdBy: CP.nom, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-histo');
+    toast('Événement ajouté ✅');
+    loadHistorique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
+/* ── Export PDF (impression navigateur) ─────────────────────────── */
+window.exporterStatutsPDF = function() {
+  const objetsHtml = escHtml(statutsData.objets||'').replace(/\n/g,'<br>');
+  const reglementHtml = statutsData.reglement ? escHtml(statutsData.reglement).replace(/\n/g,'<br>') : 'Aucun règlement intérieur renseigné.';
+  const div = document.createElement('div');
+  div.id = 'print-area';
+  div.innerHTML = `
+    <h1 style="font-size:20px">ACT &amp; SPEAK — Statuts</h1>
+    <h2 style="font-size:15px;margin-top:20px">Objets de l'association</h2>
+    <p style="font-size:12px;line-height:1.6">${objetsHtml}</p>
+    <h2 style="font-size:15px;margin-top:20px">Règlement intérieur</h2>
+    <p style="font-size:12px;line-height:1.6">${reglementHtml}</p>
+  `;
+  document.body.appendChild(div);
+  window.print();
+  setTimeout(() => document.body.removeChild(div), 500);
 };
 
 /* ── Journal d'activité (v2.0) ─────────────────────────────────────── */
