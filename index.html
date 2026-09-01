@@ -870,6 +870,11 @@ input,select,textarea{font-family:inherit}
 [data-dark] .dic-trad{color:var(--gold)}
 .dic-ex{font-size:11.5px;color:var(--t3);font-style:italic;margin-top:3px}
 .dic-langue-tag{font-size:9.5px;color:var(--t3);float:right}
+.attente-item{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--surface2)}
+.attente-item:last-child{border-bottom:none}
+.attente-pos{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:var(--surface2);color:var(--t2)}
+.attente-acts{display:flex;gap:6px}
+.attente-acts button{font-size:10.5px;font-weight:600;padding:5px 10px;border-radius:10px}
 
 /* Statuts & Administration */
 .st-objets-txt{font-size:13.5px;color:var(--t2);line-height:1.8;white-space:pre-wrap}
@@ -2037,6 +2042,10 @@ input,select,textarea{font-family:inherit}
       <div id="bib-ov-annees" style="padding:0 16px 14px;font-size:11.5px;color:var(--t3)"></div>
       <button id="bib-resp-btn" style="display:none;width:100%;height:40px;background:var(--surface2);color:var(--t1);border-top:1px solid var(--surface3);font-size:12px;font-weight:600" onclick="openBiblioRespModal()">⚙️ Gérer les responsables</button>
     </div>
+    <div id="bib-suggestions-validees" style="display:none;margin-bottom:14px">
+      <div class="sec-title">💡 Suggestions validées — bientôt disponibles</div>
+      <div id="bib-suggestions-validees-list"></div>
+    </div>
     <div id="bib-body"></div>
     <button class="ag-add-btn" style="width:100%;margin-top:4px" onclick="openSuggestionModal()">💡 Suggérer un livre</button>
   </div>
@@ -2071,10 +2080,22 @@ input,select,textarea{font-family:inherit}
       <div class="pd-card-t" style="padding:13px 16px">Description</div>
       <div style="padding:0 16px 14px;font-size:13px;color:var(--t2);line-height:1.5" id="bibd-desc"></div>
     </div>
+    <div class="pd-card" id="bibd-mystatus-card" style="display:none;padding:14px 16px;text-align:center;font-size:12.5px;font-weight:600;color:var(--gold)"></div>
     <div class="pd-card" style="padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn-join-proj" id="bibd-lire-btn" style="display:none" onclick="ouvrirLecteur(curLivreData.pdfUrl, curLivreData.titre, 'livre_'+curLivreId)">📖 Lire le PDF</button>
-      <button class="btn-join-proj" id="bibd-emprunt-btn" style="display:none" onclick="emprunterLivre()">📗 Emprunter (2 semaines)</button>
-      <button class="btn-join-proj" id="bibd-retour-btn" style="display:none;background:var(--navy)" onclick="retournerLivre()">↩️ Marquer comme rendu</button>
+      <button class="btn-join-proj" id="bibd-emprunt-btn" style="display:none" onclick="demanderEmprunt()">🙋 Demander à emprunter</button>
+      <button class="btn-join-proj" id="bibd-annuler-btn" style="display:none;background:#C0392B" onclick="annulerDemandeEmprunt()">✕ Annuler ma demande</button>
+      <button class="btn-join-proj" id="bibd-retour-btn" style="display:none;background:var(--navy)" onclick="demanderRetour()">↩️ Je rends le livre</button>
+    </div>
+    <div class="pd-card" id="bibd-attente-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span>Liste d'attente</span>
+        <button class="btn-rappel-new" id="bibd-rappel-btn" style="display:none" onclick="envoyerRappelRetour()">🔔 Rappel emprunteur</button>
+      </div>
+      <div id="bibd-attente-list"></div>
+      <div id="bibd-retour-confirm-wrap" style="display:none;padding:0 16px 14px">
+        <button class="btn-join-proj" onclick="confirmerRetourLivre()">✅ Confirmer le retour</button>
+      </div>
     </div>
     <div class="pd-card" style="padding:14px 16px">
       <button id="bibd-like-btn" onclick="toggleLikeLivre()" style="width:100%;height:40px;background:var(--surface2);border-radius:var(--r8);font-size:13px;font-weight:600;color:var(--t1)">🤍 J'aime — <span id="bibd-likes-count">0</span></button>
@@ -7049,7 +7070,8 @@ async function loadBiblio() {
     renderBibOverview();
     renderBibCatFilters();
     renderBiblio();
-    if (isBureau(CP)) renderBibSuggestionsAdmin();
+    await loadBibSuggestionsValidees();
+    renderBibSuggestionsAdmin();
   } catch(e) { body.innerHTML = '<div class="empty"><div class="empty-b">'+e.message+'</div></div>'; }
 }
 
@@ -7271,7 +7293,7 @@ function renderLivreDetail() {
   else if (l.retire) statutTxt = '🔧 Retiré du rayon';
   else {
     const enRetard = !l.disponible && l.dateRetourPrevue && new Date(l.dateRetourPrevue) < new Date();
-    statutTxt = l.disponible ? '✅ Disponible' : enRetard ? '⏰ En retard (' + escHtml(l.emprunteurNom||'') + ')' : '📕 Emprunté par ' + (l.emprunteurNom||'—');
+    statutTxt = l.disponible ? '✅ Disponible' : enRetard ? '⏰ En retard (' + escHtml(l.emprunteurNom||'') + ')' : '📕 Emprunté par ' + (l.emprunteurNom||'—') + (l.demandeRetour ? ' · ↩️ retour demandé' : '');
   }
   document.getElementById('bibd-statut').textContent = statutTxt;
 
@@ -7280,9 +7302,41 @@ function renderLivreDetail() {
   else descCard.style.display = 'none';
 
   document.getElementById('bibd-lire-btn').style.display = l.hasPdf ? 'block' : 'none';
-  document.getElementById('bibd-emprunt-btn').style.display = (l.hasPhysique && l.disponible && !l.retire) ? 'block' : 'none';
-  document.getElementById('bibd-retour-btn').style.display = (!l.disponible && l.hasPhysique && (l.emprunteurId === CU?.uid || isBiblioResponsable(CU?.uid))) ? 'block' : 'none';
   document.getElementById('bibd-admin-card').style.display = isBiblioResponsable(CU?.uid) ? 'block' : 'none';
+
+  const jeSuisEmprunteur = l.emprunteurId === CU?.uid;
+  const monStatusCard = document.getElementById('bibd-mystatus-card');
+  const mesDemandes = (l.demandes || []).filter(d => d.uid === CU?.uid && d.statut === 'attente');
+  const monRang = mesDemandes.length ? (l.demandes||[]).filter(d=>d.statut==='attente').findIndex(d=>d.uid===CU?.uid)+1 : 0;
+
+  document.getElementById('bibd-emprunt-btn').style.display = (l.hasPhysique && !l.retire && !jeSuisEmprunteur && !mesDemandes.length) ? 'block' : 'none';
+  document.getElementById('bibd-annuler-btn').style.display = mesDemandes.length ? 'block' : 'none';
+  document.getElementById('bibd-retour-btn').style.display = (jeSuisEmprunteur && !l.demandeRetour) ? 'block' : 'none';
+
+  if (mesDemandes.length) { monStatusCard.style.display = 'block'; monStatusCard.textContent = '⏳ Tu es en liste d\'attente (position ' + monRang + ')'; }
+  else if (jeSuisEmprunteur) { monStatusCard.style.display = 'block'; monStatusCard.textContent = l.demandeRetour ? '↩️ Retour demandé — en attente de confirmation' : '📗 Emprunté par toi — retour prévu le ' + (l.dateRetourPrevue ? new Date(l.dateRetourPrevue).toLocaleDateString('fr-FR') : '—'); }
+  else monStatusCard.style.display = 'none';
+
+  // Liste d'attente + confirmation retour — responsables uniquement
+  const attenteCard = document.getElementById('bibd-attente-card');
+  const isResp = isBiblioResponsable(CU?.uid);
+  const enAttente = (l.demandes || []).filter(d => d.statut === 'attente');
+  if (isResp && (enAttente.length || l.demandeRetour)) {
+    attenteCard.style.display = 'block';
+    document.getElementById('bibd-rappel-btn').style.display = (!l.disponible && l.emprunteurId) ? 'inline-flex' : 'none';
+    document.getElementById('bibd-attente-list').innerHTML = enAttente.length
+      ? enAttente.map((d,i) => `<div class="attente-item">
+          <div><span class="attente-pos">#${i+1}</span> ${escHtml(d.nom)}</div>
+          <div class="attente-acts">
+            <button class="acc" data-action="dem-conf" data-uid="${d.uid}" data-nom="${escHtml(d.nom)}">✅ Confirmer</button>
+            <button class="ref" data-action="dem-ref" data-uid="${d.uid}">✕</button>
+          </div>
+        </div>`).join('')
+      : '<div class="empty" style="padding:14px"><div class="empty-b">Aucune demande en attente.</div></div>';
+    document.querySelectorAll('[data-action="dem-conf"]').forEach(b => b.addEventListener('click', () => confirmerDemandeEmprunt(b.getAttribute('data-uid'), b.getAttribute('data-nom'))));
+    document.querySelectorAll('[data-action="dem-ref"]').forEach(b => b.addEventListener('click', () => refuserDemandeEmprunt(b.getAttribute('data-uid'))));
+    document.getElementById('bibd-retour-confirm-wrap').style.display = l.demandeRetour ? 'block' : 'none';
+  } else attenteCard.style.display = 'none';
 
   const likes = l.likes || [];
   const jaime = likes.includes(CU?.uid);
@@ -7294,25 +7348,72 @@ function renderLivreDetail() {
     : '<div class="empty" style="padding:16px"><div class="empty-b">Aucun avis pour l\'instant.</div></div>';
 }
 
-window.emprunterLivre = async function() {
+/* ── Demandes d'emprunt / liste d'attente (Partie 2) ───────────────── */
+window.demanderEmprunt = async function() {
+  try {
+    const demandes = (curLivreData.demandes || []).concat([{ uid:CU.uid, nom:CP.nom, statut:'attente', createdAt:new Date().toISOString() }]);
+    await db.collection('bibliotheque').doc(curLivreId).update({ demandes });
+    curLivreData.demandes = demandes;
+    toast('Demande envoyée — en attente de confirmation ✅');
+    renderLivreDetail();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.annulerDemandeEmprunt = async function() {
+  try {
+    const demandes = (curLivreData.demandes || []).filter(d => !(d.uid === CU.uid && d.statut === 'attente'));
+    await db.collection('bibliotheque').doc(curLivreId).update({ demandes });
+    curLivreData.demandes = demandes;
+    toast('Demande annulée');
+    renderLivreDetail();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.confirmerDemandeEmprunt = async function(uid, nom) {
+  if (!isBiblioResponsable(CU?.uid)) { toast('Réservé aux responsables de la bibliothèque'); return; }
   try {
     const dateRetourPrevue = new Date(); dateRetourPrevue.setDate(dateRetourPrevue.getDate() + BIB_EMPRUNT_JOURS);
+    const demandes = (curLivreData.demandes || []).map(d => d.uid === uid && d.statut === 'attente' ? Object.assign({}, d, {statut:'confirmee'}) : d);
     await db.collection('bibliotheque').doc(curLivreId).update({
-      disponible: false, emprunteurId: CU.uid, emprunteurNom: CP.nom,
-      dateEmprunt: new Date().toISOString(), dateRetourPrevue: dateRetourPrevue.toISOString()
+      demandes, disponible:false, emprunteurId:uid, emprunteurNom:nom,
+      dateEmprunt:new Date().toISOString(), dateRetourPrevue:dateRetourPrevue.toISOString()
     });
-    toast('Livre emprunté pour 2 semaines ✅');
+    curLivreData.demandes = demandes; curLivreData.disponible = false; curLivreData.emprunteurId = uid; curLivreData.emprunteurNom = nom;
+    toast('Emprunt confirmé pour ' + nom + ' ✅');
+    renderLivreDetail();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.refuserDemandeEmprunt = async function(uid) {
+  if (!isBiblioResponsable(CU?.uid)) { toast('Réservé aux responsables de la bibliothèque'); return; }
+  try {
+    const demandes = (curLivreData.demandes || []).map(d => d.uid === uid && d.statut === 'attente' ? Object.assign({}, d, {statut:'refusee'}) : d);
+    await db.collection('bibliotheque').doc(curLivreId).update({ demandes });
+    curLivreData.demandes = demandes;
+    toast('Demande refusée');
+    renderLivreDetail();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.demanderRetour = async function() {
+  try {
+    await db.collection('bibliotheque').doc(curLivreId).update({ demandeRetour: true });
+    curLivreData.demandeRetour = true;
+    toast('Demande de retour envoyée aux responsables ✅');
+    renderLivreDetail();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.confirmerRetourLivre = async function() {
+  if (!isBiblioResponsable(CU?.uid)) { toast('Réservé aux responsables de la bibliothèque'); return; }
+  try {
+    await db.collection('bibliotheque').doc(curLivreId).update({
+      disponible: true, emprunteurId: null, emprunteurNom: null, dateEmprunt: null, dateRetourPrevue: null, demandeRetour: false
+    });
+    toast('Retour confirmé ✅ — pense à confirmer le prochain de la liste d\'attente si besoin');
     openLivreDetail(curLivreId);
   } catch(e) { toast('Erreur : ' + e.message); }
 };
-window.retournerLivre = async function() {
-  if (!isBiblioResponsable(CU?.uid) && curLivreData.emprunteurId !== CU?.uid) { toast('Réservé aux responsables de la bibliothèque'); return; }
+window.envoyerRappelRetour = async function() {
+  if (!isBiblioResponsable(CU?.uid) || !curLivreData.emprunteurId) return;
   try {
-    await db.collection('bibliotheque').doc(curLivreId).update({
-      disponible: true, emprunteurId: null, emprunteurNom: null, dateEmprunt: null, dateRetourPrevue: null
-    });
-    toast('Livre marqué comme rendu ✅');
-    openLivreDetail(curLivreId);
+    await sendPrivateMessage(curLivreData.emprunteurId, `📚 Rappel : pense à rendre "${curLivreData.titre}" à la bibliothèque${curLivreData.dateRetourPrevue ? ' (prévu le ' + new Date(curLivreData.dateRetourPrevue).toLocaleDateString('fr-FR') + ')' : ''}.`);
+    toast('Rappel envoyé ✅');
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 window.toggleLikeLivre = async function() {
@@ -7376,29 +7477,29 @@ window.saveSuggestion = async function() {
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 async function renderBibSuggestionsAdmin() {
+  if (!isBiblioResponsable(CU?.uid)) return;
   try {
     const snap = await db.collection('bibliotheque_suggestions').where('statut','==','attente').get();
     if (snap.empty) return;
     const body = document.getElementById('bib-body');
-    let html = '<div class="sec-title" style="padding:0 2px 6px">💡 Suggestions en attente</div>';
+    let html = '<div class="sec-title" style="padding:0 2px 6px">💡 Suggestions à valider (responsables)</div>';
     snap.forEach(d => {
       const s = d.data();
       html += `<div class="fp-cd-card" style="cursor:default">
         <div class="fp-cd-top"><div><div class="fp-cd-nom">${escHtml(s.titre)}</div><div class="fp-cd-date">${escHtml(s.auteur||'')} · par ${escHtml(s.nom)}</div></div></div>
         ${s.motif ? `<div style="font-size:12px;color:var(--t2);margin-top:6px">${escHtml(s.motif)}</div>` : ''}
         <div class="pd-demande-acts" style="margin-top:9px">
-          <button class="acc" data-action="sug-accept" data-id="${d.id}" data-titre="${escHtml(s.titre)}" data-auteur="${escHtml(s.auteur||'')}">✅ Ajouter au catalogue</button>
+          <button class="acc" data-action="sug-accept" data-id="${d.id}">✅ Valider</button>
           <button class="ref" data-action="sug-reject" data-id="${d.id}">✕ Ignorer</button>
         </div>
       </div>`;
     });
     body.insertAdjacentHTML('afterbegin', html);
     body.querySelectorAll('[data-action="sug-accept"]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        db.collection('bibliotheque_suggestions').doc(btn.getAttribute('data-id')).update({ statut:'acceptee' });
-        openNewLivreModal();
-        document.getElementById('lv-titre').value = btn.getAttribute('data-titre');
-        document.getElementById('lv-auteur').value = btn.getAttribute('data-auteur');
+      btn.addEventListener('click', async () => {
+        await db.collection('bibliotheque_suggestions').doc(btn.getAttribute('data-id')).update({ statut:'validee', valideePar: CP.nom });
+        toast('Suggestion validée — visible par tous ✅');
+        loadBiblio();
       });
     });
     body.querySelectorAll('[data-action="sug-reject"]').forEach(btn => {
@@ -7408,6 +7509,21 @@ async function renderBibSuggestionsAdmin() {
       });
     });
   } catch(e) { /* non bloquant */ }
+}
+
+/* ── Suggestions validées — visibles par tous les membres ─────────── */
+async function loadBibSuggestionsValidees() {
+  const wrap = document.getElementById('bib-suggestions-validees');
+  const list = document.getElementById('bib-suggestions-validees-list');
+  try {
+    const snap = await db.collection('bibliotheque_suggestions').where('statut','==','validee').get();
+    if (snap.empty) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    list.innerHTML = `<div class="card" style="overflow:hidden">` + snap.docs.map(d => {
+      const s = d.data();
+      return `<div class="dic-item"><div class="dic-mot">${escHtml(s.titre)}</div><div class="dic-trad">${escHtml(s.auteur||'')}</div><div class="dic-ex">Suggéré par ${escHtml(s.nom)}</div></div>`;
+    }).join('') + `</div>`;
+  } catch(e) { wrap.style.display = 'none'; }
 }
 
 
