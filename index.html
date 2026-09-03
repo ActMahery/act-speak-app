@@ -888,6 +888,18 @@ input,select,textarea{font-family:inherit}
 .hist-titre{font-size:13.5px;font-weight:600;color:var(--t1)}
 .hist-date{font-size:10.5px;color:var(--t3);margin-top:1px}
 .hist-desc{font-size:12px;color:var(--t2);margin-top:4px;line-height:1.4}
+
+/* Lecteur universel façon ReadEra */
+.lecteur-overlay{position:fixed;inset:0;background:#000;z-index:9999;display:none;flex-direction:column}
+.lecteur-overlay.on{display:flex}
+.lecteur-top{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#111;padding-top:calc(10px + env(safe-area-inset-top))}
+.lecteur-btn{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:16px;flex-shrink:0}
+.lecteur-titre{flex:1;text-align:center;color:#fff;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 10px}
+.lecteur-lumi-wrap{display:flex;align-items:center;gap:10px;padding:8px 16px;background:#111;color:#fff;font-size:14px}
+.lecteur-lumi-wrap input{flex:1}
+.lecteur-body{flex:1;position:relative;background:#fff}
+.lecteur-iframe{width:100%;height:100%;border:none}
+.lecteur-dimmer{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .15s}
 @media print {
   body * { visibility:hidden; }
   #print-area, #print-area * { visibility:visible; }
@@ -6630,8 +6642,11 @@ async function openProjDetail(id) {
   if (crCard) {
     crCard.style.display = 'block';
     document.getElementById('pd-cr-list').innerHTML = crs.length
-      ? crs.map(cr => `<div class="cr-item">📎 <a href="${cr.url}" target="_blank" rel="noopener">${escHtml(cr.nom)}</a><span style="font-size:10.5px;color:var(--t3)">${escHtml(cr.ajoutePar||'')}</span></div>`).join('')
+      ? crs.map((cr,i) => `<div class="cr-item" data-action="lire-cr" data-i="${i}" style="cursor:pointer">📎 ${escHtml(cr.nom)}<span style="font-size:10.5px;color:var(--t3)">${escHtml(cr.ajoutePar||'')}</span></div>`).join('')
       : '<div class="empty" style="padding:14px"><div class="empty-b">Aucun compte rendu pour l\'instant.</div></div>';
+    document.querySelectorAll('[data-action="lire-cr"]').forEach(el => {
+      el.addEventListener('click', () => { const cr = crs[parseInt(el.getAttribute('data-i'))]; ouvrirLecteur(cr.url, cr.nom, 'cr_' + curProjId + '_' + el.getAttribute('data-i')); });
+    });
     const crAddBtn = document.getElementById('pd-cr-add-btn');
     if (crAddBtn) crAddBtn.style.display = (!locked && (respScope || isPresidentOrVP(CP))) ? 'block' : 'none';
   }
@@ -6869,7 +6884,7 @@ async function loadDemandesProjet(projetId, postes) {
         </div>
         <div class="pd-demande-txt">💬 ${escHtml(r.motivation||'')}</div>
         ${r.competences ? `<div class="pd-demande-txt">🛠️ ${escHtml(r.competences)}</div>` : ''}
-        ${r.cvUrl ? `<a class="pd-demande-cv" href="${r.cvUrl}" target="_blank" rel="noopener">📎 Voir le CV</a>` : ''}
+        ${r.cvUrl ? `<span class="pd-demande-cv" data-action="lire-cv" data-url="${r.cvUrl}" data-nom="${escHtml(r.nom||'')}" style="cursor:pointer">📎 Voir le CV</span>` : ''}
         <div class="pd-demande-acts">
           <button class="acc" data-action="dem-accept" data-id="${d.id}" data-uid="${r.uid}" data-nom="${escHtml(r.nom||'')}" data-poste="${r.posteSouhaiteId||''}">✅ Accepter (${escHtml(r.posteSouhaiteNom||'poste demandé')})</button>
           <button class="autre" data-action="dem-autre" data-id="${d.id}" data-uid="${r.uid}" data-nom="${escHtml(r.nom||'')}">🔀 Autre poste</button>
@@ -6879,6 +6894,9 @@ async function loadDemandesProjet(projetId, postes) {
       </div>`;
     });
     el.innerHTML = html;
+    el.querySelectorAll('[data-action="lire-cv"]').forEach(elm => {
+      elm.addEventListener('click', () => ouvrirLecteur(elm.getAttribute('data-url'), 'CV — ' + elm.getAttribute('data-nom'), 'cv_' + elm.getAttribute('data-url').slice(-20)));
+    });
     el.querySelectorAll('[data-action="dem-accept"]').forEach(btn => {
       btn.addEventListener('click', () => acceptDemande(btn.getAttribute('data-id'), btn.getAttribute('data-uid'), btn.getAttribute('data-nom'), btn.getAttribute('data-poste')));
     });
@@ -7004,8 +7022,11 @@ function renderDocuments() {
   const docs = curProjData.documents || [];
   const el = document.getElementById('pd-documents-list');
   el.innerHTML = docs.length
-    ? docs.map(d => `<div class="cr-item">📎 <a href="${d.url}" target="_blank" rel="noopener">${escHtml(d.nom)}</a><span style="font-size:10.5px;color:var(--t3)">${escHtml(d.ajoutePar||'')}</span></div>`).join('')
+    ? docs.map((d,i) => `<div class="cr-item" data-action="lire-doc" data-i="${i}" style="cursor:pointer">📎 ${escHtml(d.nom)}<span style="font-size:10.5px;color:var(--t3)">${escHtml(d.ajoutePar||'')}</span></div>`).join('')
     : '<div class="empty" style="padding:16px"><div class="empty-b">Aucun document.</div></div>';
+  el.querySelectorAll('[data-action="lire-doc"]').forEach(elm => {
+    elm.addEventListener('click', () => { const d = docs[parseInt(elm.getAttribute('data-i'))]; ouvrirLecteur(d.url, d.nom, 'doc_' + curProjId + '_' + elm.getAttribute('data-i')); });
+  });
 }
 window.uploadProjetDocument = async function(input) {
   const file = input.files[0];
@@ -7058,8 +7079,8 @@ async function loadBiblioResponsablesConfig() {
 async function loadBiblio() {
   const body = document.getElementById('bib-body');
   body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
-  if (CP && isBureau(CP)) document.getElementById('bib-add-btn').style.display = 'flex';
   await loadBiblioResponsablesConfig();
+  if (isBiblioResponsable(CU?.uid)) document.getElementById('bib-add-btn').style.display = 'flex';
   if (isPresidentOrVP(CP)) document.getElementById('bib-resp-btn').style.display = 'block';
   try {
     const snap = await db.collection('bibliotheque').get();
@@ -7181,6 +7202,7 @@ window.handleLvPdfSelect = function(input) {
 };
 
 window.openNewLivreModal = function() {
+  if (!isBiblioResponsable(CU?.uid)) { toast('Réservé aux responsables de la bibliothèque'); return; }
   document.getElementById('lv-titre').value = '';
   document.getElementById('lv-auteur').value = '';
   document.getElementById('lv-langue').value = '';
@@ -7198,6 +7220,7 @@ window.openNewLivreModal = function() {
   document.getElementById('ov-livre').classList.add('on');
 };
 window.saveLivre = async function() {
+  if (!isBiblioResponsable(CU?.uid)) { toast('Réservé aux responsables de la bibliothèque'); return; }
   const titre = document.getElementById('lv-titre').value.trim();
   const auteur = document.getElementById('lv-auteur').value.trim();
   if (!titre || !auteur) { toast('Titre et auteur obligatoires'); return; }
@@ -7289,11 +7312,16 @@ function renderLivreDetail() {
   formatsCard.innerHTML = formatsHtml || '<span style="font-size:12px;color:var(--t3)">Aucun format renseigné</span>';
 
   let statutTxt;
+  const isResp0 = isBiblioResponsable(CU?.uid);
   if (l.statutAcquisition === 'acquisition') statutTxt = '🕓 En acquisition' + (l.anneeAttendue ? ' (' + l.anneeAttendue + ')' : '');
   else if (l.retire) statutTxt = '🔧 Retiré du rayon';
+  else if (l.disponible) statutTxt = '✅ Disponible';
   else {
-    const enRetard = !l.disponible && l.dateRetourPrevue && new Date(l.dateRetourPrevue) < new Date();
-    statutTxt = l.disponible ? '✅ Disponible' : enRetard ? '⏰ En retard (' + escHtml(l.emprunteurNom||'') + ')' : '📕 Emprunté par ' + (l.emprunteurNom||'—') + (l.demandeRetour ? ' · ↩️ retour demandé' : '');
+    const joursRestants = l.dateRetourPrevue ? Math.ceil((new Date(l.dateRetourPrevue) - new Date()) / 86400000) : null;
+    const enRetard = joursRestants !== null && joursRestants < 0;
+    const emprunteurAffiche = isResp0 ? (l.emprunteurNom||'—') : 'un membre'; // confidentialité — nom visible aux responsables uniquement
+    const delaiTxt = joursRestants === null ? '' : enRetard ? ` · en retard de ${Math.abs(joursRestants)} j` : ` · ${joursRestants} j restant${joursRestants>1?'s':''}`;
+    statutTxt = (enRetard ? '⏰ En retard' : '📕 Emprunté') + ' par ' + emprunteurAffiche + delaiTxt + (l.demandeRetour ? ' · ↩️ retour demandé' : '');
   }
   document.getElementById('bibd-statut').textContent = statutTxt;
 
@@ -7313,9 +7341,25 @@ function renderLivreDetail() {
   document.getElementById('bibd-annuler-btn').style.display = mesDemandes.length ? 'block' : 'none';
   document.getElementById('bibd-retour-btn').style.display = (jeSuisEmprunteur && !l.demandeRetour) ? 'block' : 'none';
 
-  if (mesDemandes.length) { monStatusCard.style.display = 'block'; monStatusCard.textContent = '⏳ Tu es en liste d\'attente (position ' + monRang + ')'; }
-  else if (jeSuisEmprunteur) { monStatusCard.style.display = 'block'; monStatusCard.textContent = l.demandeRetour ? '↩️ Retour demandé — en attente de confirmation' : '📗 Emprunté par toi — retour prévu le ' + (l.dateRetourPrevue ? new Date(l.dateRetourPrevue).toLocaleDateString('fr-FR') : '—'); }
-  else monStatusCard.style.display = 'none';
+  const joursRestantsMoi = (jeSuisEmprunteur && l.dateRetourPrevue) ? Math.ceil((new Date(l.dateRetourPrevue) - new Date()) / 86400000) : null;
+  const nbAttente = (l.demandes||[]).filter(d=>d.statut==='attente').length;
+
+  if (mesDemandes.length) {
+    let txt = '⏳ Tu es en liste d\'attente (position ' + monRang + ')';
+    if (l.dateRetourPrevue) {
+      const jRestants = Math.ceil((new Date(l.dateRetourPrevue) - new Date()) / 86400000);
+      txt += ' — libération estimée dans ' + Math.max(0,jRestants) + ' j (selon le retour de l\'emprunteur actuel)';
+    }
+    monStatusCard.style.display = 'block'; monStatusCard.textContent = txt;
+  } else if (jeSuisEmprunteur) {
+    monStatusCard.style.display = 'block';
+    monStatusCard.textContent = l.demandeRetour
+      ? '↩️ Retour demandé — en attente de confirmation'
+      : '📗 Emprunté par toi — ' + (joursRestantsMoi !== null ? (joursRestantsMoi >= 0 ? joursRestantsMoi + ' jour' + (joursRestantsMoi>1?'s':'') + ' restant' + (joursRestantsMoi>1?'s':'') : 'en retard de ' + Math.abs(joursRestantsMoi) + ' j') : 'retour prévu le ' + (l.dateRetourPrevue ? new Date(l.dateRetourPrevue).toLocaleDateString('fr-FR') : '—'));
+  } else if (nbAttente > 0 && !l.disponible) {
+    monStatusCard.style.display = 'block';
+    monStatusCard.textContent = '👥 ' + nbAttente + ' personne' + (nbAttente>1?'s':'') + ' en liste d\'attente';
+  } else monStatusCard.style.display = 'none';
 
   // Liste d'attente + confirmation retour — responsables uniquement
   const attenteCard = document.getElementById('bibd-attente-card');
@@ -7402,10 +7446,24 @@ window.demanderRetour = async function() {
 window.confirmerRetourLivre = async function() {
   if (!isBiblioResponsable(CU?.uid)) { toast('Réservé aux responsables de la bibliothèque'); return; }
   try {
-    await db.collection('bibliotheque').doc(curLivreId).update({
-      disponible: true, emprunteurId: null, emprunteurNom: null, dateEmprunt: null, dateRetourPrevue: null, demandeRetour: false
-    });
-    toast('Retour confirmé ✅ — pense à confirmer le prochain de la liste d\'attente si besoin');
+    const enAttente = (curLivreData.demandes || []).filter(d => d.statut === 'attente').sort((a,b) => (a.createdAt||'').localeCompare(b.createdAt||''));
+    if (enAttente.length) {
+      // Auto-promotion : le suivant dans la file récupère automatiquement le livre
+      const next = enAttente[0];
+      const dateRetourPrevue = new Date(); dateRetourPrevue.setDate(dateRetourPrevue.getDate() + BIB_EMPRUNT_JOURS);
+      const demandes = (curLivreData.demandes || []).map(d => d.uid === next.uid && d.statut === 'attente' ? Object.assign({}, d, {statut:'confirmee'}) : d);
+      await db.collection('bibliotheque').doc(curLivreId).update({
+        demandes, disponible:false, emprunteurId:next.uid, emprunteurNom:next.nom,
+        dateEmprunt:new Date().toISOString(), dateRetourPrevue:dateRetourPrevue.toISOString(), demandeRetour:false
+      });
+      await sendPrivateMessage(next.uid, `📚 Bonne nouvelle : "${curLivreData.titre}" vient de se libérer et t'a été attribué automatiquement (tu étais le premier de la liste d'attente). Retour prévu dans ${BIB_EMPRUNT_JOURS} jours.`);
+      toast('Retour confirmé — livre attribué automatiquement à ' + next.nom + ' ✅');
+    } else {
+      await db.collection('bibliotheque').doc(curLivreId).update({
+        disponible: true, emprunteurId: null, emprunteurNom: null, dateEmprunt: null, dateRetourPrevue: null, demandeRetour: false
+      });
+      toast('Retour confirmé ✅ — livre de nouveau disponible');
+    }
     openLivreDetail(curLivreId);
   } catch(e) { toast('Erreur : ' + e.message); }
 };
@@ -7450,10 +7508,41 @@ window.deleteLivre = async function() {
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
-/* ── Lecteur (placeholder Partie 1 — sera remplacé Partie 3) ──────── */
-window.ouvrirLecteur = function(url, titre) {
+/* ── Lecteur universel façon ReadEra (Partie 3) ────────────────────── */
+let lecteurDocKey = null, lecteurUrl = null, lecteurNom = null;
+window.ouvrirLecteur = async function(url, titre, docKey) {
   if (!url) { toast('Aucun fichier disponible'); return; }
-  window.open(url, '_blank');
+  lecteurUrl = url; lecteurNom = titre || 'document'; lecteurDocKey = docKey || url;
+  document.getElementById('lecteur-titre').textContent = titre || 'Document';
+  document.getElementById('lecteur-iframe').src = url;
+  const savedLumi = localStorage.getItem('lecteur-luminosite') || '0';
+  document.getElementById('lecteur-lumi').value = savedLumi;
+  changerLuminosite(savedLumi);
+  document.getElementById('lecteur-overlay').classList.add('on');
+  // Suivi "reprendre où on en est" — best-effort : mémorise la dernière ouverture par utilisateur/document
+  if (CU && lecteurDocKey) {
+    try {
+      await db.collection('lecture_positions').doc(CU.uid + '_' + lecteurDocKey).set({
+        uid: CU.uid, docKey: lecteurDocKey, titre: lecteurNom, url,
+        lastOpenedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch(e) { /* non bloquant */ }
+  }
+};
+window.fermerLecteur = function() {
+  document.getElementById('lecteur-overlay').classList.remove('on');
+  document.getElementById('lecteur-iframe').src = '';
+};
+window.changerLuminosite = function(val) {
+  document.getElementById('lecteur-dimmer').style.opacity = (val / 100);
+  localStorage.setItem('lecteur-luminosite', val);
+};
+window.telechargerLecteur = function() {
+  if (!lecteurUrl) return;
+  const a = document.createElement('a');
+  a.href = lecteurUrl; a.download = lecteurNom || 'document';
+  a.target = '_blank';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
 };
 
 /* ── Suggestions de livres ──────────────────────────────────────── */
@@ -8776,5 +8865,23 @@ fillDash = function() {
 };
 
 </script>
+<!-- ══ LECTEUR UNIVERSEL (façon ReadEra) — PDF, documents, tout fichier ══ -->
+<div id="lecteur-overlay" class="lecteur-overlay">
+  <div class="lecteur-top">
+    <button class="lecteur-btn" onclick="fermerLecteur()">✕</button>
+    <div class="lecteur-titre" id="lecteur-titre">—</div>
+    <button class="lecteur-btn" id="lecteur-dl-btn" onclick="telechargerLecteur()">⬇️</button>
+  </div>
+  <div class="lecteur-lumi-wrap">
+    <span>🔅</span>
+    <input type="range" id="lecteur-lumi" min="0" max="80" value="0" oninput="changerLuminosite(this.value)">
+    <span>🔆</span>
+  </div>
+  <div class="lecteur-body">
+    <iframe id="lecteur-iframe" class="lecteur-iframe"></iframe>
+    <div class="lecteur-dimmer" id="lecteur-dimmer"></div>
+  </div>
+</div>
+
 </body>
 </html>
