@@ -822,6 +822,18 @@ input,select,textarea{font-family:inherit}
 .etp-stt-btns button{font-size:10px;font-weight:600;padding:4px 9px;border-radius:8px;background:var(--surface2);color:var(--t2)}
 .etp-stt-btns button.on{background:var(--navy);color:#fff}
 [data-dark] .etp-stt-btns button.on{background:var(--gold)}
+.etp-resp{font-size:10.5px;color:var(--t3);margin-top:2px}
+.etp-del{margin-left:auto;font-size:11px;color:var(--red);padding:4px 7px;background:var(--surface2);border-radius:8px}
+.tl-wrap{padding:14px 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tl-track{position:relative;height:56px}
+.tl-axis{position:absolute;left:0;right:0;top:26px;height:2px;background:var(--surface3);border-radius:2px}
+.tl-seg{position:absolute;top:22px;height:10px;border-radius:6px;background:var(--surface3)}
+.tl-seg.en_cours{background:#F5A623}
+.tl-seg.terminee{background:#2E9E6C}
+.tl-pt{position:absolute;top:19px;width:14px;height:14px;border-radius:50%;background:var(--surface3);border:2px solid var(--surface);transform:translateX(-7px)}
+.tl-pt.en_cours{background:#F5A623}
+.tl-pt.terminee{background:#2E9E6C}
+.tl-lbl{position:absolute;top:38px;font-size:9.5px;color:var(--t2);white-space:nowrap;transform:translateX(-50%);max-width:76px;overflow:hidden;text-overflow:ellipsis}
 .journal-item{padding:9px 16px;border-bottom:1px solid var(--surface2);font-size:12px;color:var(--t2)}
 .journal-item:last-child{border-bottom:none}
 .journal-item .t{color:var(--t3);font-size:10.5px;margin-left:6px}
@@ -2630,11 +2642,12 @@ input,select,textarea{font-family:inherit}
         <button class="pd-lc-statut" onclick="setProjetStatut('Terminé')">✅ Terminé</button>
       </div>
     </div>
-    <div class="pd-card" id="pd-etapes-card">
+      <div class="pd-card" id="pd-etapes-card">
       <div class="pd-card-t" style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
         <span>Étapes du projet</span>
         <button class="btn-rappel-new" id="pd-etape-add-btn" style="display:none" onclick="openNewEtapeModal()">➕ Étape</button>
       </div>
+      <div id="pd-etapes-timeline"></div>
       <div id="pd-etapes-list"></div>
     </div>
     <div class="pd-card" id="pd-documents-card">
@@ -2865,7 +2878,9 @@ input,select,textarea{font-family:inherit}
     <div class="mhandle"></div>
     <div class="mtitle">Nouvelle étape</div>
     <div class="mfield"><label>Nom *</label><input type="text" id="etp-nom" placeholder="Ex: Logistique confirmée"></div>
-    <div class="mfield"><label>Date cible</label><input type="date" id="etp-date"></div>
+    <div class="mfield"><label>Responsable</label><select id="etp-resp"></select></div>
+    <div class="mfield"><label>Début</label><input type="date" id="etp-debut"></div>
+    <div class="mfield"><label>Fin (optionnel)</label><input type="date" id="etp-fin"></div>
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-etape')">Annuler</button>
       <button class="bsub" onclick="saveEtape()"><span>Ajouter</span></button>
@@ -7097,36 +7112,89 @@ window.confirmRefuserDemande = async function() {
 };
 
 /* ── Étapes du projet (Bloc C3) ─────────────────────────────────────── */
+function etapeDebut(e) { return e.dateDebut || e.date || null; }
+function etapeFin(e)   { return e.dateFin || e.dateDebut || e.date || null; }
+function fmtDateFr(d)  { return d ? new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : ''; }
+
 function renderEtapes() {
   const el = document.getElementById('pd-etapes-list');
-  const etapes = (curProjData.etapes || []).slice().sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  const etapes = (curProjData.etapes || []).slice().sort((a,b) => (etapeDebut(a)||'').localeCompare(etapeDebut(b)||''));
+  renderEtapesTimeline(etapes);
   if (!etapes.length) { el.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">Aucune étape définie.</div></div>'; return; }
-  el.innerHTML = etapes.map((e, i) => `
+  el.innerHTML = etapes.map((e, i) => {
+    const debut = etapeDebut(e), fin = etapeFin(e);
+    let dateTxt = '';
+    if (debut && fin && debut !== fin) dateTxt = fmtDateFr(debut) + ' → ' + fmtDateFr(fin);
+    else if (debut) dateTxt = fmtDateFr(debut);
+    return `
     <div class="etp-item">
       <div class="etp-dot-wrap"><div class="etp-dot ${e.statut}"></div>${i < etapes.length-1 ? '<div class="etp-line"></div>' : ''}</div>
       <div class="etp-body">
         <div class="etp-nom">${escHtml(e.nom)}</div>
-        ${e.date ? `<div class="etp-date">${new Date(e.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}</div>` : ''}
+        ${dateTxt ? `<div class="etp-date">${dateTxt}</div>` : ''}
+        ${e.responsable ? `<div class="etp-resp">👤 ${escHtml(e.responsable)}</div>` : ''}
         <div class="etp-stt-btns">
           <button class="${e.statut==='a_venir'?'on':''}" data-action="etp-stt" data-id="${e.id}" data-st="a_venir">À venir</button>
           <button class="${e.statut==='en_cours'?'on':''}" data-action="etp-stt" data-id="${e.id}" data-st="en_cours">En cours</button>
           <button class="${e.statut==='terminee'?'on':''}" data-action="etp-stt" data-id="${e.id}" data-st="terminee">Terminée</button>
+          <button class="etp-del" data-action="etp-del" data-id="${e.id}">🗑</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   el.querySelectorAll('[data-action="etp-stt"]').forEach(btn => {
     btn.addEventListener('click', () => setEtapeStatut(btn.getAttribute('data-id'), btn.getAttribute('data-st')));
   });
+  el.querySelectorAll('[data-action="etp-del"]').forEach(btn => {
+    btn.addEventListener('click', () => deleteEtape(btn.getAttribute('data-id')));
+  });
 }
+
+function renderEtapesTimeline(etapes) {
+  const wrap = document.getElementById('pd-etapes-timeline');
+  if (!wrap) return;
+  const withDates = etapes.filter(e => etapeDebut(e));
+  if (withDates.length < 2) { wrap.innerHTML = ''; return; }
+  const starts = withDates.map(e => new Date(etapeDebut(e)).getTime());
+  const ends   = withDates.map(e => new Date(etapeFin(e)).getTime());
+  let min = Math.min.apply(null, starts), max = Math.max.apply(null, ends);
+  if (min === max) { max = min + 24*3600*1000; }
+  const span = max - min;
+  const pts = withDates.map(e => {
+    const s = new Date(etapeDebut(e)).getTime();
+    const en = new Date(etapeFin(e)).getTime();
+    return { e, left: ((s - min) / span) * 100, width: Math.max(((en - s) / span) * 100, 0), isRange: en > s };
+  });
+  const trackWidth = Math.max(280, pts.length * 90);
+  let html = '<div class="tl-wrap"><div class="tl-track" style="width:' + trackWidth + 'px"><div class="tl-axis"></div>';
+  pts.forEach(p => {
+    if (p.isRange) html += `<div class="tl-seg ${p.e.statut}" style="left:${p.left}%;width:${p.width}%"></div>`;
+    html += `<div class="tl-pt ${p.e.statut}" style="left:${p.left}%"></div>`;
+    html += `<div class="tl-lbl" style="left:${p.left}%">${escHtml(p.e.nom)}</div>`;
+  });
+  html += '</div></div>';
+  wrap.innerHTML = html;
+}
+
 window.openNewEtapeModal = function() {
   document.getElementById('etp-nom').value = '';
-  document.getElementById('etp-date').value = '';
+  document.getElementById('etp-debut').value = '';
+  document.getElementById('etp-fin').value = '';
+  const sel = document.getElementById('etp-resp');
+  const noms = [];
+  if (curProjData.responsable) noms.push(curProjData.responsable);
+  (curProjData.membres || []).forEach(m => { if (m.nom && noms.indexOf(m.nom) === -1) noms.push(m.nom); });
+  sel.innerHTML = '<option value="">—</option>' + noms.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
   document.getElementById('ov-etape').classList.add('on');
 };
 window.saveEtape = async function() {
   const nom = document.getElementById('etp-nom').value.trim();
   if (!nom) { toast('Nom obligatoire'); return; }
-  const etape = { id:'e'+Date.now(), nom, date: document.getElementById('etp-date').value || null, statut:'a_venir' };
+  const dateDebut = document.getElementById('etp-debut').value || null;
+  const dateFin = document.getElementById('etp-fin').value || null;
+  if (dateDebut && dateFin && dateFin < dateDebut) { toast('La fin doit être après le début'); return; }
+  const responsable = document.getElementById('etp-resp').value || null;
+  const etape = { id:'e'+Date.now(), nom, responsable, dateDebut, dateFin: dateFin || dateDebut, statut:'a_venir' };
   try {
     const etapes = (curProjData.etapes || []).concat([etape]);
     await db.collection('projets').doc(curProjId).update({ etapes });
@@ -7144,6 +7212,17 @@ async function setEtapeStatut(id, statut) {
     const etp = etapes.find(e => e.id === id);
     curProjData.etapes = etapes;
     if (statut === 'terminee' && etp) await pushJournal(curProjId, 'Étape terminée : ' + etp.nom);
+    renderEtapes();
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+async function deleteEtape(id) {
+  if (!confirm('Supprimer cette étape ?')) return;
+  try {
+    const etp = (curProjData.etapes || []).find(e => e.id === id);
+    const etapes = (curProjData.etapes || []).filter(e => e.id !== id);
+    await db.collection('projets').doc(curProjId).update({ etapes });
+    curProjData.etapes = etapes;
+    if (etp) await pushJournal(curProjId, 'Étape supprimée : ' + etp.nom);
     renderEtapes();
   } catch(e) { toast('Erreur : ' + e.message); }
 }
