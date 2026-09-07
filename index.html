@@ -182,8 +182,10 @@ input,select,textarea{font-family:inherit}
 .tc-meta-i strong{color:var(--t2)}
 .stt{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px}
 .stt.af{background:#EFF6FF;color:#1C3557}.stt.ec{background:#FFF3CD;color:#856404}
+.stt.ea{background:#E0D4F7;color:#5B21B6}
 .stt.te{background:#D4EDDA;color:#155724}.stt.re{background:#FDE8E8;color:#C0392B}
 [data-dark] .stt.af{background:rgba(28,53,87,.4);color:#93C5FD}
+[data-dark] .stt.ea{background:rgba(91,33,182,.35);color:#D8B4FE}
 [data-dark] .stt.ec{background:rgba(133,100,4,.4);color:#FCD34D}
 [data-dark] .stt.te{background:rgba(21,87,36,.4);color:#6EE7B7}
 .tc-acts{padding:9px 14px 13px;display:flex;gap:8px;border-top:1px solid var(--surface2)}
@@ -469,6 +471,7 @@ input,select,textarea{font-family:inherit}
 [data-dark] .msg-reply-ref{background:rgba(255,255,255,.06)}
 .msg-reply-ref b{color:var(--gold);font-weight:600}
 .msg-edited-tag{font-size:9.5px;color:var(--t3);font-style:italic;margin-left:3px}
+.msg-deleted{font-style:italic;opacity:.6}
 .msg-edit-btn,.msg-reply-btn{margin-left:6px;font-size:11px;background:none;border:none;cursor:pointer;opacity:.55;vertical-align:middle}
 .msg-edit-btn:hover,.msg-reply-btn:hover{opacity:1}
 .msg-edit-wrap{padding:4px}
@@ -1196,14 +1199,20 @@ input,select,textarea{font-family:inherit}
   <div class="det-body">
     <div class="det-card">
       <div class="det-card-t">Statut</div>
-      <div class="stt-btns">
-        <button class="sttb af" onclick="majStatut('A faire')">📋 À faire</button>
-        <button class="sttb ec" onclick="majStatut('En cours')">⚡ En cours</button>
-        <button class="sttb te" onclick="majStatut('Terminée')">✅ Terminée</button>
+      <div id="det-locked-msg" style="display:none;padding:12px 16px;font-size:12.5px;font-weight:600;color:#155724;background:#D4EDDA;border-radius:10px;margin:0 14px 12px">🔒 Tâche terminée et validée — le statut ne peut plus être modifié.</div>
+      <div id="det-pending-msg" style="display:none;padding:12px 16px;font-size:12.5px;font-weight:600;color:#856404;background:#FFF3CD;border-radius:10px;margin:0 14px 12px"></div>
+      <div class="stt-btns" id="det-validation-btns" style="display:none">
+        <button class="sttb te" data-statut="Terminée" onclick="validerTacheTerminee()">✅ Valider comme terminée</button>
+        <button class="sttb ec" data-statut="En cours" onclick="rejeterTacheTerminee()">↩️ Renvoyer en cours</button>
       </div>
-      <div class="stt-btns" style="margin-top:8px">
-        <button class="sttb nr" onclick="askRaisonStatut('Non réalisée')">❌ Non réalisée</button>
-        <button class="sttb rp" onclick="askRaisonStatut('Reportée')">⏸ Reportée</button>
+      <div class="stt-btns" id="det-normal-btns">
+        <button class="sttb af" data-statut="A faire" onclick="majStatut('A faire')">📋 À faire</button>
+        <button class="sttb ec" data-statut="En cours" onclick="majStatut('En cours')">⚡ En cours</button>
+        <button class="sttb te" data-statut="Terminée" onclick="soumettreTermine()">📤 Soumettre</button>
+      </div>
+      <div class="stt-btns" id="det-fail-btns" style="margin-top:8px">
+        <button class="sttb nr" data-statut="Non réalisée" onclick="askRaisonStatut('Non réalisée')">❌ Non réalisée</button>
+        <button class="sttb rp" data-statut="Reportée" onclick="askRaisonStatut('Reportée')">⏸ Reportée</button>
       </div>
       <div id="det-raison-wrap" style="display:none;padding:0 14px 12px">
         <div class="det-raison-tag" id="det-raison-tag"></div>
@@ -5013,16 +5022,25 @@ function renderTasks(list) {
   }
   body.innerHTML = list.map(t => {
     const st  = t.statut || 'A faire';
-    const stC = st === 'Terminée' ? 'te' : st === 'En cours' ? 'ec' : st === 'En retard' ? 're' : 'af';
+    const stC = st === 'Terminée' ? 'te' : st === 'En attente' ? 'ea' : st === 'En cours' ? 'ec' : st === 'En retard' ? 're' : 'af';
     const pc  = t.type === 'Urgente' ? 'urgente' : t.priorite === 'Haute' ? 'haute' : t.priorite === 'Basse' ? 'basse' : 'moyenne';
     const tc  = t.type === 'Urgente' ? 'urgente' : t.type === 'Récurrente' ? 'recur' : t.type === 'Test' ? 'test' : 'ponct';
     const ech = t.echeance ? new Date(t.echeance).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '—';
     const retard = t.echeance && new Date(t.echeance) < new Date() && st !== 'Terminée';
     const init = (t.assigneeNom||'?').charAt(0).toUpperCase();
+    const estCreateurCard = !!(t.createdBy && CU && t.createdBy === CU.uid);
 
     let acts = '';
     if (st === 'A faire')  acts += `<button class="ta conf" data-action="quick-stt" data-id="${t.id}" data-next="En cours">✅ Confirmer</button>`;
-    else if (st === 'En cours') acts += `<button class="ta done" data-action="quick-stt" data-id="${t.id}" data-next="Terminée">✅ Terminer</button>`;
+    else if (st === 'En cours') acts += `<button class="ta done" data-action="quick-stt" data-id="${t.id}" data-next="Terminée">📤 Soumettre</button>`;
+    else if (st === 'En attente') {
+      if (estCreateurCard) {
+        acts += `<button class="ta done" data-action="quick-stt" data-id="${t.id}" data-next="Terminée">✅ Valider</button>`;
+        acts += `<button class="ta conf" data-action="quick-stt" data-id="${t.id}" data-next="En cours">↩️ Renvoyer</button>`;
+      } else {
+        acts += `<button class="ta conf" style="opacity:.5;pointer-events:none">⏳ En attente de validation</button>`;
+      }
+    }
     else acts += `<button class="ta conf" style="opacity:.5;pointer-events:none">✅ Terminée</button>`;
     acts += `<button class="ta det" data-action="open-detail" data-id="${t.id}">Détail ›</button>`;
 
@@ -5053,12 +5071,25 @@ function renderTasks(list) {
 }
 
 // Mappe l'ancien champ statut (FR, libre) vers les nouveaux champs v2.0
-const STATUT_TO_DETAIL = { 'A faire':'a_faire', 'En cours':'en_cours', 'Terminée':'terminee', 'En retard':'a_faire', 'Non réalisée':'non_realisee', 'Reportée':'reportee' };
-const STATUT_TO_PROGRESSION = { 'A faire':0, 'En cours':50, 'Terminée':100, 'En retard':0, 'Non réalisée':0 };
+const STATUT_TO_DETAIL = { 'A faire':'a_faire', 'En cours':'en_cours', 'En attente':'en_attente', 'Terminée':'terminee', 'En retard':'a_faire', 'Non réalisée':'non_realisee', 'Reportée':'reportee' };
+const STATUT_TO_PROGRESSION = { 'A faire':0, 'En cours':50, 'En attente':90, 'Terminée':100, 'En retard':0, 'Non réalisée':0 };
 // 'Reportée' n'est volontairement pas dans cette table : la progression déjà accomplie est conservée.
 
 async function quickStt(e, id, newStt, raison) {
   e.stopPropagation();
+  const t = allTasks.find(t => t.id === id);
+  // Une tâche déjà terminée et validée est verrouillée — aucun changement de statut n'est plus possible, pour personne.
+  if (t && t.statut === 'Terminée') { toast('Cette tâche est déjà terminée et validée — son statut ne peut plus être modifié.'); return; }
+  const estCreateur = !!(t && CU && t.createdBy === CU.uid);
+  // Une tâche en attente de validation ne peut être touchée que par la personne qui l'a assignée (créateur).
+  if (t && t.statut === 'En attente' && !estCreateur) {
+    toast('Cette tâche est en attente de validation par ' + (t.createdByNom||'la personne qui l\'a assignée') + '.');
+    return;
+  }
+  const prevStatut = t ? (t.statut||'A faire') : null;
+  // Seule la personne qui a assigné la tâche peut la valider comme réellement terminée.
+  // Si c'est l'assigné lui-même qui déclare la tâche finie, elle passe d'abord en attente de validation.
+  if (newStt === 'Terminée' && !estCreateur) newStt = 'En attente';
   try {
     const payload = {
       statut:newStt,
@@ -5069,20 +5100,70 @@ async function quickStt(e, id, newStt, raison) {
     if (raison !== undefined) payload.raisonEchec = raison || '';
     if (newStt !== 'Non réalisée' && newStt !== 'Reportée') payload.raisonEchec = firebase.firestore.FieldValue.delete();
     await db.collection('taches').doc(id).update(payload);
-    const t = allTasks.find(t => t.id === id);
     if (t) { t.statut = newStt; t.raisonEchec = raison || ''; }
     applyFilter(curFilter);
-    if (newStt === 'Terminée' && !isBureau(CP)) {
-      const ns = (CP.score||0) + 10;
-      await db.collection('users').doc(CU.uid).update({ score:ns });
-      CP.score = ns;
-      toast('✅ Tâche terminée +10 pts !');
+    if (newStt === 'Terminée') {
+      // Les points reviennent à l'assigné qui a réalisé la tâche, jamais à la personne qui valide.
+      let msg = '✅ Tâche validée comme terminée';
+      try {
+        if (t && t.assigneeId) {
+          const assigneeSnap = await db.collection('users').doc(t.assigneeId).get();
+          if (assigneeSnap.exists) {
+            const aData = assigneeSnap.data();
+            if (!isBureau(aData)) {
+              const ns = (aData.score||0) + 10;
+              await db.collection('users').doc(t.assigneeId).update({ score: ns });
+              if (CU && t.assigneeId === CU.uid) CP.score = ns;
+              msg += ' — +10 pts pour ' + (t.assigneeNom||'le membre');
+            }
+          }
+        }
+      } catch(err) { /* non bloquant pour le score */ }
+      toast(msg);
+    } else if (newStt === 'En attente') {
+      toast('📤 Soumise — en attente de validation par ' + (t?.createdByNom||'la personne qui a assigné la tâche'));
     } else if (newStt === 'Non réalisée' || newStt === 'Reportée') {
       toast(newStt === 'Non réalisée' ? '❌ Marquée non réalisée' : '⏸ Tâche reportée');
+    } else if (prevStatut === 'En attente' && newStt === 'En cours') {
+      toast('↩️ Renvoyée en cours — validation refusée');
     } else {
-      toast(newStt === 'En cours' ? '⚡ Tâche démarrée' : '✅ Tâche terminée');
+      toast(newStt === 'En cours' ? '⚡ Tâche démarrée' : 'Statut mis à jour');
     }
   } catch(e) { toast('Erreur : ' + e.message); }
+}
+window.soumettreTermine = function() { majStatut('Terminée'); };
+window.validerTacheTerminee = function() { majStatut('Terminée'); };
+window.rejeterTacheTerminee = function() { majStatut('En cours'); };
+
+function refreshDetailStatusUI(t) {
+  const st = t.statut || 'A faire';
+  document.getElementById('det-stt').textContent = st;
+  const estCreateur = !!(t.createdBy && CU && t.createdBy === CU.uid);
+  const lockedMsg = document.getElementById('det-locked-msg');
+  const pendingMsg = document.getElementById('det-pending-msg');
+  const validationBtns = document.getElementById('det-validation-btns');
+  const normalBtns = document.getElementById('det-normal-btns');
+  const failBtns = document.getElementById('det-fail-btns');
+  lockedMsg.style.display = 'none';
+  pendingMsg.style.display = 'none';
+  validationBtns.style.display = 'none';
+  normalBtns.style.display = 'flex';
+  failBtns.style.display = 'flex';
+  if (st === 'Terminée') {
+    lockedMsg.style.display = 'block';
+    normalBtns.style.display = 'none';
+    failBtns.style.display = 'none';
+  } else if (st === 'En attente') {
+    normalBtns.style.display = 'none';
+    failBtns.style.display = 'none';
+    if (estCreateur) {
+      validationBtns.style.display = 'flex';
+    } else {
+      pendingMsg.style.display = 'block';
+      pendingMsg.textContent = '⏳ En attente de validation par ' + (t.createdByNom || 'la personne qui a assigné cette tâche') + '.';
+    }
+  }
+  document.querySelectorAll('.sttb').forEach(b => b.classList.toggle('sel', b.getAttribute('data-statut') === st));
 }
 
 function openDetail(id) {
@@ -5095,13 +5176,11 @@ function openDetail(id) {
   document.getElementById('det-prio').textContent  = t.priorite||'—';
   document.getElementById('det-cat').textContent   = t.cat||'—';
   document.getElementById('det-canal').textContent = t.canal||'—';
-  document.getElementById('det-stt').textContent   = t.statut||'A faire';
   document.getElementById('det-ref').textContent   = t.ref||id.substring(0,8).toUpperCase();
   document.getElementById('det-ech').textContent   = t.echeance
     ? new Date(t.echeance).toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
     : 'Non définie';
-  const map = {'A faire':0,'En cours':1,'Terminée':2,'Non réalisée':3,'Reportée':4};
-  document.querySelectorAll('.sttb').forEach((b,i) => b.classList.toggle('sel', i === (map[t.statut||'A faire']||0)));
+  refreshDetailStatusUI(t);
   const raisonWrap = document.getElementById('det-raison-wrap');
   const raisonTag  = document.getElementById('det-raison-tag');
   if (t.raisonEchec) {
@@ -5133,11 +5212,14 @@ window.confirmStatutAvecRaison = async function() {
   if (!raison) { toast('Explique brièvement la raison'); return; }
   if (!pendingRaisonStatut || !curTaskId) return;
   await quickStt({stopPropagation:()=>{}}, curTaskId, pendingRaisonStatut, raison);
-  document.getElementById('det-stt').textContent = pendingRaisonStatut;
-  const map = {'A faire':0,'En cours':1,'Terminée':2,'Non réalisée':3,'Reportée':4};
-  document.querySelectorAll('.sttb').forEach((b,i) => b.classList.toggle('sel', i === (map[pendingRaisonStatut]||0)));
-  document.getElementById('det-raison-wrap').style.display = 'block';
-  document.getElementById('det-raison-tag').textContent = (pendingRaisonStatut === 'Reportée' ? '⏸ Reportée — ' : '❌ Non réalisée — ') + raison;
+  const t = allTasks.find(t => t.id === curTaskId);
+  if (t) {
+    refreshDetailStatusUI(t);
+    if (t.statut === pendingRaisonStatut) {
+      document.getElementById('det-raison-wrap').style.display = 'block';
+      document.getElementById('det-raison-tag').textContent = (pendingRaisonStatut === 'Reportée' ? '⏸ Reportée — ' : '❌ Non réalisée — ') + raison;
+    }
+  }
   closeOverlay('ov-task-reason');
   pendingRaisonStatut = null;
 };
@@ -5145,10 +5227,8 @@ window.confirmStatutAvecRaison = async function() {
 async function majStatut(s) {
   if (!curTaskId) return;
   await quickStt({stopPropagation:()=>{}}, curTaskId, s);
-  document.getElementById('det-stt').textContent = s;
-  const map = {'A faire':0,'En cours':1,'Terminée':2,'Non réalisée':3,'Reportée':4};
-  document.querySelectorAll('.sttb').forEach((b,i) => b.classList.toggle('sel', i === (map[s]||0)));
-  document.getElementById('det-raison-wrap').style.display = 'none';
+  const t = allTasks.find(t => t.id === curTaskId);
+  if (t) refreshDetailStatusUI(t);
 }
 
 /* ── Suppression admin d'une tâche (Session 7) ────────────────────── */
@@ -5622,8 +5702,8 @@ function loadMsgs(convId, isPriv) {
       const time = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
       const newGroup = m.auteurId !== lastUid;
       const createdMs = m.createdAt?.toDate ? m.createdAt.toDate().getTime() : 0;
-      const canEdit   = mine && createdMs && (now - createdMs < EDIT_WINDOW_MS);
-      const canDelete = mine || isBureau(CP);
+      const canEdit   = mine && !m.deleted && createdMs && (now - createdMs < EDIT_WINDOW_MS);
+      const canDelete = mine && !m.deleted;
 
       // Séparateur de date
       if (date && date !== lastDate) {
@@ -5632,7 +5712,7 @@ function loadMsgs(convId, isPriv) {
       }
 
       // Réactions existantes
-      const reacts = m.reactions || {};
+      const reacts = m.deleted ? {} : (m.reactions || {});
       let reactHtml = '';
       Object.entries(reacts).forEach(([emoji, users]) => {
         if (users && users.length > 0) {
@@ -5642,20 +5722,22 @@ function loadMsgs(convId, isPriv) {
       });
 
       // Citation de réponse
-      const replyHtml = m.replyTo
+      const replyHtml = (m.replyTo && !m.deleted)
         ? `<div class="msg-reply-ref" data-action="jump-reply" data-target="${m.replyTo.id}"><b>${escHtml(m.replyTo.nom||'')}</b> · ${escHtml(m.replyTo.texte||'')}</div>`
         : '';
 
-      // Image ou texte (avec surlignage des @mentions)
+      // Image ou texte (avec surlignage des @mentions) — ou placeholder si le message a été supprimé
       let bodyHtml = '';
-      if (m.imageUrl) {
+      if (m.deleted) {
+        bodyHtml = `<span class="msg-deleted">🚫 Message supprimé</span>`;
+      } else if (m.imageUrl) {
         bodyHtml = `<img src="${m.imageUrl}" class="msg-img" alt="image" data-action="open-img" data-url="${m.imageUrl}">`;
       } else {
         bodyHtml = highlightMentions(escHtml(m.texte || ''));
       }
 
-      const editedTag = m.edited ? `<span class="msg-edited-tag">modifié</span>` : '';
-      const replyBtn  = `<button class="msg-reply-btn" data-action="reply-msg" data-msgid="${d.id}" data-nom="${escHtml(m.auteurNom||'')}" data-txt="${escHtml((m.texte||'📷 Photo').slice(0,80))}" title="Répondre">↩️</button>`;
+      const editedTag = (m.edited && !m.deleted) ? `<span class="msg-edited-tag">modifié</span>` : '';
+      const replyBtn  = m.deleted ? '' : `<button class="msg-reply-btn" data-action="reply-msg" data-msgid="${d.id}" data-nom="${escHtml(m.auteurNom||'')}" data-txt="${escHtml((m.texte||'📷 Photo').slice(0,80))}" title="Répondre">↩️</button>`;
       const editBtn   = canEdit
         ? `<button class="msg-edit-btn" data-action="edit-msg" data-msgid="${d.id}" data-convid="${convId}" title="Modifier">✏️</button>` : '';
       const delBtn    = canDelete
@@ -5663,7 +5745,7 @@ function loadMsgs(convId, isPriv) {
 
       html += `<div class="msg-group ${grp}" id="msg-${d.id}">
         ${!mine && newGroup ? `<div class="msg-author">${escHtml(m.auteurNom||'')}</div>` : ''}
-        <div class="msg-bubble" data-action="msg-bubble" data-msgid="${d.id}" data-convid="${convId}">${replyHtml}<span class="msg-bubble-txt" id="msg-txt-${d.id}">${bodyHtml}</span></div>
+        <div class="msg-bubble"${m.deleted ? '' : ` data-action="msg-bubble" data-msgid="${d.id}" data-convid="${convId}"`}>${replyHtml}<span class="msg-bubble-txt" id="msg-txt-${d.id}">${bodyHtml}</span></div>
         ${reactHtml ? `<div class="msg-reactions">${reactHtml}</div>` : ''}
         <div class="msg-time">${time}${mine && m.vu ? ' · Vu ✓' : ''}${editedTag}${replyBtn}${editBtn}${delBtn}</div>
       </div>`;
@@ -5812,7 +5894,7 @@ window.toggleReaction = async function(msgId, convId, emoji) {
   } catch(e) { toast('Erreur réaction'); }
 };
 
-/* ── Suppression d'un message : auteur ou Bureau (Session 7) ──────── */
+/* ── Suppression d'un message : réservé à son auteur (soft delete) ── */
 window.deleteMsg = async function(msgId, convId) {
   if (!CU) return;
   try {
@@ -5821,12 +5903,41 @@ window.deleteMsg = async function(msgId, convId) {
     const data = snap.data();
     if (!data) return;
     const mine = data.auteurId === CU.uid;
-    if (!mine && !isBureau(CP)) { toast('Tu ne peux supprimer que tes propres messages'); return; }
+    if (!mine) { toast('Tu ne peux supprimer que tes propres messages'); return; }
+    if (data.deleted) return; // déjà supprimé
     if (!confirm('Supprimer ce message définitivement ?')) return;
-    await ref.delete();
+    await ref.update({
+      deleted: true,
+      texte: '',
+      imageUrl: firebase.firestore.FieldValue.delete(),
+      reactions: {},
+      deletedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
     toast('Message supprimé');
+    // Recalcule l'aperçu de la conversation pour ne jamais afficher le contenu d'un message supprimé.
+    await refreshConvPreview(convId);
   } catch(e) { toast('Erreur : ' + e.message); }
 };
+
+// Recalcule lastMsg/lastTime/lastBy du fil à partir du dernier message NON supprimé,
+// afin que la trace d'un message effacé ne reste jamais visible dans l'aperçu de la conversation.
+async function refreshConvPreview(convId) {
+  try {
+    const snap = await db.collection('chat').doc(convId).collection('messages')
+      .orderBy('createdAt','desc').limit(15).get();
+    let dernier = null;
+    snap.forEach(d => { if (!dernier && !d.data().deleted) dernier = d.data(); });
+    if (dernier) {
+      await db.collection('chat').doc(convId).set({
+        lastMsg: dernier.imageUrl ? '📷 Photo' : (dernier.texte || ''),
+        lastTime: dernier.createdAt || firebase.firestore.FieldValue.serverTimestamp(),
+        lastBy: dernier.auteurNom || ''
+      }, { merge:true });
+    } else {
+      await db.collection('chat').doc(convId).set({ lastMsg:'', lastBy:'' }, { merge:true });
+    }
+  } catch(e) { /* non bloquant */ }
+}
 
 /* ── Réponse à un message (Session 7) ─────────────────────────────── */
 window.startReply = function(msgId, nom, txt) {
@@ -5996,7 +6107,7 @@ async function loadCanalPreviews() {
       if (snap.exists) {
         const d = snap.data();
         const el = document.getElementById('last-'+id);
-        if (el && d.lastMsg) el.textContent = (d.lastBy ? d.lastBy + ' : ' : '') + d.lastMsg;
+        if (el) el.textContent = d.lastMsg ? ((d.lastBy ? d.lastBy + ' : ' : '') + d.lastMsg) : 'Aucun message';
         const tel = document.getElementById('time-'+id);
         if (tel && d.lastTime) {
           tel.textContent = d.lastTime.toDate().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
