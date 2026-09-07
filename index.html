@@ -832,8 +832,14 @@ input,select,textarea{font-family:inherit}
 .tl-seg.terminee{background:#2E9E6C}
 .tl-pt{position:absolute;top:19px;width:14px;height:14px;border-radius:50%;background:var(--surface3);border:2px solid var(--surface);transform:translateX(-7px)}
 .tl-pt.en_cours{background:#F5A623}
-.tl-pt.terminee{background:#2E9E6C}
-.tl-lbl{position:absolute;top:38px;font-size:9.5px;color:var(--t2);white-space:nowrap;transform:translateX(-50%);max-width:76px;overflow:hidden;text-overflow:ellipsis}
+.tl-pt.terminee{background:#2E9E6C}.tl-lbl{position:absolute;top:38px;font-size:9.5px;color:var(--t2);white-space:nowrap;transform:translateX(-50%);max-width:76px;overflow:hidden;text-overflow:ellipsis}
+.ind-item{padding:11px 16px;border-bottom:1px solid var(--surface2);cursor:pointer}
+.ind-item:last-child{border-bottom:none}
+.ind-nom{font-size:13px;font-weight:600;color:var(--t1)}
+.ind-row{display:flex;justify-content:space-between;gap:8px;margin-top:4px;font-size:11.5px;color:var(--t2)}
+.ind-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:var(--surface2);color:var(--t3);white-space:nowrap}
+.ind-badge.ok{background:#DFF5EC;color:#0F6E56}
+[data-dark] .ind-badge.ok{background:rgba(15,110,86,.25);color:#4ADE80}
 .journal-item{padding:9px 16px;border-bottom:1px solid var(--surface2);font-size:12px;color:var(--t2)}
 .journal-item:last-child{border-bottom:none}
 .journal-item .t{color:var(--t3);font-size:10.5px;margin-left:6px}
@@ -2625,6 +2631,13 @@ input,select,textarea{font-family:inherit}
       <div class="pd-card-t" style="padding:13px 16px">Impact attendu</div>
       <div style="padding:0 16px 14px;font-size:13px;color:var(--t2);line-height:1.5" id="pd-impact-txt"></div>
     </div>
+    <div class="pd-card" id="pd-indicateurs-card">
+      <div class="pd-card-t" style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span>Indicateurs de succès</span>
+        <button class="btn-rappel-new" id="pd-indicateur-add-btn" style="display:none" onclick="openNewIndicateurModal()">➕ Indicateur</button>
+      </div>
+      <div id="pd-indicateurs-list"></div>
+    </div>
     <div class="pd-card">
       <div class="pd-card-t">Informations</div>
       <div class="det-row"><span class="det-row-l">Responsable</span><span class="det-row-v" id="pd-resp">—</span></div>
@@ -2639,7 +2652,18 @@ input,select,textarea{font-family:inherit}
       <div class="pd-lifecycle-acts" style="padding-top:0">
         <button class="pd-lc-statut" onclick="setProjetStatut('Actif')">Actif</button>
         <button class="pd-lc-statut" onclick="setProjetStatut('En pause')">En pause</button>
-        <button class="pd-lc-statut" onclick="setProjetStatut('Terminé')">✅ Terminé</button>
+        <button class="pd-lc-statut" onclick="openClotureModal()">✅ Terminé</button>
+      </div>
+    </div>
+    <div class="pd-card" id="pd-cloture-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">📋 Bilan de clôture</div>
+      <div style="padding:0 16px 14px">
+        <div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Résultats atteints</div>
+        <div style="font-size:13px;color:var(--t2);line-height:1.5;margin-bottom:10px" id="pd-cloture-resultats"></div>
+        <div id="pd-cloture-lecons-wrap" style="display:none">
+          <div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Leçons apprises</div>
+          <div style="font-size:13px;color:var(--t2);line-height:1.5" id="pd-cloture-lecons"></div>
+        </div>
       </div>
     </div>
       <div class="pd-card" id="pd-etapes-card">
@@ -2884,6 +2908,40 @@ input,select,textarea{font-family:inherit}
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-etape')">Annuler</button>
       <button class="bsub" onclick="saveEtape()"><span>Ajouter</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INDICATEUR DE SUCCÈS -->
+<div class="overlay" id="ov-indicateur" onclick="closeOverlay('ov-indicateur')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="ind-modal-title">Nouvel indicateur</div>
+    <div class="mfield"><label>Indicateur *</label><input type="text" id="ind-nom" placeholder="Ex: Nombre de participants"></div>
+    <div class="mfield"><label>Cible *</label><input type="text" id="ind-cible" placeholder="Ex: 50 participants"></div>
+    <div class="mfield"><label>Réalisé (à date)</label><input type="text" id="ind-realise" placeholder="Ex: 32 participants"></div>
+    <div class="mfield" style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="ind-atteint" style="width:auto">
+      <label style="margin:0;text-transform:none;font-size:13px;font-weight:500;color:var(--t1)">Objectif atteint</label>
+    </div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-indicateur')">Annuler</button>
+      <button class="bsub" onclick="saveIndicateur()"><span>Enregistrer</span></button>
+    </div>
+    <button id="ind-del-btn" style="display:none;width:100%;text-align:center;margin-top:10px;font-size:12px;color:var(--red)" onclick="deleteIndicateur()">🗑 Supprimer cet indicateur</button>
+  </div>
+</div>
+
+<!-- MODAL CLÔTURE DU PROJET -->
+<div class="overlay" id="ov-cloture-proj" onclick="closeOverlay('ov-cloture-proj')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Clôturer le projet</div>
+    <div class="mfield"><label>Résultats atteints *</label><textarea id="clo-resultats" placeholder="Ce qui a été concrètement accompli"></textarea></div>
+    <div class="mfield"><label>Leçons apprises</label><textarea id="clo-lecons" placeholder="Ce qui a bien/moins bien fonctionné"></textarea></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-cloture-proj')">Annuler</button>
+      <button class="bsub" onclick="confirmCloture()"><span>Clôturer</span></button>
     </div>
   </div>
 </div>
@@ -6815,6 +6873,24 @@ async function openProjDetail(id) {
   if (etapeAddBtn) etapeAddBtn.style.display = canManage ? 'inline-flex' : 'none';
   renderEtapes();
 
+  // Indicateurs de succès — visibles à tous, édition réservée responsables/PRD/VP
+  const indAddBtn = document.getElementById('pd-indicateur-add-btn');
+  if (indAddBtn) indAddBtn.style.display = canManage ? 'inline-flex' : 'none';
+  renderIndicateurs();
+
+  // Bilan de clôture — visible une fois le projet terminé
+  const clotureCard = document.getElementById('pd-cloture-card');
+  if (clotureCard) {
+    if (p.statut === 'Terminé' && p.cloture) {
+      clotureCard.style.display = 'block';
+      document.getElementById('pd-cloture-resultats').textContent = p.cloture.resultats || '—';
+      document.getElementById('pd-cloture-lecons-wrap').style.display = p.cloture.lecons ? 'block' : 'none';
+      document.getElementById('pd-cloture-lecons').textContent = p.cloture.lecons || '';
+    } else {
+      clotureCard.style.display = 'none';
+    }
+  }
+
   // Documents — visibles à tous les membres, ajout réservé membres/responsables/PRD/VP, jamais si archivé
   const docAddBtn = document.getElementById('pd-doc-add-btn');
   if (docAddBtn) docAddBtn.style.display = (!locked && (jeSuisMembre || isBureau(CP))) ? 'inline-flex' : 'none';
@@ -7226,6 +7302,80 @@ async function deleteEtape(id) {
     renderEtapes();
   } catch(e) { toast('Erreur : ' + e.message); }
 }
+
+/* ── Indicateurs de succès du projet ─────────────────────────────────── */
+let curEditIndicateurId = null;
+function renderIndicateurs() {
+  const el = document.getElementById('pd-indicateurs-list');
+  const inds = curProjData.indicateurs || [];
+  if (!inds.length) { el.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">Aucun indicateur défini.</div></div>'; return; }
+  el.innerHTML = inds.map(ind => `
+    <div class="ind-item" data-action="ind-edit" data-id="${ind.id}">
+      <div class="ind-nom">${escHtml(ind.nom)}</div>
+      <div class="ind-row"><span>Cible : ${escHtml(ind.cible||'—')}</span><span class="ind-badge ${ind.atteint?'ok':''}">${ind.atteint ? '✅ Atteint' : (ind.realise ? 'En cours' : 'À suivre')}</span></div>
+      ${ind.realise ? `<div class="ind-row"><span>Réalisé : ${escHtml(ind.realise)}</span></div>` : ''}
+    </div>`).join('');
+  el.querySelectorAll('[data-action="ind-edit"]').forEach(elm => {
+    elm.addEventListener('click', () => openEditIndicateurModal(elm.getAttribute('data-id')));
+  });
+}
+window.openNewIndicateurModal = function() {
+  curEditIndicateurId = null;
+  document.getElementById('ind-modal-title').textContent = 'Nouvel indicateur';
+  document.getElementById('ind-nom').value = '';
+  document.getElementById('ind-cible').value = '';
+  document.getElementById('ind-realise').value = '';
+  document.getElementById('ind-atteint').checked = false;
+  document.getElementById('ind-del-btn').style.display = 'none';
+  document.getElementById('ov-indicateur').classList.add('on');
+};
+window.openEditIndicateurModal = function(id) {
+  const ind = (curProjData.indicateurs || []).find(i => i.id === id);
+  if (!ind) return;
+  curEditIndicateurId = id;
+  document.getElementById('ind-modal-title').textContent = "Modifier l'indicateur";
+  document.getElementById('ind-nom').value = ind.nom || '';
+  document.getElementById('ind-cible').value = ind.cible || '';
+  document.getElementById('ind-realise').value = ind.realise || '';
+  document.getElementById('ind-atteint').checked = !!ind.atteint;
+  document.getElementById('ind-del-btn').style.display = 'block';
+  document.getElementById('ov-indicateur').classList.add('on');
+};
+window.saveIndicateur = async function() {
+  const nom = document.getElementById('ind-nom').value.trim();
+  const cible = document.getElementById('ind-cible').value.trim();
+  if (!nom || !cible) { toast('Indicateur et cible obligatoires'); return; }
+  const realise = document.getElementById('ind-realise').value.trim() || null;
+  const atteint = document.getElementById('ind-atteint').checked;
+  try {
+    let inds = (curProjData.indicateurs || []).slice();
+    if (curEditIndicateurId) {
+      inds = inds.map(i => i.id === curEditIndicateurId ? Object.assign({}, i, {nom, cible, realise, atteint}) : i);
+    } else {
+      inds.push({ id:'i'+Date.now(), nom, cible, realise, atteint });
+    }
+    await db.collection('projets').doc(curProjId).update({ indicateurs: inds });
+    curProjData.indicateurs = inds;
+    await pushJournal(curProjId, (curEditIndicateurId ? 'Indicateur mis à jour : ' : 'Indicateur ajouté : ') + nom);
+    closeOverlay('ov-indicateur');
+    toast('Indicateur enregistré ✅');
+    renderIndicateurs();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.deleteIndicateur = async function() {
+  if (!curEditIndicateurId) return;
+  if (!confirm('Supprimer cet indicateur ?')) return;
+  try {
+    const ind = (curProjData.indicateurs || []).find(i => i.id === curEditIndicateurId);
+    const inds = (curProjData.indicateurs || []).filter(i => i.id !== curEditIndicateurId);
+    await db.collection('projets').doc(curProjId).update({ indicateurs: inds });
+    curProjData.indicateurs = inds;
+    if (ind) await pushJournal(curProjId, 'Indicateur supprimé : ' + ind.nom);
+    closeOverlay('ov-indicateur');
+    toast('Indicateur supprimé');
+    renderIndicateurs();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
 
 /* ── Documents du projet — visibles à tous les membres (Bloc C3) ──── */
 function renderDocuments() {
@@ -8368,6 +8518,31 @@ window.setProjetStatut = async function(statut) {
     await db.collection('projets').doc(curProjId).update({ statut });
     await pushJournal(curProjId, 'Statut → ' + statut);
     toast('Statut mis à jour ✅');
+    openProjDetail(curProjId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.openClotureModal = function() {
+  if (!curProjData || !curProjId) return;
+  if (!isPresidentOrVP(CP) && !isProjectResponsable(curProjData, CU.uid)) { toast('Réservé aux responsables du projet ou au Président/VP'); return; }
+  if (isProjetVerrouille(curProjData)) { toast('Projet archivé — lecture seule'); return; }
+  if (!(curProjData.comptesRendus && curProjData.comptesRendus.length)) {
+    toast('Ajoute au moins un compte rendu avant de clore le projet');
+    return;
+  }
+  document.getElementById('clo-resultats').value = (curProjData.cloture && curProjData.cloture.resultats) || '';
+  document.getElementById('clo-lecons').value = (curProjData.cloture && curProjData.cloture.lecons) || '';
+  document.getElementById('ov-cloture-proj').classList.add('on');
+};
+window.confirmCloture = async function() {
+  const resultats = document.getElementById('clo-resultats').value.trim();
+  if (!resultats) { toast('Décris au moins les résultats atteints'); return; }
+  const lecons = document.getElementById('clo-lecons').value.trim() || null;
+  try {
+    const cloture = { resultats, lecons, closedBy: CP.nom, closedAt: new Date().toISOString() };
+    await db.collection('projets').doc(curProjId).update({ statut: 'Terminé', cloture });
+    await pushJournal(curProjId, 'Projet clôturé par ' + CP.nom);
+    closeOverlay('ov-cloture-proj');
+    toast('Projet clôturé ✅');
     openProjDetail(curProjId);
   } catch(e) { toast('Erreur : ' + e.message); }
 };
