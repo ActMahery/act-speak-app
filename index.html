@@ -838,6 +838,8 @@ input,select,textarea{font-family:inherit}
 .bib-stt.dispo{background:#D4EDDA;color:#155724}
 .bib-stt.emprunte{background:#FDE8E8;color:#C0392B}
 .bib-stt.retard{background:#F5A623;color:#fff}
+.bib-stt.acquisition{background:#D6E4F0;color:#1B4F72}
+[data-dark] .bib-stt.acquisition{background:rgba(27,79,114,.3);color:#7FB3D5}
 [data-dark] .bib-stt.dispo{background:rgba(21,87,36,.3);color:#6EE7B7}
 [data-dark] .bib-stt.emprunte{background:rgba(192,57,43,.25);color:#FCA5A5}
 .bib-avis-item{padding:11px 16px;border-bottom:1px solid var(--surface2)}
@@ -892,14 +894,23 @@ input,select,textarea{font-family:inherit}
 /* Lecteur universel façon ReadEra */
 .lecteur-overlay{position:fixed;inset:0;background:#000;z-index:9999;display:none;flex-direction:column}
 .lecteur-overlay.on{display:flex}
-.lecteur-top{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#111;padding-top:calc(10px + env(safe-area-inset-top))}
+.lecteur-top{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#111;padding-top:calc(10px + env(safe-area-inset-top));transition:transform .2s,opacity .2s}
 .lecteur-btn{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:16px;flex-shrink:0}
+.lecteur-btn.sm{width:34px;height:34px;font-size:18px;font-weight:700}
 .lecteur-titre{flex:1;text-align:center;color:#fff;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 10px}
-.lecteur-lumi-wrap{display:flex;align-items:center;gap:10px;padding:8px 16px;background:#111;color:#fff;font-size:14px}
+.lecteur-lumi-wrap{display:flex;align-items:center;gap:10px;padding:8px 16px;background:#111;color:#fff;font-size:14px;transition:transform .2s,opacity .2s}
 .lecteur-lumi-wrap input{flex:1}
-.lecteur-body{flex:1;position:relative;background:#fff}
-.lecteur-iframe{width:100%;height:100%;border:none}
-.lecteur-dimmer{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .15s}
+.lecteur-body{flex:1;position:relative;background:#3a3a3a;overflow:hidden;touch-action:pan-y}
+.lecteur-pdf-wrap{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;overflow:auto}
+.lecteur-pdf-wrap canvas{max-width:100%;height:auto;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.4);margin:0 auto}
+.lecteur-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600;background:rgba(0,0,0,.35);z-index:2}
+.lecteur-dimmer{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .15s;z-index:3}
+.lecteur-bottom{display:flex;align-items:center;justify-content:center;gap:18px;padding:10px 16px;background:#111;padding-bottom:calc(10px + env(safe-area-inset-bottom));transition:transform .2s,opacity .2s}
+.lecteur-page-indic{color:#fff;font-size:13px;font-weight:600;min-width:90px;text-align:center;padding:4px 10px;border-radius:8px;background:rgba(255,255,255,.08)}
+.lecteur-overlay.controls-hidden .lecteur-top,
+.lecteur-overlay.controls-hidden .lecteur-lumi-wrap,
+.lecteur-overlay.controls-hidden .lecteur-bottom{transform:translateY(-100%);opacity:0;pointer-events:none}
+.lecteur-overlay.controls-hidden .lecteur-bottom{transform:translateY(100%)}
 @media print {
   body * { visibility:hidden; }
   #print-area, #print-area * { visibility:visible; }
@@ -2042,6 +2053,7 @@ input,select,textarea{font-family:inherit}
       <button class="chip" data-bibf="dispo" onclick="filterBiblio(this,'dispo')">✅ Disponibles</button>
       <button class="chip" data-bibf="emprunte" onclick="filterBiblio(this,'emprunte')">📕 Empruntés</button>
       <button class="chip" data-bibf="mesemprunts" onclick="filterBiblio(this,'mesemprunts')">👤 Mes emprunts</button>
+      <button class="chip" data-bibf="acquisition" onclick="filterBiblio(this,'acquisition')">🕓 En acquisition</button>
     </div>
     <div class="filters" id="bib-cat-filters" style="padding:8px 0 0"></div>
   </div>
@@ -2127,7 +2139,9 @@ input,select,textarea{font-family:inherit}
       </div>
       <div id="bibd-avis-list"></div>
     </div>
-    <div class="pd-card" id="bibd-admin-card" style="display:none;padding:14px 16px">
+    <div class="pd-card" id="bibd-admin-card" style="display:none;padding:14px 16px;flex-direction:column;gap:8px">
+      <button class="btn-join-proj" id="bibd-recu-btn" style="display:none" onclick="marquerRecuPhysiquement()">📦 Marquer comme reçu physiquement</button>
+      <button class="btn-join-proj" id="bibd-retire-btn" style="display:none" onclick="toggleRetireLivre()">🔧 Retirer du rayon</button>
       <button class="btn-danger-full" onclick="deleteLivre()">🗑️ Supprimer ce livre</button>
     </div>
   </div>
@@ -3075,6 +3089,12 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+</script>
 <script>
 // ── INIT ──────────────────────────────────────────────────────
 console.log("ACT & SPEAK v7.0 — Script chargé");
@@ -7085,8 +7105,8 @@ async function loadBiblio() {
   try {
     const snap = await db.collection('bibliotheque').get();
     allLivres = []; snap.forEach(d => allLivres.push({ id:d.id, ...d.data() }));
-    const dispoLivres = allLivres.filter(l => l.statutAcquisition !== 'acquisition' && !l.retire);
-    document.getElementById('bib-count').textContent = dispoLivres.length + ' livre' + (dispoLivres.length!==1?'s':'');
+    const visibleLivres = allLivres.filter(l => !l.retire);
+    document.getElementById('bib-count').textContent = visibleLivres.length + ' livre' + (visibleLivres.length!==1?'s':'');
 
     renderBibOverview();
     renderBibCatFilters();
@@ -7114,11 +7134,11 @@ function renderBibCatFilters() {
   const el = document.getElementById('bib-cat-filters');
   const isResp = isBureau(CP);
   const counts = {};
-  allLivres.filter(l => l.statutAcquisition !== 'acquisition' && !l.retire).forEach(l => {
+  allLivres.filter(l => !l.retire).forEach(l => {
     const c = l.categorie || 'autre';
     counts[c] = (counts[c]||0) + 1;
   });
-  let html = `<button class="chip on" data-bibc="tous">Tout (${allLivres.filter(l=>l.statutAcquisition!=='acquisition'&&!l.retire).length})</button>`;
+  let html = `<button class="chip on" data-bibc="tous">Tout (${allLivres.filter(l=>!l.retire).length})</button>`;
   Object.keys(BIB_CATEGORIES).forEach(k => {
     const n = counts[k] || 0;
     if (n === 0 && !isResp) return; // masqué aux membres si vide, visible aux responsables/Bureau
@@ -7147,20 +7167,22 @@ function renderBiblio() {
   const body = document.getElementById('bib-body');
   const q = (document.getElementById('bib-search')?.value || '').trim().toLowerCase();
   let list = allLivres.filter(l => {
-    if (l.statutAcquisition === 'acquisition') return bibFilter === 'tous' && bibCatFilter === 'tous' && false; // masqués de la liste normale, visibles via vue d'ensemble uniquement
+    const enAcq = l.statutAcquisition === 'acquisition';
     if (l.retire && !isBureau(CP)) return false;
     if (bibCatFilter !== 'tous' && (l.categorie||'autre') !== bibCatFilter) return false;
-    if (bibFilter === 'dispo' && !l.disponible) return false;
-    if (bibFilter === 'emprunte' && l.disponible) return false;
+    if (bibFilter === 'dispo' && (enAcq || !l.disponible)) return false;
+    if (bibFilter === 'emprunte' && (enAcq || l.disponible)) return false;
+    if (bibFilter === 'acquisition' && !enAcq) return false;
     if (bibFilter === 'mesemprunts' && l.emprunteurId !== CU?.uid) return false;
     if (q && !(l.titre||'').toLowerCase().includes(q) && !(l.auteur||'').toLowerCase().includes(q)) return false;
     return true;
   });
   if (!list.length) { body.innerHTML = '<div class="empty"><div class="empty-ic">📚</div><div class="empty-t">Aucun livre</div></div>'; return; }
   body.innerHTML = list.map(l => {
+    const enAcq = l.statutAcquisition === 'acquisition';
     const enRetard = !l.disponible && l.dateRetourPrevue && new Date(l.dateRetourPrevue) < new Date();
-    const sttC = l.retire ? 'emprunte' : l.disponible ? 'dispo' : enRetard ? 'retard' : 'emprunte';
-    const sttL = l.retire ? '🔧 Retiré (réparation)' : l.disponible ? '✅ Disponible' : enRetard ? '⏰ En retard' : '📕 Emprunté';
+    const sttC = enAcq ? 'acquisition' : l.retire ? 'emprunte' : l.disponible ? 'dispo' : enRetard ? 'retard' : 'emprunte';
+    const sttL = enAcq ? ('🕓 En acquisition' + (l.anneeAttendue ? ' (' + l.anneeAttendue + ')' : '')) : l.retire ? '🔧 Retiré (réparation)' : l.disponible ? '✅ Disponible' : enRetard ? '⏰ En retard' : '📕 Emprunté';
     const likesN = (l.likes||[]).length;
     const formats = [];
     if (l.hasPhysique) formats.push('📕 Physique');
@@ -7330,7 +7352,15 @@ function renderLivreDetail() {
   else descCard.style.display = 'none';
 
   document.getElementById('bibd-lire-btn').style.display = l.hasPdf ? 'block' : 'none';
-  document.getElementById('bibd-admin-card').style.display = isBiblioResponsable(CU?.uid) ? 'block' : 'none';
+  const isRespAdmin = isBiblioResponsable(CU?.uid);
+  document.getElementById('bibd-admin-card').style.display = isRespAdmin ? 'flex' : 'none';
+  const recuBtn = document.getElementById('bibd-recu-btn');
+  recuBtn.style.display = (isRespAdmin && l.statutAcquisition === 'acquisition') ? 'block' : 'none';
+  const retireBtn = document.getElementById('bibd-retire-btn');
+  if (isRespAdmin && l.statutAcquisition !== 'acquisition') {
+    retireBtn.style.display = 'block';
+    retireBtn.textContent = l.retire ? '📚 Remettre au rayon' : '🔧 Retirer du rayon (réparation)';
+  } else retireBtn.style.display = 'none';
 
   const jeSuisEmprunteur = l.emprunteurId === CU?.uid;
   const monStatusCard = document.getElementById('bibd-mystatus-card');
@@ -7507,31 +7537,153 @@ window.deleteLivre = async function() {
     loadBiblio();
   } catch(e) { toast('Erreur : ' + e.message); }
 };
+window.marquerRecuPhysiquement = async function() {
+  if (!isBiblioResponsable(CU?.uid)) { toast('Réservé aux responsables de la bibliothèque'); return; }
+  if (curLivreData.statutAcquisition !== 'acquisition') return;
+  if (!confirm('Confirmer la réception physique de "' + curLivreData.titre + '" ?')) return;
+  try {
+    await db.collection('bibliotheque').doc(curLivreId).update({
+      statutAcquisition: 'disponible', hasPhysique: true, disponible: true, anneeAttendue: null
+    });
+    curLivreData.statutAcquisition = 'disponible';
+    curLivreData.hasPhysique = true;
+    curLivreData.disponible = true;
+    curLivreData.anneeAttendue = null;
+    toast('Livre marqué comme reçu — disponible à l\'emprunt ✅');
+    renderLivreDetail();
+    loadBiblio();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.toggleRetireLivre = async function() {
+  if (!isBiblioResponsable(CU?.uid)) { toast('Réservé aux responsables de la bibliothèque'); return; }
+  const nouveauRetire = !curLivreData.retire;
+  if (nouveauRetire && curLivreData.emprunteurId) { toast('Impossible : ce livre est actuellement emprunté'); return; }
+  if (nouveauRetire && !confirm('Retirer temporairement ce livre du rayon (ex : réparation) ?')) return;
+  try {
+    await db.collection('bibliotheque').doc(curLivreId).update({ retire: nouveauRetire });
+    curLivreData.retire = nouveauRetire;
+    toast(nouveauRetire ? 'Livre retiré du rayon 🔧' : 'Livre remis au rayon ✅');
+    renderLivreDetail();
+    loadBiblio();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
 
-/* ── Lecteur universel façon ReadEra (Partie 3) ────────────────────── */
+/* ── Lecteur universel façon ReadEra (Partie 3) — rendu PDF.js en page ── */
 let lecteurDocKey = null, lecteurUrl = null, lecteurNom = null;
+let lecteurPdfDoc = null, lecteurPageActuelle = 1, lecteurPageTotal = 0;
+let lecteurRenderTask = null, lecteurSaveTimer = null;
+
 window.ouvrirLecteur = async function(url, titre, docKey) {
   if (!url) { toast('Aucun fichier disponible'); return; }
-  lecteurUrl = url; lecteurNom = titre || 'document'; lecteurDocKey = docKey || url;
-  document.getElementById('lecteur-titre').textContent = titre || 'Document';
-  document.getElementById('lecteur-iframe').src = url;
+  lecteurUrl = url; lecteurNom = titre || 'Document'; lecteurDocKey = docKey || url;
+  lecteurPdfDoc = null; lecteurPageActuelle = 1; lecteurPageTotal = 0;
+
+  document.getElementById('lecteur-titre').textContent = lecteurNom;
+  document.getElementById('lecteur-page-indic').textContent = '— / —';
+  document.getElementById('lecteur-overlay').classList.remove('controls-hidden');
+  document.getElementById('lecteur-overlay').classList.add('on');
+  document.getElementById('lecteur-loading').style.display = 'flex';
+
   const savedLumi = localStorage.getItem('lecteur-luminosite') || '0';
   document.getElementById('lecteur-lumi').value = savedLumi;
   changerLuminosite(savedLumi);
-  document.getElementById('lecteur-overlay').classList.add('on');
-  // Suivi "reprendre où on en est" — best-effort : mémorise la dernière ouverture par utilisateur/document
+
+  try { await document.getElementById('lecteur-overlay').requestFullscreen?.(); } catch(e) { /* non bloquant — pas grave si refusé par le navigateur */ }
+
+  if (!window.pdfjsLib) {
+    document.getElementById('lecteur-loading').style.display = 'none';
+    toast('Lecteur PDF indisponible — vérifie ta connexion et réessaie');
+    return;
+  }
+
+  // Reprendre à la page où l'utilisateur s'était arrêté (par utilisateur + document)
+  let pageDepart = 1;
   if (CU && lecteurDocKey) {
     try {
-      await db.collection('lecture_positions').doc(CU.uid + '_' + lecteurDocKey).set({
-        uid: CU.uid, docKey: lecteurDocKey, titre: lecteurNom, url,
-        lastOpenedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      const posSnap = await db.collection('lecture_positions').doc(CU.uid + '_' + lecteurDocKey).get();
+      if (posSnap.exists && posSnap.data().page) pageDepart = posSnap.data().page;
     } catch(e) { /* non bloquant */ }
   }
+
+  try {
+    const loadingTask = pdfjsLib.getDocument(url);
+    lecteurPdfDoc = await loadingTask.promise;
+    lecteurPageTotal = lecteurPdfDoc.numPages;
+    lecteurPageActuelle = Math.min(Math.max(1, pageDepart), lecteurPageTotal);
+    document.getElementById('lecteur-loading').style.display = 'none';
+    await renderLecteurPage(lecteurPageActuelle);
+  } catch(e) {
+    document.getElementById('lecteur-loading').style.display = 'none';
+    toast('Impossible de charger le document : ' + e.message);
+  }
+};
+
+async function renderLecteurPage(num) {
+  if (!lecteurPdfDoc) return;
+  if (lecteurRenderTask) { try { lecteurRenderTask.cancel(); } catch(e) {} }
+  try {
+    const page = await lecteurPdfDoc.getPage(num);
+    const canvas = document.getElementById('lecteur-canvas');
+    const wrap = document.getElementById('lecteur-pdf-wrap');
+    const unscaled = page.getViewport({ scale: 1 });
+    const dpr = window.devicePixelRatio || 1;
+    const availWidth = Math.max(wrap.clientWidth - 16, 200);
+    const scale = (availWidth / unscaled.width) * dpr;
+    const viewport = page.getViewport({ scale });
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    canvas.style.width = (viewport.width / dpr) + 'px';
+    canvas.style.height = (viewport.height / dpr) + 'px';
+    const ctx = canvas.getContext('2d');
+    const renderTask = page.render({ canvasContext: ctx, viewport });
+    lecteurRenderTask = renderTask;
+    await renderTask.promise;
+    lecteurPageActuelle = num;
+    document.getElementById('lecteur-page-indic').textContent = num + ' / ' + lecteurPageTotal;
+    wrap.scrollTop = 0;
+    sauvegarderPositionLecture(num);
+  } catch(e) {
+    if (e && e.name === 'RenderingCancelledException') return;
+    toast('Erreur d\'affichage de la page : ' + e.message);
+  }
+}
+function sauvegarderPositionLecture(page) {
+  if (!CU || !lecteurDocKey) return;
+  clearTimeout(lecteurSaveTimer);
+  lecteurSaveTimer = setTimeout(() => {
+    db.collection('lecture_positions').doc(CU.uid + '_' + lecteurDocKey).set({
+      uid: CU.uid, docKey: lecteurDocKey, titre: lecteurNom, url: lecteurUrl,
+      page, totalPages: lecteurPageTotal, lastOpenedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(() => {});
+  }, 600);
+}
+window.pageLecteurSuivante = function() {
+  if (!lecteurPdfDoc || lecteurPageActuelle >= lecteurPageTotal) return;
+  renderLecteurPage(lecteurPageActuelle + 1);
+};
+window.pageLecteurPrecedente = function() {
+  if (!lecteurPdfDoc || lecteurPageActuelle <= 1) return;
+  renderLecteurPage(lecteurPageActuelle - 1);
+};
+window.ouvrirSautPage = function() {
+  if (!lecteurPdfDoc) return;
+  const input = document.getElementById('lecteur-page-input');
+  input.value = lecteurPageActuelle;
+  input.max = lecteurPageTotal;
+  document.getElementById('ov-lecteur-page').classList.add('on');
+};
+window.validerSautPage = function() {
+  const v = parseInt(document.getElementById('lecteur-page-input').value);
+  closeOverlay('ov-lecteur-page');
+  if (!v || v < 1 || v > lecteurPageTotal) { toast('Numéro de page invalide'); return; }
+  renderLecteurPage(v);
 };
 window.fermerLecteur = function() {
   document.getElementById('lecteur-overlay').classList.remove('on');
-  document.getElementById('lecteur-iframe').src = '';
+  document.getElementById('lecteur-overlay').classList.remove('controls-hidden');
+  if (document.fullscreenElement) { try { document.exitFullscreen(); } catch(e) {} }
+  if (lecteurRenderTask) { try { lecteurRenderTask.cancel(); } catch(e) {} }
+  lecteurPdfDoc = null; lecteurPageActuelle = 1; lecteurPageTotal = 0;
 };
 window.changerLuminosite = function(val) {
   document.getElementById('lecteur-dimmer').style.opacity = (val / 100);
@@ -7544,6 +7696,30 @@ window.telechargerLecteur = function() {
   a.target = '_blank';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 };
+// Immersion façon ReadEra : tap = afficher/masquer les contrôles, swipe horizontal = page suivante/précédente
+document.addEventListener('DOMContentLoaded', function() {
+  const body = document.getElementById('lecteur-body');
+  const pageIndic = document.getElementById('lecteur-page-indic');
+  const prevBtn = document.getElementById('lecteur-prev-btn');
+  const nextBtn = document.getElementById('lecteur-next-btn');
+  if (!body) return;
+  let sx = 0, sy = 0, st = 0, moved = false;
+  body.addEventListener('pointerdown', (e) => { sx = e.clientX; sy = e.clientY; st = Date.now(); moved = false; });
+  body.addEventListener('pointermove', (e) => {
+    if (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10) moved = true;
+  });
+  body.addEventListener('pointerup', (e) => {
+    const dx = e.clientX - sx, dy = e.clientY - sy, dt = Date.now() - st;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && dt < 600) {
+      if (dx < 0) pageLecteurSuivante(); else pageLecteurPrecedente();
+    } else if (!moved && dt < 400) {
+      document.getElementById('lecteur-overlay').classList.toggle('controls-hidden');
+    }
+  });
+  if (pageIndic) pageIndic.addEventListener('click', (e) => { e.stopPropagation(); ouvrirSautPage(); });
+  if (prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); pageLecteurPrecedente(); });
+  if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); pageLecteurSuivante(); });
+});
 
 /* ── Suggestions de livres ──────────────────────────────────────── */
 window.openSuggestionModal = function() {
@@ -8867,19 +9043,37 @@ fillDash = function() {
 </script>
 <!-- ══ LECTEUR UNIVERSEL (façon ReadEra) — PDF, documents, tout fichier ══ -->
 <div id="lecteur-overlay" class="lecteur-overlay">
-  <div class="lecteur-top">
+  <div class="lecteur-top" id="lecteur-top">
     <button class="lecteur-btn" onclick="fermerLecteur()">✕</button>
     <div class="lecteur-titre" id="lecteur-titre">—</div>
     <button class="lecteur-btn" id="lecteur-dl-btn" onclick="telechargerLecteur()">⬇️</button>
   </div>
-  <div class="lecteur-lumi-wrap">
+  <div class="lecteur-lumi-wrap" id="lecteur-lumi-wrap">
     <span>🔅</span>
     <input type="range" id="lecteur-lumi" min="0" max="80" value="0" oninput="changerLuminosite(this.value)">
     <span>🔆</span>
   </div>
-  <div class="lecteur-body">
-    <iframe id="lecteur-iframe" class="lecteur-iframe"></iframe>
+  <div class="lecteur-body" id="lecteur-body">
+    <div class="lecteur-pdf-wrap" id="lecteur-pdf-wrap">
+      <canvas id="lecteur-canvas"></canvas>
+    </div>
+    <div class="lecteur-loading" id="lecteur-loading" style="display:none">⏳ Chargement du document…</div>
     <div class="lecteur-dimmer" id="lecteur-dimmer"></div>
+  </div>
+  <div class="lecteur-bottom" id="lecteur-bottom">
+    <button class="lecteur-btn sm" id="lecteur-prev-btn">‹</button>
+    <div class="lecteur-page-indic" id="lecteur-page-indic">— / —</div>
+    <button class="lecteur-btn sm" id="lecteur-next-btn">›</button>
+  </div>
+</div>
+
+<!-- MODAL SAUT DE PAGE -->
+<div class="overlay" id="ov-lecteur-page" onclick="closeOverlay('ov-lecteur-page')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Aller à la page</div>
+    <div class="mfield"><label>Numéro de page</label><input type="number" id="lecteur-page-input" min="1"></div>
+    <button class="btn-join-proj" onclick="validerSautPage()">Aller</button>
   </div>
 </div>
 
