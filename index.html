@@ -841,6 +841,16 @@ input,select,textarea{font-family:inherit}
 .ind-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:var(--surface2);color:var(--t3);white-space:nowrap}
 .ind-badge.ok{background:#DFF5EC;color:#0F6E56}
 [data-dark] .ind-badge.ok{background:rgba(15,110,86,.25);color:#4ADE80}
+.lg-table{width:100%;border-collapse:collapse;min-width:640px}
+.lg-table th{position:sticky;top:0;background:var(--surface2);font-size:11px;text-align:left;padding:9px 10px;cursor:pointer;white-space:nowrap;color:var(--t2)}
+.lg-table td{padding:9px 10px;font-size:12px;border-bottom:1px solid var(--surface2);white-space:nowrap;color:var(--t1)}
+.lg-table tbody tr{cursor:pointer}
+.lg-table tbody tr:hover{background:var(--surface2)}
+@media print{
+  body *{visibility:hidden}
+  #qr-print-area, #qr-print-area *{visibility:visible}
+  #qr-print-area{position:fixed;top:0;left:0;width:100%}
+}
 .journal-item{padding:9px 16px;border-bottom:1px solid var(--surface2);font-size:12px;color:var(--t2)}
 .journal-item:last-child{border-bottom:none}
 .journal-item .t{color:var(--t3);font-size:10.5px;margin-left:6px}
@@ -2684,6 +2694,10 @@ input,select,textarea{font-family:inherit}
       </div>
       <div id="pd-documents-list"></div>
     </div>
+    <div class="pd-card" id="pd-materiel-reserve-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">📦 Matériel réservé</div>
+      <div id="pd-materiel-reserve-list"></div>
+    </div>
     <div class="pd-card" id="pd-journal-card">
       <div class="pd-card-t" style="padding:13px 16px">Journal d'activité</div>
       <div id="pd-journal-list"></div>
@@ -3174,6 +3188,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 if (window.pdfjsLib) {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -3367,6 +3382,8 @@ function go(screen) {
   if (screen === 'biblio') loadBiblio();
   if (screen === 'logistique') loadLogistique();
   if (screen === 'logistique-demandes') loadDemandesLogistique();
+  if (screen === 'logistique-reservations') loadReservationsLogistique();
+  if (screen === 'logistique-commandes') loadCommandesLogistique();
   if (screen === 'langues') loadLangues();
   if (screen === 'dictionnaire') loadDictionnaire();
   if (screen === 'statuts') loadStatuts();
@@ -3433,6 +3450,21 @@ auth.onAuthStateChanged(async user => {
     } catch(e) {
       console.warn('Firestore profil:', e.message);
       // On reste avec le profil minimal, l'app fonctionne quand même
+    }
+
+    // Lien direct vers une fiche matériel (scan QR code)
+    const matParam = new URLSearchParams(location.search).get('mat');
+    if (matParam) {
+      try {
+        await loadLogResponsablesConfig();
+        const snap = await db.collection('logistique_materiel').where('ref','==',matParam).limit(1).get();
+        if (!snap.empty) {
+          const d = snap.docs[0];
+          go('logistique');
+          loadLogistique().then(() => openMaterielDetail(d.id));
+        }
+      } catch(e) { /* silencieux */ }
+      history.replaceState(null, '', location.pathname);
     }
   } else {
     CU = null; CP = null;
@@ -6900,6 +6932,9 @@ async function openProjDetail(id) {
   if (docAddBtn) docAddBtn.style.display = (!locked && (jeSuisMembre || isBureau(CP))) ? 'inline-flex' : 'none';
   renderDocuments();
 
+  // Matériel logistique réservé pour ce projet — lecture seule, visible à tous
+  if (typeof renderMaterielReserveCard === 'function') renderMaterielReserveCard(id);
+
   // Journal d'activité — lecture seule, visible à tous
   renderJournalVisuel();
 
@@ -6942,14 +6977,26 @@ async function openProjDetail(id) {
 
     var total = tasks.length;
     var done  = tasks.filter(function(t) { return t.statut === 'Terminée'; }).length;
-    var pct   = total > 0 ? Math.round((done / total) * 100) : (p.avancement || 0);
+
+    // Avancement hybride : basé sur les étapes si le projet en a au moins 2 (jalon terminé = 100%,
+    // en cours/à venir = 0%), sinon basé sur les tâches comme avant.
+    var etapes = p.etapes || [];
+    var pct, countLabel;
+    if (etapes.length >= 2) {
+      var etapesTerminees = etapes.filter(function(e) { return e.statut === 'terminee'; }).length;
+      pct = Math.round((etapesTerminees / etapes.length) * 100);
+      countLabel = etapesTerminees + '/' + etapes.length + ' étape' + (etapes.length !== 1 ? 's' : '');
+    } else {
+      pct = total > 0 ? Math.round((done / total) * 100) : (p.avancement || 0);
+      countLabel = total + ' tâche' + (total !== 1 ? 's' : '');
+    }
 
     document.getElementById('pd-pct-label').textContent   = pct + '%';
-    document.getElementById('pd-tasks-count').textContent = total + ' tâche' + (total !== 1 ? 's' : '');
+    document.getElementById('pd-tasks-count').textContent = countLabel;
     document.getElementById('pd-bar').style.width         = pct + '%';
 
     // Mettre à jour l'avancement dans Firestore
-    if (total > 0) {
+    if (etapes.length >= 2 || total > 0) {
       await db.collection('projets').doc(id).update({ avancement: pct });
     }
 
@@ -7267,6 +7314,21 @@ window.openNewEtapeModal = function() {
   sel.innerHTML = '<option value="">—</option>' + noms.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
   document.getElementById('ov-etape').classList.add('on');
 };
+// Recalcule et persiste l'avancement quand les étapes changent (mode hybride : actif dès 2 étapes).
+async function updateAvancementFromEtapes(etapes) {
+  if (!etapes || etapes.length < 2 || !curProjId) return;
+  const etapesTerminees = etapes.filter(e => e.statut === 'terminee').length;
+  const pct = Math.round((etapesTerminees / etapes.length) * 100);
+  try {
+    await db.collection('projets').doc(curProjId).update({ avancement: pct });
+    const pctLbl = document.getElementById('pd-pct-label');
+    const barEl = document.getElementById('pd-bar');
+    const countEl = document.getElementById('pd-tasks-count');
+    if (pctLbl) pctLbl.textContent = pct + '%';
+    if (barEl) barEl.style.width = pct + '%';
+    if (countEl) countEl.textContent = etapesTerminees + '/' + etapes.length + ' étape' + (etapes.length !== 1 ? 's' : '');
+  } catch(e) { /* non bloquant */ }
+}
 window.saveEtape = async function() {
   const nom = document.getElementById('etp-nom').value.trim();
   if (!nom) { toast('Nom obligatoire'); return; }
@@ -7283,6 +7345,7 @@ window.saveEtape = async function() {
     closeOverlay('ov-etape');
     toast('Étape ajoutée ✅');
     renderEtapes();
+    await updateAvancementFromEtapes(etapes);
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 async function setEtapeStatut(id, statut) {
@@ -7293,6 +7356,7 @@ async function setEtapeStatut(id, statut) {
     curProjData.etapes = etapes;
     if (statut === 'terminee' && etp) await pushJournal(curProjId, 'Étape terminée : ' + etp.nom);
     renderEtapes();
+    await updateAvancementFromEtapes(etapes);
   } catch(e) { toast('Erreur : ' + e.message); }
 }
 async function deleteEtape(id) {
@@ -7304,6 +7368,7 @@ async function deleteEtape(id) {
     curProjData.etapes = etapes;
     if (etp) await pushJournal(curProjId, 'Étape supprimée : ' + etp.nom);
     renderEtapes();
+    await updateAvancementFromEtapes(etapes);
   } catch(e) { toast('Erreur : ' + e.message); }
 }
 
@@ -9411,13 +9476,19 @@ fillDash = function() {
 
 /* ══ LOGISTIQUE (Module additionnel) — Bloc A : Inventaire matériel ══ */
 const LG_CATS = [
-  { key:'technique',    label:'Technique',    prefix:'T', bg:'#EFF6FF', fg:'#1C3557' },
-  { key:'info',         label:'Informatique', prefix:'I', bg:'#F5F3FF', fg:'#5B21B6' },
-  { key:'evenementiel', label:'Événementiel', prefix:'E', bg:'#FFF3CD', fg:'#856404' },
-  { key:'decoration',   label:'Décoration',   prefix:'D', bg:'#FDE8E8', fg:'#C0392B' },
-  { key:'pedagogique',  label:'Pédagogique',  prefix:'P', bg:'#D4EDDA', fg:'#155724' }
+  { key:'technique',    label:'Technique',    prefix:'T', code3:'TEC', bg:'#EFF6FF', fg:'#1C3557' },
+  { key:'info',         label:'Informatique', prefix:'I', code3:'INF', bg:'#F5F3FF', fg:'#5B21B6' },
+  { key:'evenementiel', label:'Événementiel', prefix:'E', code3:'EVE', bg:'#FFF3CD', fg:'#856404' },
+  { key:'decoration',   label:'Décoration',   prefix:'D', code3:'DEC', bg:'#FDE8E8', fg:'#C0392B' },
+  { key:'pedagogique',  label:'Pédagogique',  prefix:'P', code3:'PED', bg:'#D4EDDA', fg:'#155724' }
+];
+const LG_CRITICITES = [
+  { key:'Essentiel',   bg:'#FDE8E8', fg:'#C0392B' },
+  { key:'Utile',       bg:'#EFF6FF', fg:'#1C3557' },
+  { key:'Occasionnel', bg:'var(--surface2)', fg:'var(--t3)' }
 ];
 let allMateriels = [], curMaterielId = null, curMaterielData = null, lgFilter = 'tous', lgCatFilter = 'tous';
+let lgViewMode = 'cards', lgSortCol = 'nom', lgSortDir = 1;
 let logResponsables = { resp1Id:null, resp1Nom:null, resp2Id:null, resp2Nom:null, resp3Id:null, resp3Nom:null };
 
 // Seuls les 3 responsables logistique gèrent l'inventaire — pas de bypass automatique pour le reste du Bureau.
@@ -9433,21 +9504,75 @@ async function loadLogResponsablesConfig() {
 }
 function msOfTs(ts) { return (ts && ts.toMillis) ? ts.toMillis() : 0; }
 
-// Référence par catégorie (T-01, E-01...) calculée à l'affichage — plus de double saisie manuelle.
-function getCatRef(m, catKey) {
-  const cat = LG_CATS.find(c => c.key === catKey);
-  if (!cat || !m.categories || !m.categories[catKey]) return null;
-  const sameCat = allMateriels.filter(x => x.categories && x.categories[catKey])
-    .sort((a,b) => msOfTs(a.createdAt) - msOfTs(b.createdAt));
-  const idx = sameCat.findIndex(x => x.id === m.id);
-  return idx >= 0 ? (cat.prefix + '-' + String(idx+1).padStart(2,'0')) : null;
+// Catégorie principale = première catégorie cochée, dans l'ordre fixe de LG_CATS.
+function categoriePrincipale(categories) {
+  if (!categories) return null;
+  return LG_CATS.find(c => categories[c.key]) || null;
+}
+// Code unique structuré LG-CAT-001 (remplace l'ancien double système réf générale + réf par catégorie).
+function nextRefSeqForCat(code3) {
+  const prefix = 'LG-' + code3 + '-';
+  let max = 0;
+  allMateriels.forEach(m => {
+    if (m.ref && m.ref.indexOf(prefix) === 0) {
+      const n = parseInt(m.ref.slice(prefix.length), 10);
+      if (!isNaN(n) && n > max) max = n;
+    }
+  });
+  return max + 1;
+}
+function generateRefCode(categories) {
+  const cat = categoriePrincipale(categories);
+  const code3 = cat ? cat.code3 : 'GEN';
+  return 'LG-' + code3 + '-' + String(nextRefSeqForCat(code3)).padStart(3,'0');
 }
 function catBadgesHtml(m, small) {
-  return LG_CATS.filter(c => m.categories && m.categories[c.key]).map(c => {
-    const ref = getCatRef(m, c.key);
-    return `<span style="font-size:${small?10:11}px;font-weight:600;padding:3px 9px;border-radius:10px;background:${c.bg};color:${c.fg}">${c.label}${ref?' · '+ref:''}</span>`;
-  }).join('');
+  return LG_CATS.filter(c => m.categories && m.categories[c.key]).map(c =>
+    `<span style="font-size:${small?10:11}px;font-weight:600;padding:3px 9px;border-radius:10px;background:${c.bg};color:${c.fg}">${c.label}</span>`
+  ).join('');
 }
+function criticiteBadge(m) {
+  const crit = m.criticite || 'Utile';
+  const cfg = LG_CRITICITES.find(c => c.key === crit) || LG_CRITICITES[1];
+  return `<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:${cfg.bg};color:${cfg.fg}">${crit}</span>`;
+}
+function materielQte(m) {
+  if (m.lots && m.lots.length) return m.lots.reduce((s,l) => s + (Number(l.quantite)||0), 0);
+  return Number(m.quantite) || 0;
+}
+function materielDerniereAcqLabel(m) {
+  const lots = (m.lots && m.lots.length) ? m.lots : (m.dateAcquisitionISO ? [{date:m.dateAcquisitionISO}] : []);
+  if (!lots.length) return m.dateAcquisition || '—';
+  const last = lots.slice().sort((a,b) => (a.date||'').localeCompare(b.date||'')).pop();
+  return last.date ? new Date(last.date).toLocaleDateString('fr-FR',{month:'long',year:'numeric'}) : (m.dateAcquisition || '—');
+}
+function buildMaterielLink(m) {
+  return location.origin + location.pathname + '?mat=' + encodeURIComponent(m.ref || '');
+}
+// Migration silencieuse : génère un refCode structuré si absent, convertit quantité/date en premier lot si `lots` est absent.
+window.migrerAnciensMateriels = async function() {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  const aMigrer = allMateriels.filter(m => !m.ref || m.ref.split('-').length < 3 || !m.lots);
+  if (!aMigrer.length) { toast('Rien à migrer, tout est déjà à jour ✅'); return; }
+  if (!confirm(aMigrer.length + ' matériel(s) à migrer vers le nouveau système de références et de lots. Continuer ?')) return;
+  try {
+    const batch = db.batch();
+    aMigrer.forEach(m => {
+      const update = {};
+      if (!m.ref || m.ref.split('-').length < 3) {
+        update.ref = generateRefCode(m.categories);
+        m.ref = update.ref;
+      }
+      if (!m.lots) {
+        update.lots = [{ date: m.dateAcquisitionISO || null, quantite: Number(m.quantite) || 0 }];
+      }
+      batch.update(db.collection('logistique_materiel').doc(m.id), update);
+    });
+    await batch.commit();
+    toast('Migration terminée ✅');
+    loadLogistique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
 
 async function loadLogistique() {
   const body = document.getElementById('lg-body');
@@ -9457,6 +9582,10 @@ async function loadLogistique() {
   document.getElementById('lg-resp-btn').style.display = isPresidentOrVP(CP) ? 'block' : 'none';
   const navDemandes = document.getElementById('lg-nav-demandes');
   if (navDemandes) navDemandes.style.display = (isLogResponsable(CU?.uid) || isBureau(CP)) ? 'inline-block' : 'none';
+  const navReservations = document.getElementById('lg-nav-reservations');
+  if (navReservations) navReservations.style.display = isLogResponsable(CU?.uid) ? 'inline-block' : 'none';
+  const navCommandes = document.getElementById('lg-nav-commandes');
+  if (navCommandes) navCommandes.style.display = isLogResponsable(CU?.uid) ? 'inline-block' : 'none';
   try {
     const snap = await db.collection('logistique_materiel').get();
     allMateriels = []; snap.forEach(d => allMateriels.push({ id:d.id, ...d.data() }));
@@ -9470,15 +9599,17 @@ async function loadLogistique() {
 
 function renderLogistiqueOverview() {
   const visibles = allMateriels.filter(m => !m.retire);
-  const totalQte = visibles.reduce((s,m) => s + (Number(m.quantite)||0), 0);
+  const totalQte = visibles.reduce((s,m) => s + materielQte(m), 0);
   const retireCount = allMateriels.filter(m => m.retire).length;
   document.getElementById('lg-ov-total').textContent = totalQte;
   document.getElementById('lg-ov-retire').textContent = retireCount;
   const catsHtml = LG_CATS.map(c => {
-    const qte = visibles.filter(m => m.categories && m.categories[c.key]).reduce((s,m) => s + (Number(m.quantite)||0), 0);
+    const qte = visibles.filter(m => m.categories && m.categories[c.key]).reduce((s,m) => s + materielQte(m), 0);
     return `<span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:10px;background:${c.bg};color:${c.fg}">${c.label} : ${qte}</span>`;
   }).join('');
   document.getElementById('lg-ov-cats').innerHTML = catsHtml;
+  const migBtn = document.getElementById('lg-migrate-btn');
+  if (migBtn) migBtn.style.display = isLogResponsable(CU?.uid) ? 'block' : 'none';
 }
 
 function renderLogistiqueCatFilters() {
@@ -9509,18 +9640,29 @@ function filterLogistiqueCat(el, c) {
   renderLogistique();
 }
 
-function renderLogistique() {
-  const body = document.getElementById('lg-body');
+function getFilteredMateriels() {
   const q = (document.getElementById('lg-search').value || '').toLowerCase().trim();
-  const visiblesCount = allMateriels.filter(m => !m.retire).length;
-  document.getElementById('lg-count').textContent = visiblesCount + ' matériel' + (visiblesCount!==1?'s':'');
-  let list = allMateriels.filter(m => {
+  return allMateriels.filter(m => {
     if (lgFilter === 'disponible' && m.retire) return false;
     if (lgFilter === 'retire' && !m.retire) return false;
     if (lgCatFilter !== 'tous' && !(m.categories && m.categories[lgCatFilter])) return false;
     if (q && !(m.nom||'').toLowerCase().includes(q)) return false;
     return true;
   });
+}
+window.toggleLgViewMode = function(mode) {
+  lgViewMode = mode;
+  document.getElementById('lg-view-cards-btn').classList.toggle('on', mode==='cards');
+  document.getElementById('lg-view-table-btn').classList.toggle('on', mode==='table');
+  document.getElementById('lg-body').style.display = mode==='cards' ? 'block' : 'none';
+  document.getElementById('lg-table-wrap').style.display = mode==='table' ? 'block' : 'none';
+  renderLogistique();
+};
+function renderLogistique() {
+  const list = getFilteredMateriels();
+  document.getElementById('lg-count').textContent = list.length + ' matériel' + (list.length!==1?'s':'');
+  if (lgViewMode === 'table') { renderLogistiqueTable(list); return; }
+  const body = document.getElementById('lg-body');
   if (!list.length) {
     body.innerHTML = '<div class="empty"><div class="empty-ic">📦</div><div class="empty-t">Aucun matériel</div><div class="empty-b">Rien dans cette catégorie.</div></div>';
     return;
@@ -9529,28 +9671,88 @@ function renderLogistique() {
     const etatBg = m.retire ? '#FDE8E8' : m.etat === 'Neuf' ? '#D4EDDA' : m.etat === 'Abîmé' ? '#FDE8E8' : '#EFF6FF';
     const etatFg = m.retire ? '#C0392B' : m.etat === 'Neuf' ? '#155724' : m.etat === 'Abîmé' ? '#C0392B' : '#1C3557';
     const etatLabel = m.retire ? '🔧 Retiré' : (m.etat || 'Bon état');
+    const thumb = m.photoUrl ? `<img src="${m.photoUrl}" style="width:44px;height:44px;border-radius:10px;object-fit:cover;margin-right:10px">` : `<div style="width:44px;height:44px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px;margin-right:10px">📦</div>`;
     return `<div class="tc" data-action="open-mat" data-id="${m.id}" style="cursor:pointer">
       <div class="tc-top">
-        <div class="tc-info">
-          <div class="tc-nom">${escHtml(m.nom||'—')}</div>
-          <div class="tc-who">${escHtml(m.ref||'')} · Qté ${m.quantite ?? '—'}${m.lieuStockage ? ' · '+escHtml(m.lieuStockage) : ''}</div>
+        <div style="display:flex;align-items:center">
+          ${thumb}
+          <div class="tc-info">
+            <div class="tc-nom">${escHtml(m.nom||'—')}</div>
+            <div class="tc-who">${escHtml(m.ref||'')} · Qté ${materielQte(m)}${m.lieuStockage ? ' · '+escHtml(m.lieuStockage) : ''}</div>
+          </div>
         </div>
         <div class="tc-badge" style="background:${etatBg};color:${etatFg}">${etatLabel}</div>
       </div>
-      <div class="tc-meta" style="flex-wrap:wrap;gap:6px">${catBadgesHtml(m, true)}</div>
+      <div class="tc-meta" style="flex-wrap:wrap;gap:6px">${catBadgesHtml(m, true)}${criticiteBadge(m)}</div>
     </div>`;
   }).join('');
   body.querySelectorAll('[data-action="open-mat"]').forEach(el => {
     el.addEventListener('click', () => openMaterielDetail(el.getAttribute('data-id')));
   });
 }
+const LG_TABLE_COLS = [
+  { key:'ref', label:'Réf' },
+  { key:'nom', label:'Nom' },
+  { key:'qte', label:'Qté' },
+  { key:'lieuStockage', label:'Lieu' },
+  { key:'etat', label:'État' },
+  { key:'criticite', label:'Criticité' },
+  { key:'responsable', label:'Responsable' },
+  { key:'derniereAcq', label:'Dern. acquis.' }
+];
+function lgTableSortVal(m, key) {
+  if (key === 'qte') return materielQte(m);
+  if (key === 'derniereAcq') return materielDerniereAcqLabel(m);
+  if (key === 'criticite') return m.criticite || 'Utile';
+  return (m[key] || '').toString().toLowerCase();
+}
+window.sortLgTable = function(col) {
+  if (lgSortCol === col) lgSortDir = -lgSortDir; else { lgSortCol = col; lgSortDir = 1; }
+  renderLogistique();
+};
+function renderLogistiqueTable(list) {
+  const wrap = document.getElementById('lg-table-wrap');
+  const sorted = list.slice().sort((a,b) => {
+    const va = lgTableSortVal(a, lgSortCol), vb = lgTableSortVal(b, lgSortCol);
+    return va < vb ? -1*lgSortDir : va > vb ? 1*lgSortDir : 0;
+  });
+  let html = '<div style="overflow-x:auto"><table class="lg-table"><thead><tr>';
+  LG_TABLE_COLS.forEach(c => {
+    const arrow = lgSortCol === c.key ? (lgSortDir===1?' ▲':' ▼') : '';
+    html += `<th data-sort="${c.key}">${c.label}${arrow}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+  if (!sorted.length) {
+    html += `<tr><td colspan="${LG_TABLE_COLS.length}" style="text-align:center;color:var(--t3);padding:20px">Aucun matériel</td></tr>`;
+  } else {
+    sorted.forEach(m => {
+      html += `<tr data-action="open-mat-row" data-id="${m.id}">
+        <td>${escHtml(m.ref||'—')}</td>
+        <td>${escHtml(m.nom||'—')}</td>
+        <td>${materielQte(m)}</td>
+        <td>${escHtml(m.lieuStockage||'—')}</td>
+        <td>${m.retire ? '🔧 Retiré' : escHtml(m.etat||'Bon état')}</td>
+        <td>${escHtml(m.criticite||'Utile')}</td>
+        <td>${escHtml(m.responsable||'—')}</td>
+        <td>${escHtml(materielDerniereAcqLabel(m))}</td>
+      </tr>`;
+    });
+  }
+  html += '</tbody></table></div>';
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('[data-sort]').forEach(th => th.addEventListener('click', () => sortLgTable(th.getAttribute('data-sort'))));
+  wrap.querySelectorAll('[data-action="open-mat-row"]').forEach(tr => tr.addEventListener('click', () => openMaterielDetail(tr.getAttribute('data-id'))));
+}
 
 function renderMaterielDetailFields(m) {
   document.getElementById('lgd-nom').textContent = m.nom || '—';
   document.getElementById('lgd-ref').textContent = m.ref || '—';
-  document.getElementById('lgd-cats-card').innerHTML = catBadgesHtml(m, false) || '<span style="font-size:12px;color:var(--t3)">Aucune catégorie</span>';
-  document.getElementById('lgd-qte').textContent = m.quantite ?? '—';
-  document.getElementById('lgd-date').textContent = m.dateAcquisition || '—';
+  const photoWrap = document.getElementById('lgd-photo-wrap');
+  if (m.photoUrl) { photoWrap.style.display = 'block'; photoWrap.innerHTML = `<img src="${m.photoUrl}" style="width:100%;max-height:220px;object-fit:cover;border-radius:var(--r22)">`; }
+  else photoWrap.style.display = 'none';
+  document.getElementById('lgd-cats-card').innerHTML = (catBadgesHtml(m, false) || '<span style="font-size:12px;color:var(--t3)">Aucune catégorie</span>') + criticiteBadge(m);
+  document.getElementById('lgd-qte').textContent = materielQte(m);
+  document.getElementById('lgd-date').textContent = materielDerniereAcqLabel(m);
   document.getElementById('lgd-lieu').textContent = m.lieuStockage || '—';
   document.getElementById('lgd-resp').textContent = m.responsable || '—';
   document.getElementById('lgd-etat').textContent = m.retire ? '🔧 Retiré du stock' : (m.etat || 'Bon état');
@@ -9558,11 +9760,85 @@ function renderMaterielDetailFields(m) {
   const detailsCard = document.getElementById('lgd-details-card');
   if (m.details) { detailsCard.style.display = 'block'; document.getElementById('lgd-details').textContent = m.details; }
   else detailsCard.style.display = 'none';
+  renderLotsList(m);
   const isResp = isLogResponsable(CU?.uid);
   document.getElementById('lgd-admin-card').style.display = isResp ? 'flex' : 'none';
+  document.getElementById('lgd-add-lot-btn').style.display = isResp ? 'inline-flex' : 'none';
   const retireBtn = document.getElementById('lgd-retire-btn');
   retireBtn.textContent = m.retire ? '📦 Remettre en stock' : '🔧 Retirer du stock';
 }
+function renderLotsList(m) {
+  const el = document.getElementById('lgd-lots-list');
+  const lots = (m.lots || []).slice().sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  const isResp = isLogResponsable(CU?.uid);
+  if (!lots.length) { el.innerHTML = '<div style="font-size:12px;color:var(--t3);padding:8px 0">Aucun lot enregistré.</div>'; return; }
+  el.innerHTML = lots.map((l, i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--surface2)">
+      <span style="font-size:12.5px;color:var(--t2)">${l.date ? new Date(l.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : 'Date inconnue'} · +${l.quantite}</span>
+      ${isResp ? `<button data-action="del-lot" data-idx="${i}" style="font-size:11px;color:var(--red);background:none">🗑</button>` : ''}
+    </div>`).join('');
+  el.querySelectorAll('[data-action="del-lot"]').forEach(btn => {
+    btn.addEventListener('click', () => deleteLot(Number(btn.getAttribute('data-idx')), lots));
+  });
+}
+async function deleteLot(idx, sortedLots) {
+  if (!isLogResponsable(CU?.uid)) return;
+  const lotObj = sortedLots[idx];
+  const trueIdx = curMaterielData.lots.indexOf(lotObj);
+  if (trueIdx < 0) return;
+  if (!confirm('Supprimer ce lot ?')) return;
+  const newLots = curMaterielData.lots.slice();
+  newLots.splice(trueIdx, 1);
+  const quantite = newLots.reduce((s,l) => s + (Number(l.quantite)||0), 0);
+  const lastDate = newLots.length ? newLots.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).pop().date : null;
+  try {
+    await db.collection('logistique_materiel').doc(curMaterielId).update({
+      lots: newLots, quantite,
+      dateAcquisitionISO: lastDate,
+      dateAcquisition: lastDate ? new Date(lastDate).toLocaleDateString('fr-FR',{month:'long',year:'numeric'}) : null
+    });
+    curMaterielData.lots = newLots; curMaterielData.quantite = quantite;
+    toast('Lot supprimé');
+    renderMaterielDetailFields(curMaterielData);
+    loadLogistique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+window.openAddLotModal = function() {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  document.getElementById('lot-date').value = '';
+  document.getElementById('lot-qte').value = 1;
+  document.getElementById('ov-lot').classList.add('on');
+};
+window.saveLot = async function() {
+  if (!isLogResponsable(CU?.uid) || !curMaterielData) { toast('Réservé aux responsables logistique'); return; }
+  const date = document.getElementById('lot-date').value || null;
+  const quantite = Number(document.getElementById('lot-qte').value) || 0;
+  if (quantite <= 0) { toast('Quantité invalide'); return; }
+  try {
+    const newLots = (curMaterielData.lots || []).concat([{ date, quantite }]);
+    const totalQte = newLots.reduce((s,l) => s + (Number(l.quantite)||0), 0);
+    const lastDate = newLots.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).pop().date;
+    await db.collection('logistique_materiel').doc(curMaterielId).update({
+      lots: newLots, quantite: totalQte,
+      dateAcquisitionISO: lastDate,
+      dateAcquisition: lastDate ? new Date(lastDate).toLocaleDateString('fr-FR',{month:'long',year:'numeric'}) : null
+    });
+    curMaterielData.lots = newLots; curMaterielData.quantite = totalQte;
+    closeOverlay('ov-lot');
+    toast('Lot ajouté ✅');
+    renderMaterielDetailFields(curMaterielData);
+    loadLogistique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.openQrModal = function() {
+  if (!curMaterielData) return;
+  const container = document.getElementById('qr-materiel-container');
+  container.innerHTML = '';
+  new QRCode(container, { text: buildMaterielLink(curMaterielData), width:200, height:200 });
+  document.getElementById('qr-materiel-label').textContent = (curMaterielData.ref||'') + ' · ' + (curMaterielData.nom||'');
+  document.getElementById('ov-qr-materiel').classList.add('on');
+};
+window.printQr = function() { window.print(); };
 function openMaterielDetail(id) {
   curMaterielId = id;
   const m = allMateriels.find(x => x.id === id);
@@ -9588,10 +9864,13 @@ window.openNewMaterielModal = function() {
   document.getElementById('mat-ref').value = '';
   document.getElementById('mat-qte').value = 1;
   document.getElementById('mat-date').value = '';
+  document.getElementById('mat-qte-date-row').style.display = 'flex';
   document.getElementById('mat-lieu').value = '';
   document.getElementById('mat-resp').value = '';
   document.getElementById('mat-etat').value = 'Neuf';
+  document.getElementById('mat-crit').value = 'Utile';
   document.getElementById('mat-details').value = '';
+  document.getElementById('mat-photo-file').value = '';
   document.getElementById('mat-reutilisable-chk').checked = true;
   renderMatCatsCheckboxes({});
   document.getElementById('mat-sub-btn').querySelector('span').textContent = 'Ajouter';
@@ -9603,12 +9882,13 @@ window.openEditMaterielModal = function() {
   document.getElementById('mat-modal-title').textContent = 'Modifier le matériel';
   document.getElementById('mat-nom').value = m.nom || '';
   document.getElementById('mat-ref').value = m.ref || '';
-  document.getElementById('mat-qte').value = m.quantite ?? 1;
-  document.getElementById('mat-date').value = m.dateAcquisitionISO || '';
+  document.getElementById('mat-qte-date-row').style.display = 'none';
   document.getElementById('mat-lieu').value = m.lieuStockage || '';
   document.getElementById('mat-resp').value = m.responsable || '';
   document.getElementById('mat-etat').value = m.etat || 'Neuf';
+  document.getElementById('mat-crit').value = m.criticite || 'Utile';
   document.getElementById('mat-details').value = m.details || '';
+  document.getElementById('mat-photo-file').value = '';
   document.getElementById('mat-reutilisable-chk').checked = m.reutilisable !== false;
   renderMatCatsCheckboxes(m.categories || {});
   document.getElementById('mat-sub-btn').querySelector('span').textContent = 'Enregistrer';
@@ -9618,29 +9898,35 @@ window.saveMateriel = async function() {
   if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
   const nom = document.getElementById('mat-nom').value.trim();
   if (!nom) { toast('Le nom du matériel est obligatoire'); return; }
-  let ref = document.getElementById('mat-ref').value.trim();
-  if (!ref) ref = 'LG-' + String(allMateriels.length + 1).padStart(3,'0');
   const categories = {};
   LG_CATS.forEach(c => { categories[c.key] = !!document.getElementById('mat-cat-'+c.key).checked; });
-  const dateVal = document.getElementById('mat-date').value;
+  let ref = document.getElementById('mat-ref').value.trim();
+  if (!ref && !curMaterielId) ref = generateRefCode(categories);
   const payload = {
-    nom, ref, categories,
-    quantite: Number(document.getElementById('mat-qte').value) || 0,
-    dateAcquisitionISO: dateVal || null,
-    dateAcquisition: dateVal ? new Date(dateVal).toLocaleDateString('fr-FR',{month:'long',year:'numeric'}) : null,
+    nom, categories,
     lieuStockage: document.getElementById('mat-lieu').value.trim(),
     responsable: document.getElementById('mat-resp').value.trim(),
     etat: document.getElementById('mat-etat').value,
+    criticite: document.getElementById('mat-crit').value,
     details: document.getElementById('mat-details').value.trim(),
     reutilisable: document.getElementById('mat-reutilisable-chk').checked
   };
+  if (ref) payload.ref = ref;
   const btn = document.getElementById('mat-sub-btn');
   btn.disabled = true;
   try {
+    const photoFile = document.getElementById('mat-photo-file').files[0];
+    if (photoFile) payload.photoUrl = await uploadToCloudinary(photoFile, 'logistique/photos');
     if (curMaterielId) {
       await db.collection('logistique_materiel').doc(curMaterielId).update(payload);
       toast('Matériel modifié ✅');
     } else {
+      const dateVal = document.getElementById('mat-date').value;
+      const qteInit = Number(document.getElementById('mat-qte').value) || 0;
+      payload.lots = [{ date: dateVal || null, quantite: qteInit }];
+      payload.quantite = qteInit;
+      payload.dateAcquisitionISO = dateVal || null;
+      payload.dateAcquisition = dateVal ? new Date(dateVal).toLocaleDateString('fr-FR',{month:'long',year:'numeric'}) : null;
       payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       payload.retire = false;
       await db.collection('logistique_materiel').add(payload);
@@ -9936,6 +10222,386 @@ window.deleteDemande = async function() {
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
+/* ══ LOGISTIQUE — Bloc C : Réservation & sortie de matériel pour un événement ══ */
+// Règle : seuls les 3 Responsables Logistique créent/gèrent une réservation (sur demande orale/externe).
+// La disponibilité se vérifie par quantité sur la période demandée (pas de blocage tout-ou-rien).
+let allReservationsLog = [], lrFilter = 'toutes', curRetourReservationId = null;
+
+function reservationOverlap(debutA, finA, debutB, finB) {
+  return debutA <= finB && finA >= debutB;
+}
+function quantiteDisponibleMateriel(materielId, dateDebut, dateFin) {
+  const m = allMateriels.find(x => x.id === materielId);
+  if (!m) return 0;
+  const total = materielQte(m);
+  const reserve = allReservationsLog
+    .filter(r => r.materielId === materielId && (r.statut === 'reservee' || r.statut === 'sortie'))
+    .filter(r => reservationOverlap(r.dateSortie, r.dateRetourPrevue, dateDebut, dateFin))
+    .reduce((s,r) => s + (Number(r.quantite)||0), 0);
+  return total - reserve;
+}
+function reservationStatutInfo(r) {
+  const enRetard = r.statut === 'sortie' && r.dateRetourPrevue && r.dateRetourPrevue < new Date().toISOString().slice(0,10);
+  if (r.statut === 'retournee') return { label:'✅ Retourné', bg:'#D4EDDA', fg:'#155724' };
+  if (enRetard) return { label:'⏰ En retard', bg:'#FDE8E8', fg:'#C0392B' };
+  if (r.statut === 'sortie') return { label:'🚚 Sorti', bg:'#FFF3CD', fg:'#856404' };
+  return { label:'📅 Réservé', bg:'#EFF6FF', fg:'#1C3557' };
+}
+async function loadReservationsLogistique() {
+  const body = document.getElementById('lr-body');
+  body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+  await loadLogResponsablesConfig();
+  const canManage = isLogResponsable(CU?.uid);
+  document.getElementById('lr-add-btn').style.display = canManage ? 'flex' : 'none';
+  if (!canManage) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">🔒</div><div class="empty-t">Section réservée</div><div class="empty-b">Réservée aux responsables logistique.</div></div>';
+    document.getElementById('lr-count').textContent = '—';
+    return;
+  }
+  try {
+    if (!allMateriels.length) {
+      const matSnap = await db.collection('logistique_materiel').get();
+      allMateriels = []; matSnap.forEach(d => allMateriels.push({ id:d.id, ...d.data() }));
+    }
+    const resSnap = await db.collection('logistique_reservations').get();
+    allReservationsLog = [];
+    resSnap.forEach(d => allReservationsLog.push({ id:d.id, ...d.data() }));
+    allReservationsLog.sort((a,b) => (a.dateSortie||'').localeCompare(b.dateSortie||''));
+    renderReservationsLog();
+  } catch(e) { body.innerHTML = '<div class="empty"><div class="empty-t">Erreur de chargement</div></div>'; }
+}
+window.filterReservationsLog = function(el, f) {
+  lrFilter = f;
+  document.querySelectorAll('[data-lrf]').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  renderReservationsLog();
+};
+function renderReservationsLog() {
+  const body = document.getElementById('lr-body');
+  let list = allReservationsLog.filter(r => {
+    if (lrFilter === 'reservee') return r.statut === 'reservee';
+    if (lrFilter === 'sortie') return r.statut === 'sortie';
+    if (lrFilter === 'retournee') return r.statut === 'retournee';
+    return true;
+  });
+  document.getElementById('lr-count').textContent = allReservationsLog.length + ' réservation' + (allReservationsLog.length!==1?'s':'');
+  if (!list.length) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">🚚</div><div class="empty-t">Aucune réservation</div><div class="empty-b">Rien dans cette catégorie.</div></div>';
+    return;
+  }
+  body.innerHTML = list.map(r => {
+    const st = reservationStatutInfo(r);
+    const periode = (r.dateSortie ? new Date(r.dateSortie).toLocaleDateString('fr-FR') : '—') + ' → ' + (r.dateRetourPrevue ? new Date(r.dateRetourPrevue).toLocaleDateString('fr-FR') : '—');
+    let actions = '';
+    if (r.statut === 'reservee') actions += `<button data-action="lr-sortie" data-id="${r.id}" style="font-size:11px;font-weight:600;padding:6px 10px;border-radius:8px;background:var(--surface2);color:var(--t1);margin-right:6px">📤 Marquer sorti</button><button data-action="lr-annuler" data-id="${r.id}" style="font-size:11px;font-weight:600;padding:6px 10px;border-radius:8px;background:var(--surface2);color:var(--red)">✕ Annuler</button>`;
+    if (r.statut === 'sortie') actions += `<button data-action="lr-retour" data-id="${r.id}" style="font-size:11px;font-weight:600;padding:6px 10px;border-radius:8px;background:var(--surface2);color:var(--t1)">📥 Marquer retourné</button>`;
+    return `<div class="tc">
+      <div class="tc-top">
+        <div class="tc-info">
+          <div class="tc-nom">${escHtml(r.materielNom||'—')} × ${r.quantite}</div>
+          <div class="tc-who">${escHtml(r.projetNom||'—')} · ${periode}${r.responsableSortie ? ' · 👤 '+escHtml(r.responsableSortie) : ''}</div>
+        </div>
+        <div class="tc-badge" style="background:${st.bg};color:${st.fg}">${st.label}</div>
+      </div>
+      ${actions ? `<div class="tc-meta" style="flex-wrap:wrap;gap:0;padding-top:8px">${actions}</div>` : ''}
+    </div>`;
+  }).join('');
+  body.querySelectorAll('[data-action="lr-sortie"]').forEach(b => b.addEventListener('click', () => marquerSortieReservation(b.getAttribute('data-id'))));
+  body.querySelectorAll('[data-action="lr-annuler"]').forEach(b => b.addEventListener('click', () => annulerReservation(b.getAttribute('data-id'))));
+  body.querySelectorAll('[data-action="lr-retour"]').forEach(b => b.addEventListener('click', () => openRetourReservationModal(b.getAttribute('data-id'))));
+}
+window.openNewReservationModal = async function() {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  document.getElementById('lr-qte').value = 1;
+  document.getElementById('lr-date-sortie').value = '';
+  document.getElementById('lr-date-retour').value = '';
+  document.getElementById('lr-resp-sortie').value = '';
+  document.getElementById('lr-dispo-info').textContent = '';
+  const matSel = document.getElementById('lr-materiel');
+  matSel.innerHTML = '<option value="">— Choisir —</option>' + allMateriels.filter(m => !m.retire).map(m => `<option value="${m.id}">${escHtml(m.ref||'')} · ${escHtml(m.nom||'')}</option>`).join('');
+  const projSel = document.getElementById('lr-projet');
+  projSel.innerHTML = '<option value="">Chargement...</option>';
+  document.getElementById('ov-reservation').classList.add('on');
+  try {
+    const snap = await db.collection('projets').get();
+    const projs = [];
+    snap.forEach(d => { const p = d.data(); if (p.statutPublication !== 'archive') projs.push({ id:d.id, nom:p.nom||'—' }); });
+    projs.sort((a,b) => a.nom.localeCompare(b.nom));
+    projSel.innerHTML = '<option value="">— Choisir —</option>' + projs.map(p => `<option value="${p.id}">${escHtml(p.nom)}</option>`).join('');
+  } catch(e) { projSel.innerHTML = '<option value="">Erreur de chargement</option>'; }
+};
+window.checkDispoReservation = function() {
+  const materielId = document.getElementById('lr-materiel').value;
+  const dateDebut = document.getElementById('lr-date-sortie').value;
+  const dateFin = document.getElementById('lr-date-retour').value;
+  const infoEl = document.getElementById('lr-dispo-info');
+  if (!materielId || !dateDebut || !dateFin) { infoEl.textContent = ''; return; }
+  const dispo = quantiteDisponibleMateriel(materielId, dateDebut, dateFin);
+  infoEl.textContent = dispo + ' disponible(s) sur cette période';
+  infoEl.style.color = dispo > 0 ? 'var(--t2)' : 'var(--red)';
+};
+window.saveReservation = async function() {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  const materielId = document.getElementById('lr-materiel').value;
+  const projetId = document.getElementById('lr-projet').value;
+  const quantite = Number(document.getElementById('lr-qte').value) || 0;
+  const dateSortie = document.getElementById('lr-date-sortie').value;
+  const dateRetourPrevue = document.getElementById('lr-date-retour').value;
+  const responsableSortie = document.getElementById('lr-resp-sortie').value.trim();
+  if (!materielId || !projetId) { toast('Matériel et projet obligatoires'); return; }
+  if (!dateSortie || !dateRetourPrevue) { toast('Dates obligatoires'); return; }
+  if (dateRetourPrevue < dateSortie) { toast('La date de retour doit être après la sortie'); return; }
+  if (quantite <= 0) { toast('Quantité invalide'); return; }
+  const dispo = quantiteDisponibleMateriel(materielId, dateSortie, dateRetourPrevue);
+  if (quantite > dispo) { toast('Quantité insuffisante : ' + dispo + ' disponible(s) sur cette période'); return; }
+  const m = allMateriels.find(x => x.id === materielId);
+  const projSel = document.getElementById('lr-projet');
+  const projetNom = projSel.options[projSel.selectedIndex] ? projSel.options[projSel.selectedIndex].textContent : '—';
+  const btn = document.getElementById('lr-sub-btn');
+  btn.disabled = true;
+  try {
+    await db.collection('logistique_reservations').add({
+      materielId, materielNom: m ? m.nom : '—', materielRef: m ? m.ref : '',
+      projetId, projetNom,
+      quantite, dateSortie, dateRetourPrevue, responsableSortie: responsableSortie || null,
+      statut: 'reservee',
+      createdBy: CU.uid, createdByNom: CP?.nom || '—',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-reservation');
+    toast('Réservation créée ✅');
+    loadReservationsLogistique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+  finally { btn.disabled = false; }
+};
+async function marquerSortieReservation(id) {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  try {
+    await db.collection('logistique_reservations').doc(id).update({ statut: 'sortie', dateSortieReelle: new Date().toISOString() });
+    toast('Matériel marqué sorti ✅');
+    loadReservationsLogistique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+async function annulerReservation(id) {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  if (!confirm('Annuler cette réservation ?')) return;
+  try {
+    await db.collection('logistique_reservations').doc(id).delete();
+    toast('Réservation annulée');
+    loadReservationsLogistique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+window.openRetourReservationModal = function(id) {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  curRetourReservationId = id;
+  document.getElementById('lr-retour-etat').value = 'Bon état';
+  document.getElementById('lr-retour-rapport').value = '';
+  document.getElementById('ov-retour-reservation').classList.add('on');
+};
+window.confirmRetourReservation = async function() {
+  if (!curRetourReservationId) return;
+  const etatRetour = document.getElementById('lr-retour-etat').value;
+  const rapport = document.getElementById('lr-retour-rapport').value.trim() || null;
+  try {
+    await db.collection('logistique_reservations').doc(curRetourReservationId).update({
+      statut: 'retournee', dateRetourReelle: new Date().toISOString(), etatRetour, rapport
+    });
+    closeOverlay('ov-retour-reservation');
+    toast('Retour enregistré ✅');
+    loadReservationsLogistique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+async function renderMaterielReserveCard(projetId) {
+  const card = document.getElementById('pd-materiel-reserve-card');
+  const list = document.getElementById('pd-materiel-reserve-list');
+  if (!card) return;
+  try {
+    const snap = await db.collection('logistique_reservations').where('projetId','==',projetId).get();
+    const resas = [];
+    snap.forEach(d => resas.push({ id:d.id, ...d.data() }));
+    if (!resas.length) { card.style.display = 'none'; return; }
+    resas.sort((a,b) => (a.dateSortie||'').localeCompare(b.dateSortie||''));
+    card.style.display = 'block';
+    list.innerHTML = resas.map(r => {
+      const st = reservationStatutInfo(r);
+      const periode = (r.dateSortie ? new Date(r.dateSortie).toLocaleDateString('fr-FR') : '—') + ' → ' + (r.dateRetourPrevue ? new Date(r.dateRetourPrevue).toLocaleDateString('fr-FR') : '—');
+      return `<div style="padding:9px 16px;border-bottom:1px solid var(--surface2);display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:12.5px;font-weight:600;color:var(--t1)">${escHtml(r.materielNom||'—')} × ${r.quantite}</div><div style="font-size:11px;color:var(--t3)">${periode}</div></div>
+        <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:${st.bg};color:${st.fg}">${st.label}</span>
+      </div>`;
+    }).join('');
+  } catch(e) { card.style.display = 'none'; }
+}
+
+/* ══ LOGISTIQUE — Bloc E : Commandes / importations spéciales ══ */
+// Suivi simple : article commandé, lieu d'achat, statut de la commande, disponible ou non.
+// Réservé aux 3 Responsables Logistique — faible priorité, faible volume attendu.
+let allCommandesLog = [], lcFilter = 'toutes', curCommandeId = null;
+const LC_STATUTS = [
+  { key:'Commandé',   bg:'#EFF6FF', fg:'#1C3557' },
+  { key:'En transit', bg:'#FFF3CD', fg:'#856404' },
+  { key:'Arrivé',     bg:'#D4EDDA', fg:'#155724' }
+];
+function commandeStatutInfo(statut) {
+  return LC_STATUTS.find(s => s.key === statut) || LC_STATUTS[0];
+}
+async function loadCommandesLogistique() {
+  const body = document.getElementById('lc-body');
+  body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+  await loadLogResponsablesConfig();
+  const canManage = isLogResponsable(CU?.uid);
+  document.getElementById('lc-add-btn').style.display = canManage ? 'flex' : 'none';
+  if (!canManage) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">🔒</div><div class="empty-t">Section réservée</div><div class="empty-b">Réservée aux responsables logistique.</div></div>';
+    document.getElementById('lc-count').textContent = '—';
+    return;
+  }
+  try {
+    const snap = await db.collection('logistique_commandes').get();
+    allCommandesLog = [];
+    snap.forEach(d => allCommandesLog.push({ id:d.id, ...d.data() }));
+    allCommandesLog.sort((a,b) => (b.dateCommande||'').localeCompare(a.dateCommande||''));
+    renderCommandesLog();
+  } catch(e) { body.innerHTML = '<div class="empty"><div class="empty-t">Erreur de chargement</div></div>'; }
+}
+window.filterCommandesLog = function(el, f) {
+  lcFilter = f;
+  document.querySelectorAll('[data-lcf]').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  renderCommandesLog();
+};
+function renderCommandesLog() {
+  const body = document.getElementById('lc-body');
+  let list = allCommandesLog.filter(c => {
+    if (lcFilter === 'encours') return c.statut !== 'Arrivé';
+    if (lcFilter === 'arrivee') return c.statut === 'Arrivé';
+    return true;
+  });
+  document.getElementById('lc-count').textContent = allCommandesLog.length + ' commande' + (allCommandesLog.length!==1?'s':'');
+  if (!list.length) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">📥</div><div class="empty-t">Aucune commande</div><div class="empty-b">Rien dans cette catégorie.</div></div>';
+    return;
+  }
+  body.innerHTML = list.map(c => {
+    const st = commandeStatutInfo(c.statut);
+    const dispoTxt = c.statut === 'Arrivé' ? '✅ Disponible' : '⏳ Indisponible';
+    return `<div class="tc" data-action="open-cmd" data-id="${c.id}" style="cursor:pointer">
+      <div class="tc-top">
+        <div class="tc-info">
+          <div class="tc-nom">${escHtml(c.article||'—')} × ${c.quantite ?? '—'}</div>
+          <div class="tc-who">${escHtml(c.lieuAchat||'—')}${c.dateCommande ? ' · '+new Date(c.dateCommande).toLocaleDateString('fr-FR') : ''} · ${dispoTxt}</div>
+        </div>
+        <div class="tc-badge" style="background:${st.bg};color:${st.fg}">${c.statut||'Commandé'}</div>
+      </div>
+    </div>`;
+  }).join('');
+  body.querySelectorAll('[data-action="open-cmd"]').forEach(el => {
+    el.addEventListener('click', () => openCommandeDetail(el.getAttribute('data-id')));
+  });
+}
+window.openNewCommandeModal = function() {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  curCommandeId = null;
+  document.getElementById('cmd-modal-title').textContent = 'Nouvelle commande';
+  document.getElementById('cmd-article').value = '';
+  document.getElementById('cmd-qte').value = 1;
+  document.getElementById('cmd-lieu').value = '';
+  document.getElementById('cmd-cout').value = 0;
+  document.getElementById('cmd-date').value = '';
+  document.getElementById('cmd-statut').value = 'Commandé';
+  document.getElementById('cmd-notes').value = '';
+  document.getElementById('cmd-sub-btn').querySelector('span').textContent = 'Ajouter';
+  document.getElementById('ov-commande').classList.add('on');
+};
+window.openEditCommandeModal = function() {
+  if (!isLogResponsable(CU?.uid) || !curCommandeId) { toast('Réservé aux responsables logistique'); return; }
+  const c = allCommandesLog.find(x => x.id === curCommandeId);
+  if (!c) return;
+  document.getElementById('cmd-modal-title').textContent = 'Modifier la commande';
+  document.getElementById('cmd-article').value = c.article || '';
+  document.getElementById('cmd-qte').value = c.quantite ?? 1;
+  document.getElementById('cmd-lieu').value = c.lieuAchat || '';
+  document.getElementById('cmd-cout').value = c.coutEstime || 0;
+  document.getElementById('cmd-date').value = c.dateCommande || '';
+  document.getElementById('cmd-statut').value = c.statut || 'Commandé';
+  document.getElementById('cmd-notes').value = c.notes || '';
+  document.getElementById('cmd-sub-btn').querySelector('span').textContent = 'Enregistrer';
+  document.getElementById('ov-commande').classList.add('on');
+};
+window.saveCommande = async function() {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  const article = document.getElementById('cmd-article').value.trim();
+  if (!article) { toast("L'article est obligatoire"); return; }
+  const payload = {
+    article,
+    quantite: Number(document.getElementById('cmd-qte').value) || 1,
+    lieuAchat: document.getElementById('cmd-lieu').value.trim(),
+    coutEstime: Number(document.getElementById('cmd-cout').value) || 0,
+    dateCommande: document.getElementById('cmd-date').value || null,
+    statut: document.getElementById('cmd-statut').value,
+    notes: document.getElementById('cmd-notes').value.trim()
+  };
+  const btn = document.getElementById('cmd-sub-btn');
+  btn.disabled = true;
+  try {
+    if (curCommandeId) {
+      await db.collection('logistique_commandes').doc(curCommandeId).update(payload);
+      toast('Commande modifiée ✅');
+    } else {
+      payload.createdBy = CU.uid; payload.createdByNom = CP?.nom || '—';
+      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('logistique_commandes').add(payload);
+      toast('Commande ajoutée ✅');
+    }
+    const wasEdit = !!curCommandeId;
+    closeOverlay('ov-commande');
+    await loadCommandesLogistique();
+    if (wasEdit) openCommandeDetail(curCommandeId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+  finally { btn.disabled = false; }
+};
+function openCommandeDetail(id) {
+  curCommandeId = id;
+  const c = allCommandesLog.find(x => x.id === id);
+  if (!c) return;
+  const st = commandeStatutInfo(c.statut);
+  document.getElementById('lcd-article').textContent = c.article || '—';
+  document.getElementById('lcd-statut-badge').textContent = c.statut || 'Commandé';
+  document.getElementById('lcd-statut-badge').style.background = st.bg;
+  document.getElementById('lcd-statut-badge').style.color = st.fg;
+  document.getElementById('lcd-qte').textContent = c.quantite ?? '—';
+  document.getElementById('lcd-lieu').textContent = c.lieuAchat || '—';
+  document.getElementById('lcd-cout').textContent = (Number(c.coutEstime)||0).toLocaleString('fr-FR') + ' Ar';
+  document.getElementById('lcd-date').textContent = c.dateCommande ? new Date(c.dateCommande).toLocaleDateString('fr-FR') : '—';
+  document.getElementById('lcd-dispo').textContent = c.statut === 'Arrivé' ? '✅ Disponible' : '⏳ Indisponible';
+  const notesCard = document.getElementById('lcd-notes-card');
+  if (c.notes) { notesCard.style.display = 'block'; document.getElementById('lcd-notes').textContent = c.notes; }
+  else notesCard.style.display = 'none';
+  document.querySelectorAll('[data-lcstatut]').forEach(b => {
+    b.classList.toggle('on', b.getAttribute('data-lcstatut') === c.statut);
+  });
+  go('logistique-commande-detail');
+}
+window.setCommandeStatut = async function(statut) {
+  if (!isLogResponsable(CU?.uid) || !curCommandeId) return;
+  try {
+    await db.collection('logistique_commandes').doc(curCommandeId).update({ statut });
+    toast('Statut mis à jour ✅');
+    await loadCommandesLogistique();
+    openCommandeDetail(curCommandeId);
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.deleteCommande = async function() {
+  if (!isLogResponsable(CU?.uid) || !curCommandeId) return;
+  if (!confirm('Supprimer cette commande ?')) return;
+  try {
+    await db.collection('logistique_commandes').doc(curCommandeId).delete();
+    toast('Commande supprimée');
+    go('logistique-commandes');
+    loadCommandesLogistique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
 </script>
 <!-- ══ LOGISTIQUE (Module additionnel) ══ -->
 <div id="s-logistique" class="scr">
@@ -9948,6 +10614,8 @@ window.deleteDemande = async function() {
     <div class="filters" style="padding:10px 0 0" id="lg-subnav">
       <button class="chip on" onclick="go('logistique')">📦 Inventaire</button>
       <button class="chip" id="lg-nav-demandes" style="display:none" onclick="go('logistique-demandes')">📝 Demandes</button>
+      <button class="chip" id="lg-nav-reservations" style="display:none" onclick="go('logistique-reservations')">🚚 Réservations</button>
+      <button class="chip" id="lg-nav-commandes" style="display:none" onclick="go('logistique-commandes')">📥 Commandes</button>
     </div>
     <div class="filters" style="padding:10px 0 0">
       <button class="chip on" data-lgf="tous" onclick="filterLogistique(this,'tous')">Tous</button>
@@ -9955,6 +10623,10 @@ window.deleteDemande = async function() {
       <button class="chip" data-lgf="retire" onclick="filterLogistique(this,'retire')">🔧 Retiré</button>
     </div>
     <div class="filters" id="lg-cat-filters" style="padding:8px 0 0"></div>
+    <div class="filters" style="padding:8px 0 0">
+      <button class="chip on" id="lg-view-cards-btn" onclick="toggleLgViewMode('cards')">🗂️ Fiches</button>
+      <button class="chip" id="lg-view-table-btn" onclick="toggleLgViewMode('table')">🔲 Tableau</button>
+    </div>
   </div>
   <div class="proj-body">
     <div class="card" id="lg-overview-card" style="overflow:hidden;margin-bottom:14px">
@@ -9963,9 +10635,11 @@ window.deleteDemande = async function() {
         <div style="text-align:center"><div style="font-size:11px;color:var(--t3)">RETIRÉS / HS</div><div style="font-size:19px;font-weight:700;color:var(--gold)" id="lg-ov-retire">0</div></div>
       </div>
       <div id="lg-ov-cats" style="padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:6px"></div>
+      <button id="lg-migrate-btn" style="display:none;width:100%;height:38px;background:var(--surface2);color:var(--t2);border-top:1px solid var(--surface3);font-size:11.5px;font-weight:600" onclick="migrerAnciensMateriels()">🔄 Mettre à jour les anciennes fiches (réf + lots)</button>
       <button id="lg-resp-btn" style="display:none;width:100%;height:40px;background:var(--surface2);color:var(--t1);border-top:1px solid var(--surface3);font-size:12px;font-weight:600" onclick="openLogRespModal()">⚙️ Gérer les responsables logistique</button>
     </div>
     <div id="lg-body"></div>
+    <div id="lg-table-wrap" style="display:none"></div>
   </div>
   <nav class="bnav">
     <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
@@ -9984,10 +10658,11 @@ window.deleteDemande = async function() {
     <div class="rd-sub" id="lgd-ref">—</div>
   </div>
   <div class="pd-body">
+    <div id="lgd-photo-wrap" style="display:none;padding:0 16px 14px"></div>
     <div class="pd-card" id="lgd-cats-card" style="padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap"></div>
     <div class="pd-card">
       <div class="det-row"><span class="det-row-l">Quantité</span><span class="det-row-v" id="lgd-qte">—</span></div>
-      <div class="det-row"><span class="det-row-l">Date d'acquisition</span><span class="det-row-v" id="lgd-date">—</span></div>
+      <div class="det-row"><span class="det-row-l">Dernière acquisition</span><span class="det-row-v" id="lgd-date">—</span></div>
       <div class="det-row"><span class="det-row-l">Lieu de stockage</span><span class="det-row-v" id="lgd-lieu">—</span></div>
       <div class="det-row"><span class="det-row-l">Responsable</span><span class="det-row-v" id="lgd-resp">—</span></div>
       <div class="det-row"><span class="det-row-l">État</span><span class="det-row-v" id="lgd-etat">—</span></div>
@@ -9996,6 +10671,16 @@ window.deleteDemande = async function() {
     <div class="pd-card" id="lgd-details-card" style="display:none">
       <div class="pd-card-t" style="padding:13px 16px">Détails</div>
       <div style="padding:0 16px 14px;font-size:13px;color:var(--t2);line-height:1.5" id="lgd-details"></div>
+    </div>
+    <div class="pd-card">
+      <div class="pd-card-t" style="padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
+        <span>Historique d'acquisition</span>
+        <button class="btn-rappel-new" id="lgd-add-lot-btn" style="display:none" onclick="openAddLotModal()">➕ Lot</button>
+      </div>
+      <div id="lgd-lots-list" style="padding:0 16px 12px"></div>
+    </div>
+    <div class="pd-card" style="padding:14px 16px">
+      <button class="btn-join-proj" onclick="openQrModal()">🔳 QR Code de cette fiche</button>
     </div>
     <div class="pd-card" id="lgd-admin-card" style="display:none;padding:14px 16px;flex-direction:column;gap:8px">
       <button class="btn-join-proj" onclick="openEditMaterielModal()">✏️ Modifier ce matériel</button>
@@ -10011,26 +10696,62 @@ window.deleteDemande = async function() {
     <div class="mhandle"></div>
     <div class="mtitle" id="mat-modal-title">Nouveau matériel</div>
     <div class="mfield"><label>Nom du matériel *</label><input type="text" id="mat-nom" placeholder="Ex: Rideau de scène"></div>
-    <div class="mfield"><label>Référence</label><input type="text" id="mat-ref" placeholder="Ex: LG-001 (auto si vide)"></div>
+    <div class="mfield"><label>Référence</label><input type="text" id="mat-ref" placeholder="Ex: LG-TEC-001 (auto si vide)"></div>
     <div class="mfield">
       <label>Catégories</label>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px" id="mat-cats-wrap"></div>
     </div>
-    <div class="mrow">
-      <div class="mfield" style="margin-bottom:0"><label>Quantité</label><input type="number" id="mat-qte" min="0" value="1"></div>
+    <div class="mrow" id="mat-qte-date-row">
+      <div class="mfield" style="margin-bottom:0"><label>Quantité initiale</label><input type="number" id="mat-qte" min="0" value="1"></div>
       <div class="mfield" style="margin-bottom:0"><label>Date d'acquisition</label><input type="date" id="mat-date"></div>
     </div>
     <div class="mfield"><label>Lieu de stockage</label><input type="text" id="mat-lieu" placeholder="Ex: Andavamamba"></div>
     <div class="mfield"><label>Responsable</label><input type="text" id="mat-resp" placeholder="Nom du responsable"></div>
-    <div class="mfield"><label>État</label>
-      <select id="mat-etat"><option>Neuf</option><option>Bon état</option><option>Usé</option><option>Abîmé</option></select>
+    <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>État</label>
+        <select id="mat-etat"><option>Neuf</option><option>Bon état</option><option>Usé</option><option>Abîmé</option></select>
+      </div>
+      <div class="mfield" style="margin-bottom:0"><label>Criticité</label>
+        <select id="mat-crit"><option>Essentiel</option><option selected>Utile</option><option>Occasionnel</option></select>
+      </div>
     </div>
+    <div class="mfield"><label>Photo</label><input type="file" id="mat-photo-file" accept="image/*"></div>
     <div class="mfield"><label>Détails (taille, poids...)</label><textarea id="mat-details" placeholder="Optionnel..."></textarea></div>
     <label style="display:flex;align-items:center;gap:9px;padding:8px 0 4px;font-size:13px;color:var(--t1);cursor:pointer">
       <input type="checkbox" id="mat-reutilisable-chk" checked style="width:18px;height:18px">
       Matériel réutilisable
     </label>
     <button class="bsub" id="mat-sub-btn" style="margin-top:14px" onclick="saveMateriel()"><span>Ajouter</span></button>
+  </div>
+</div>
+
+<!-- MODAL AJOUT DE LOT -->
+<div class="overlay" id="ov-lot" onclick="closeOverlay('ov-lot')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Ajouter un lot</div>
+    <div class="mfield"><label>Date d'acquisition</label><input type="date" id="lot-date"></div>
+    <div class="mfield"><label>Quantité ajoutée *</label><input type="number" id="lot-qte" min="1" value="1"></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-lot')">Annuler</button>
+      <button class="bsub" onclick="saveLot()"><span>Ajouter</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL QR CODE MATÉRIEL -->
+<div class="overlay" id="ov-qr-materiel" onclick="closeOverlay('ov-qr-materiel')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div id="qr-print-area" style="text-align:center">
+      <div class="mtitle" style="text-align:center">QR Code matériel</div>
+      <div id="qr-materiel-container" style="display:flex;justify-content:center;margin:10px 0"></div>
+      <div id="qr-materiel-label" style="font-size:12px;color:var(--t2);margin-bottom:14px"></div>
+    </div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-qr-materiel')">Fermer</button>
+      <button class="bsub" onclick="printQr()"><span>🖨️ Imprimer</span></button>
+    </div>
   </div>
 </div>
 
@@ -10060,6 +10781,8 @@ window.deleteDemande = async function() {
     <div class="filters" style="padding:10px 0 0">
       <button class="chip" onclick="go('logistique')">📦 Inventaire</button>
       <button class="chip on">📝 Demandes</button>
+      <button class="chip" onclick="go('logistique-reservations')">🚚 Réservations</button>
+      <button class="chip" onclick="go('logistique-commandes')">📥 Commandes</button>
     </div>
     <div class="filters" style="padding:10px 0 0">
       <button class="chip on" data-ldf="toutes" onclick="filterDemandes(this,'toutes')">Toutes</button>
@@ -10146,6 +10869,157 @@ window.deleteDemande = async function() {
       <button class="bcnl" onclick="closeOverlay('ov-demande-refus')">Annuler</button>
       <button class="bsub" onclick="confirmRefusDemande()"><span>Confirmer le refus</span></button>
     </div>
+  </div>
+</div>
+
+<!-- ══ LOGISTIQUE — Bloc C : Réservation & sortie de matériel pour un événement ══ -->
+<div id="s-logistique-reservations" class="scr">
+  <div class="proj-hd">
+    <div class="proj-hd-top">
+      <div><div class="proj-title">Réservations logistique</div><div class="proj-sub" id="lr-count">—</div></div>
+      <button class="btn-new-proj" id="lr-add-btn" style="display:none" onclick="openNewReservationModal()">➕ Réservation</button>
+    </div>
+    <div class="filters" style="padding:10px 0 0">
+      <button class="chip" onclick="go('logistique')">📦 Inventaire</button>
+      <button class="chip" onclick="go('logistique-demandes')">📝 Demandes</button>
+      <button class="chip on">🚚 Réservations</button>
+      <button class="chip" onclick="go('logistique-commandes')">📥 Commandes</button>
+    </div>
+    <div class="filters" style="padding:10px 0 0">
+      <button class="chip on" data-lrf="toutes" onclick="filterReservationsLog(this,'toutes')">Toutes</button>
+      <button class="chip" data-lrf="reservee" onclick="filterReservationsLog(this,'reservee')">📅 Réservées</button>
+      <button class="chip" data-lrf="sortie" onclick="filterReservationsLog(this,'sortie')">🚚 Sorties</button>
+      <button class="chip" data-lrf="retournee" onclick="filterReservationsLog(this,'retournee')">✅ Retournées</button>
+    </div>
+  </div>
+  <div class="proj-body">
+    <div id="lr-body"></div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- MODAL NOUVELLE RÉSERVATION -->
+<div class="overlay" id="ov-reservation" onclick="closeOverlay('ov-reservation')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouvelle réservation</div>
+    <div class="mfield"><label>Matériel *</label><select id="lr-materiel" onchange="checkDispoReservation()"></select></div>
+    <div class="mfield"><label>Projet / événement *</label><select id="lr-projet"></select></div>
+    <div class="mfield"><label>Quantité *</label><input type="number" id="lr-qte" min="1" value="1"></div>
+    <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>Date de sortie *</label><input type="date" id="lr-date-sortie" onchange="checkDispoReservation()"></div>
+      <div class="mfield" style="margin-bottom:0"><label>Retour prévu *</label><input type="date" id="lr-date-retour" onchange="checkDispoReservation()"></div>
+    </div>
+    <div class="mfield" id="lr-dispo-info" style="font-size:12px;color:var(--t2)"></div>
+    <div class="mfield"><label>Responsable de la sortie</label><input type="text" id="lr-resp-sortie" placeholder="Qui l'emporte concrètement"></div>
+    <button class="bsub" id="lr-sub-btn" style="margin-top:6px" onclick="saveReservation()"><span>Réserver</span></button>
+  </div>
+</div>
+
+<!-- MODAL RETOUR RÉSERVATION -->
+<div class="overlay" id="ov-retour-reservation" onclick="closeOverlay('ov-retour-reservation')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Marquer le retour</div>
+    <div class="mfield"><label>État constaté</label>
+      <select id="lr-retour-etat"><option>Neuf</option><option>Bon état</option><option>Usé</option><option>Abîmé</option></select>
+    </div>
+    <div class="mfield"><label>Rapport (optionnel)</label><textarea id="lr-retour-rapport" placeholder="Remarques sur l'utilisation ou l'état"></textarea></div>
+    <div class="mbtns">
+      <button class="bcnl" onclick="closeOverlay('ov-retour-reservation')">Annuler</button>
+      <button class="bsub" onclick="confirmRetourReservation()"><span>Confirmer le retour</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOGISTIQUE — Bloc E : Commandes / importations spéciales ══ -->
+<div id="s-logistique-commandes" class="scr">
+  <div class="proj-hd">
+    <div class="proj-hd-top">
+      <div><div class="proj-title">Commandes logistique</div><div class="proj-sub" id="lc-count">—</div></div>
+      <button class="btn-new-proj" id="lc-add-btn" style="display:none" onclick="openNewCommandeModal()">➕ Commande</button>
+    </div>
+    <div class="filters" style="padding:10px 0 0">
+      <button class="chip" onclick="go('logistique')">📦 Inventaire</button>
+      <button class="chip" onclick="go('logistique-demandes')">📝 Demandes</button>
+      <button class="chip" onclick="go('logistique-reservations')">🚚 Réservations</button>
+      <button class="chip on">📥 Commandes</button>
+    </div>
+    <div class="filters" style="padding:10px 0 0">
+      <button class="chip on" data-lcf="toutes" onclick="filterCommandesLog(this,'toutes')">Toutes</button>
+      <button class="chip" data-lcf="encours" onclick="filterCommandesLog(this,'encours')">⏳ En cours</button>
+      <button class="chip" data-lcf="arrivee" onclick="filterCommandesLog(this,'arrivee')">✅ Arrivées</button>
+    </div>
+  </div>
+  <div class="proj-body">
+    <div id="lc-body"></div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- DÉTAIL COMMANDE -->
+<div id="s-logistique-commande-detail" class="scr">
+  <div class="rd-hd">
+    <div class="rd-back" onclick="go('logistique-commandes')">‹ Retour</div>
+    <div class="rd-title" id="lcd-article">—</div>
+    <div class="rd-sub" id="lcd-statut-badge">—</div>
+  </div>
+  <div class="pd-body">
+    <div class="pd-card">
+      <div class="det-row"><span class="det-row-l">Quantité</span><span class="det-row-v" id="lcd-qte">—</span></div>
+      <div class="det-row"><span class="det-row-l">Lieu d'achat</span><span class="det-row-v" id="lcd-lieu">—</span></div>
+      <div class="det-row"><span class="det-row-l">Coût estimé</span><span class="det-row-v" id="lcd-cout">—</span></div>
+      <div class="det-row"><span class="det-row-l">Date de commande</span><span class="det-row-v" id="lcd-date">—</span></div>
+      <div class="det-row"><span class="det-row-l">Disponibilité</span><span class="det-row-v" id="lcd-dispo">—</span></div>
+    </div>
+    <div class="pd-card" id="lcd-notes-card" style="display:none">
+      <div class="pd-card-t" style="padding:13px 16px">Notes</div>
+      <div style="padding:0 16px 14px;font-size:13px;color:var(--t2);line-height:1.5" id="lcd-notes"></div>
+    </div>
+    <div class="pd-card" style="padding:14px 16px">
+      <div style="font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Faire évoluer le statut</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="chip" data-lcstatut="Commandé" onclick="setCommandeStatut('Commandé')">Commandé</button>
+        <button class="chip" data-lcstatut="En transit" onclick="setCommandeStatut('En transit')">En transit</button>
+        <button class="chip" data-lcstatut="Arrivé" onclick="setCommandeStatut('Arrivé')">✅ Arrivé</button>
+      </div>
+    </div>
+    <div class="pd-card" style="padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+      <button class="btn-join-proj" onclick="openEditCommandeModal()">✏️ Modifier cette commande</button>
+      <button class="btn-danger-full" onclick="deleteCommande()">🗑️ Supprimer cette commande</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE / ÉDITION COMMANDE -->
+<div class="overlay" id="ov-commande" onclick="closeOverlay('ov-commande')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="cmd-modal-title">Nouvelle commande</div>
+    <div class="mfield"><label>Article commandé *</label><input type="text" id="cmd-article" placeholder="Ex: Micros sans fil"></div>
+    <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>Quantité</label><input type="number" id="cmd-qte" min="1" value="1"></div>
+      <div class="mfield" style="margin-bottom:0"><label>Coût estimé (Ar)</label><input type="number" id="cmd-cout" min="0" value="0"></div>
+    </div>
+    <div class="mfield"><label>Lieu d'achat</label><input type="text" id="cmd-lieu" placeholder="Ex: Chine, fournisseur local..."></div>
+    <div class="mfield"><label>Date de commande</label><input type="date" id="cmd-date"></div>
+    <div class="mfield"><label>Statut</label>
+      <select id="cmd-statut"><option>Commandé</option><option>En transit</option><option>Arrivé</option></select>
+    </div>
+    <div class="mfield"><label>Notes (optionnel)</label><textarea id="cmd-notes" placeholder="Référence de commande, transporteur..."></textarea></div>
+    <button class="bsub" id="cmd-sub-btn" style="margin-top:6px" onclick="saveCommande()"><span>Ajouter</span></button>
   </div>
 </div>
 
