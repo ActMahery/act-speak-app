@@ -2812,7 +2812,13 @@ input,select,textarea{font-family:inherit}
         <div class="card" style="padding:16px" id="treso-donut-wrap"></div>
       </div>
       <div>
-        <div class="sec-title">Ce mois</div>
+        <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>Évolution</span>
+          <div style="display:flex;gap:6px">
+            <button id="chart-mode-mois" class="chip on" style="padding:4px 10px;font-size:11px" onclick="setTresoChartMode('mois')">Mensuel</button>
+            <button id="chart-mode-annee" class="chip" style="padding:4px 10px;font-size:11px" onclick="setTresoChartMode('annee')">Annuel</button>
+          </div>
+        </div>
         <div class="card" style="overflow:hidden">
           <div style="display:grid;grid-template-columns:1fr 1fr;padding:14px 16px;gap:10px;border-bottom:1px solid var(--surface2)">
             <div style="text-align:center">
@@ -3030,9 +3036,10 @@ input,select,textarea{font-family:inherit}
     <div class="mfield"><label>Mode de paiement</label>
       <select id="tx-mode"><option>Cash</option><option>Mobile Money</option><option>Virement</option></select>
     </div>
+    <div class="mfield"><label>Date de la transaction (optionnel)</label><input type="date" id="tx-date-manuelle"></div>
     <div id="tx-cotis-row" style="display:none">
       <div class="mfield"><label>Membre</label><select id="tx-membre"><option value="">— Choisir —</option></select></div>
-      <div class="mfield"><label>Période</label><input type="text" id="tx-periode" placeholder="Ex: T1 2026, Année 2026"></div>
+      <div class="mfield"><label>Année de cotisation</label><select id="tx-periode"></select></div>
     </div>
     <div class="mfield"><label>Justificatif (photo)</label>
       <div style="display:flex;gap:8px;align-items:center">
@@ -3045,6 +3052,15 @@ input,select,textarea{font-family:inherit}
       <button class="bcnl" onclick="closeOverlay('ov-tx')">Annuler</button>
       <button class="bsub" id="tx-sub" onclick="submitTransaction()"><span>Enregistrer</span></button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL VOIR JUSTIFICATIF -->
+<div class="overlay" id="ov-justif-view" onclick="closeOverlay('ov-justif-view')">
+  <div class="modal" onclick="event.stopPropagation()" style="text-align:center">
+    <div class="mhandle"></div>
+    <div class="mtitle">Justificatif</div>
+    <img id="justif-view-img" src="" style="width:100%;border-radius:var(--r16);margin-top:6px">
   </div>
 </div>
 
@@ -8967,13 +8983,12 @@ async function libererFonds(id) {
 }
 
 /* ── Résumé en donut par catégorie (dépenses validées) ─────────────── */
-function renderDonutCategories() {
-  const wrap = document.getElementById('treso-donut-wrap');
-  if (!wrap) return;
-  const validated = allTx.filter(t => t.statut === 'validee' && t.type === 'depense');
-  if (!validated.length) { wrap.innerHTML = '<div style="font-size:12px;color:var(--t3);text-align:center;padding:10px 0">Pas encore de dépenses validées</div>'; return; }
+function buildDonutBlock(titre, txs) {
+  if (!txs.length) {
+    return `<div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${titre}</div><div style="font-size:12px;color:var(--t3);padding:2px 0 4px">Pas encore de transaction validée</div>`;
+  }
   const byCat = {};
-  validated.forEach(t => { const c = t.categorie || 'Autre'; byCat[c] = (byCat[c]||0) + (Number(t.montant)||0); });
+  txs.forEach(t => { const c = t.categorie || 'Autre'; byCat[c] = (byCat[c]||0) + (Number(t.montant)||0); });
   const total = Object.values(byCat).reduce((a,b)=>a+b,0);
   const colors = ['#1C3557','#5B21B6','#856404','#155724','#C0392B','#2E9E6C','#F5A623','#8E44AD','#16A085','#D35400'];
   const entries = Object.entries(byCat).sort((a,b) => b[1]-a[1]);
@@ -8985,30 +9000,41 @@ function renderDonutCategories() {
     return part;
   });
   const gradient = 'conic-gradient(' + gradParts.join(', ') + ')';
-  let html = '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">';
-  html += `<div style="width:110px;height:110px;border-radius:50%;background:${gradient};flex-shrink:0;position:relative">
-    <div style="position:absolute;inset:18px;background:var(--surface);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:var(--t3);text-align:center">Dépenses</div>
+  let html = `<div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${titre} — ${total.toLocaleString('fr-FR')} Ar</div>`;
+  html += '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">';
+  html += `<div style="width:96px;height:96px;border-radius:50%;background:${gradient};flex-shrink:0;position:relative">
+    <div style="position:absolute;inset:16px;background:var(--surface);border-radius:50%"></div>
   </div>`;
   html += '<div style="flex:1;min-width:140px">' + entries.map(([cat,val], i) => {
     const pct = Math.round((val/total)*100);
     return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11.5px;color:var(--t2)"><span style="width:9px;height:9px;border-radius:50%;background:${colors[i%colors.length]};flex-shrink:0"></span>${escHtml(cat)} — ${pct}% (${val.toLocaleString('fr-FR')} Ar)</div>`;
   }).join('') + '</div></div>';
-  wrap.innerHTML = html;
+  return html;
+}
+function renderDonutCategories() {
+  const wrap = document.getElementById('treso-donut-wrap');
+  if (!wrap) return;
+  const entreesValidees  = allTx.filter(t => t.statut === 'validee' && t.type === 'entree');
+  const depensesValidees = allTx.filter(t => t.statut === 'validee' && t.type === 'depense');
+  wrap.innerHTML = buildDonutBlock('Entrées par catégorie', entreesValidees)
+    + '<div style="height:18px"></div>'
+    + buildDonutBlock('Dépenses par catégorie', depensesValidees);
 }
 
 /* ── Suivi des cotisations par membre ──────────────────────────────── */
 let cotisPeriode = '';
 async function loadCotisations() {
   if (!CU || !CP || !isBureau(CP)) { go('dash'); toast('Accès réservé au Bureau'); return; }
-  if (!cotisPeriode) cotisPeriode = 'Année ' + new Date().getFullYear();
-  const input = document.getElementById('cotis-periode-input');
-  if (input) input.value = cotisPeriode;
+  const sel = document.getElementById('cotis-periode-input');
+  const curY = new Date().getFullYear();
+  let opts = '';
+  for (let y = curY - 2; y <= curY + 1; y++) opts += `<option${y===curY?' selected':''}>${y}</option>`;
+  sel.innerHTML = opts;
+  cotisPeriode = String(curY);
   renderCotisations();
 }
 window.checkCotisations = function() {
-  const periode = document.getElementById('cotis-periode-input').value.trim();
-  if (!periode) { toast('Indique une période'); return; }
-  cotisPeriode = periode;
+  cotisPeriode = document.getElementById('cotis-periode-input').value;
   renderCotisations();
 };
 async function renderCotisations() {
@@ -9091,6 +9117,7 @@ function renderPendingTx(list) {
           <div class="tx-nom">${escHtml(tx.description||'—')}</div>
           <div class="tx-meta">${escHtml(tx.categorie||'—')} · saisi par ${escHtml(tx.auteurNom||'—')}</div>
           ${tx.commentaireDivergence ? `<div class="tx-diverg-note">💬 ${escHtml(tx.commentaireDivergence)}</div>` : ''}
+          ${tx.justificatif ? `<button data-action="tx-view-justif" data-url="${escHtml(tx.justificatif)}" style="font-size:11px;color:var(--gold);font-weight:600;margin-top:3px;background:none">📷 Voir le justificatif</button>` : ''}
         </div>
         <div class="tx-amount ${isE?'e':'d'}">${sign}${Number(tx.montant).toLocaleString('fr-FR')} Ar</div>
       </div>
@@ -9103,6 +9130,7 @@ function renderPendingTx(list) {
   el.querySelectorAll('[data-action="tx-reject"]').forEach(b => b.addEventListener('click', () => startRejectTx(b.getAttribute('data-id'))));
   el.querySelectorAll('[data-action="tx-resubmit"]').forEach(b => b.addEventListener('click', () => resubmitTx(b.getAttribute('data-id'))));
   el.querySelectorAll('[data-action="tx-delete"]').forEach(b => b.addEventListener('click', () => deleteTx(b.getAttribute('data-id'))));
+  el.querySelectorAll('[data-action="tx-view-justif"]').forEach(b => b.addEventListener('click', () => viewJustif(b.getAttribute('data-url'))));
 }
 
 /* ── Actions de validation double contrôle (Session 7) ────────────── */
@@ -9187,6 +9215,11 @@ window.resubmitTx = async function(id) {
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
+function txEffectiveDate(tx) {
+  if (tx.dateTx) return new Date(tx.dateTx);
+  if (tx.createdAt && tx.createdAt.toDate) return tx.createdAt.toDate();
+  return null;
+}
 function renderTransactions(list) {
   var el = document.getElementById('tx-list');
 
@@ -9201,14 +9234,14 @@ function renderTransactions(list) {
     var tx   = list[i];
     var isE  = tx.type === 'entree';
     var sign = isE ? '+' : '-';
-    var date = tx.createdAt && tx.createdAt.toDate
-      ? tx.createdAt.toDate().toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})
-      : '—';
+    var dt   = txEffectiveDate(tx);
+    var date = dt ? dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '—';
+    var justifBtn = tx.justificatif ? ' · <button data-action="tx-view-justif" data-url="' + escHtml(tx.justificatif) + '" style="color:var(--gold);font-weight:600;background:none">📷 Photo</button>' : '';
     html += '<div class="tx-item" data-txid="' + tx.id + '">';
     html += '<div class="tx-ic ' + (isE ? 'e' : 'd') + '">' + (isE ? '📈' : '📉') + '</div>';
     html += '<div class="tx-info">';
     html += '<div class="tx-nom">' + escHtml(tx.description || '—') + '</div>';
-    html += '<div class="tx-meta">' + escHtml(tx.categorie || '—') + ' · ' + date + ' · ✅ validé par ' + escHtml(tx.validateurNom || '—') + '</div>';
+    html += '<div class="tx-meta">' + escHtml(tx.categorie || '—') + ' · ' + date + ' · ✅ validé par ' + escHtml(tx.validateurNom || '—') + justifBtn + '</div>';
     html += '</div>';
     html += '<div class="tx-amount ' + (isE ? 'e' : 'd') + '">' + sign + Number(tx.montant).toLocaleString('fr-FR') + ' Ar</div>';
     if (canDel) html += '<button class="tx-item-del" data-action="tx-del-validated" data-id="' + tx.id + '" title="Supprimer">🗑️</button>';
@@ -9218,9 +9251,42 @@ function renderTransactions(list) {
   el.querySelectorAll('[data-action="tx-del-validated"]').forEach(function(b) {
     b.addEventListener('click', function() { deleteTx(b.getAttribute('data-id')); });
   });
+  el.querySelectorAll('[data-action="tx-view-justif"]').forEach(function(b) {
+    b.addEventListener('click', function() { viewJustif(b.getAttribute('data-url')); });
+  });
 }
 
-function renderChart() {
+let tresoChartMode = 'mois';
+window.setTresoChartMode = function(mode) {
+  tresoChartMode = mode;
+  var mBtn = document.getElementById('chart-mode-mois');
+  var aBtn = document.getElementById('chart-mode-annee');
+  if (mBtn) mBtn.classList.toggle('on', mode === 'mois');
+  if (aBtn) aBtn.classList.toggle('on', mode === 'annee');
+  renderChart();
+};
+function renderBarChartInto(el, items) {
+  var maxVal = 1;
+  for (var l = 0; l < items.length; l++) {
+    if (items[l].e > maxVal) maxVal = items[l].e;
+    if (items[l].d > maxVal) maxVal = items[l].d;
+  }
+  var html = '';
+  for (var m = 0; m < items.length; m++) {
+    var it = items[m];
+    var hE = Math.round((it.e / maxVal) * 50);
+    var hD = Math.round((it.d / maxVal) * 50);
+    html += '<div class="chart-bar-wrap">';
+    html += '<div style="display:flex;gap:2px;align-items:flex-end;height:54px">';
+    html += '<div class="chart-bar e" style="height:' + (hE || 2) + 'px;flex:1"></div>';
+    html += '<div class="chart-bar d" style="height:' + (hD || 2) + 'px;flex:1"></div>';
+    html += '</div>';
+    html += '<div class="chart-bar-label">' + it.label + '</div>';
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+function renderChartMensuel() {
   var el = document.getElementById('treso-chart');
   if (!el) return;
   var months = [];
@@ -9236,8 +9302,8 @@ function renderChart() {
   for (var j = 0; j < allTx.length; j++) {
     var tx = allTx[j];
     if (tx.statut !== 'validee') continue;
-    if (!tx.createdAt || !tx.createdAt.toDate) continue;
-    var txDate = tx.createdAt.toDate();
+    var txDate = txEffectiveDate(tx);
+    if (!txDate) continue;
     for (var k = 0; k < months.length; k++) {
       if (txDate.getFullYear() === months[k].year && txDate.getMonth() === months[k].month) {
         if (tx.type === 'entree')  months[k].e += tx.montant;
@@ -9245,25 +9311,29 @@ function renderChart() {
       }
     }
   }
-  var maxVal = 1;
-  for (var l = 0; l < months.length; l++) {
-    if (months[l].e > maxVal) maxVal = months[l].e;
-    if (months[l].d > maxVal) maxVal = months[l].d;
+  renderBarChartInto(el, months);
+}
+function renderChartAnnuel() {
+  var el = document.getElementById('treso-chart');
+  if (!el) return;
+  var byYear = {};
+  for (var j = 0; j < allTx.length; j++) {
+    var tx = allTx[j];
+    if (tx.statut !== 'validee') continue;
+    var txDate = txEffectiveDate(tx);
+    if (!txDate) continue;
+    var y = txDate.getFullYear();
+    if (!byYear[y]) byYear[y] = { e:0, d:0 };
+    if (tx.type === 'entree')  byYear[y].e += tx.montant;
+    if (tx.type === 'depense') byYear[y].d += tx.montant;
   }
-  var html = '';
-  for (var m = 0; m < months.length; m++) {
-    var mo = months[m];
-    var hE = Math.round((mo.e / maxVal) * 50);
-    var hD = Math.round((mo.d / maxVal) * 50);
-    html += '<div class="chart-bar-wrap">';
-    html += '<div style="display:flex;gap:2px;align-items:flex-end;height:54px">';
-    html += '<div class="chart-bar e" style="height:' + (hE || 2) + 'px;flex:1"></div>';
-    html += '<div class="chart-bar d" style="height:' + (hD || 2) + 'px;flex:1"></div>';
-    html += '</div>';
-    html += '<div class="chart-bar-label">' + mo.label + '</div>';
-    html += '</div>';
-  }
-  el.innerHTML = html;
+  var years = Object.keys(byYear).sort();
+  if (!years.length) { var nowY = new Date().getFullYear(); years = [String(nowY)]; byYear[nowY] = { e:0, d:0 }; }
+  var items = years.map(function(y) { return { label: y, e: byYear[y].e, d: byYear[y].d }; });
+  renderBarChartInto(el, items);
+}
+function renderChart() {
+  if (tresoChartMode === 'annee') renderChartAnnuel(); else renderChartMensuel();
 }
 
 /* ── Modal Transaction ─────────────────────────────────────────── */
@@ -9277,8 +9347,13 @@ window.openModalTx = function(type) {
   document.getElementById('tx-desc').value    = '';
   document.getElementById('tx-cat').value = 'Cotisation';
   document.getElementById('tx-mode').value = 'Cash';
-  document.getElementById('tx-periode').value = '';
+  document.getElementById('tx-date-manuelle').value = '';
   document.getElementById('tx-justif-name').value = '';
+  var anneeSel = document.getElementById('tx-periode');
+  var curY = new Date().getFullYear();
+  var opts = '';
+  for (var y = curY - 1; y <= curY + 2; y++) opts += '<option' + (y===curY?' selected':'') + '>' + y + '</option>';
+  anneeSel.innerHTML = opts;
   const memSel = document.getElementById('tx-membre');
   memSel.innerHTML = '<option value="">— Choisir —</option>';
   ensureMentionCache().then(members => {
@@ -9286,6 +9361,10 @@ window.openModalTx = function(type) {
   });
   toggleTxCotisationFields();
   document.getElementById('ov-tx').classList.add('on');
+};
+window.viewJustif = function(url) {
+  document.getElementById('justif-view-img').src = url;
+  document.getElementById('ov-justif-view').classList.add('on');
 };
 window.toggleTxCotisationFields = function() {
   const row = document.getElementById('tx-cotis-row');
@@ -9320,21 +9399,32 @@ window.submitTransaction = async function() {
   var memSel = document.getElementById('tx-membre');
   var membreUid = cat === 'Cotisation' ? memSel.value : '';
   var membreNom = cat === 'Cotisation' && memSel.selectedIndex > 0 ? memSel.options[memSel.selectedIndex].textContent : '';
-  var periode = cat === 'Cotisation' ? document.getElementById('tx-periode').value.trim() : '';
+  var periode = cat === 'Cotisation' ? document.getElementById('tx-periode').value : '';
+  var dateManuelle = document.getElementById('tx-date-manuelle').value || null;
+  var payload = {
+    type: curTxType, montant: montant,
+    description: desc, categorie: cat,
+    mode: document.getElementById('tx-mode').value,
+    membreUid: membreUid || null, membreNom: membreNom || null, periode: periode || null,
+    dateTx: dateManuelle,
+    justificatif: txJustifUrl || '',
+    auteurId: CU.uid, auteurNom: CP.nom || '',
+    statut: 'attente', // double contrôle — validation requise avant impact sur le solde
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  // Le Trésorier fait autorité sur la caisse — ses propres saisies sont validées immédiatement.
+  if (isTresorier(CP)) {
+    payload.statut = 'validee';
+    payload.validations = { tresorier: { uid: CU.uid, nom: CP.nom || '', at: new Date().toISOString() } };
+    payload.validateurId = CU.uid;
+    payload.validateurNom = CP.nom || '';
+    payload.validatedAt = firebase.firestore.FieldValue.serverTimestamp();
+  }
   try {
-    await db.collection('tresorerie').add({
-      type: curTxType, montant: montant,
-      description: desc, categorie: cat,
-      mode: document.getElementById('tx-mode').value,
-      membreUid: membreUid || null, membreNom: membreNom || null, periode: periode || null,
-      justificatif: txJustifUrl || '',
-      auteurId: CU.uid, auteurNom: CP.nom || '',
-      statut: 'attente', // double contrôle — validation requise avant impact sur le solde
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    await db.collection('tresorerie').add(payload);
     closeOverlay('ov-tx');
     loadTreso();
-    toast((curTxType === 'entree' ? 'Entrée' : 'Dépense') + ' enregistrée — en attente de validation');
+    toast((curTxType === 'entree' ? 'Entrée' : 'Dépense') + (payload.statut === 'validee' ? ' enregistrée et validée ✅' : ' enregistrée — en attente de validation'));
   } catch(e) { toast('Erreur : ' + e.message); }
   finally { btn.disabled = false; btn.querySelector('span').textContent = 'Enregistrer'; }
 };
@@ -11764,8 +11854,7 @@ window.deleteAgendaAsso = async function() {
       <div><div class="proj-title">Cotisations</div><div class="proj-sub" id="cotis-summary">—</div></div>
     </div>
     <div style="display:flex;gap:8px;padding:10px 16px 4px">
-      <input type="text" id="cotis-periode-input" placeholder="Ex: T1 2026, Année 2026" style="flex:1;height:40px;border-radius:var(--r8);border:1px solid var(--surface3);background:var(--surface2);padding:0 12px;font-size:13px;color:var(--t1)">
-      <button onclick="checkCotisations()" style="height:40px;padding:0 16px;border-radius:var(--r8);background:var(--gold);color:#fff;font-size:13px;font-weight:600">Vérifier</button>
+      <select id="cotis-periode-input" onchange="checkCotisations()" style="flex:1;height:40px;border-radius:var(--r8);border:1px solid var(--surface3);background:var(--surface2);padding:0 12px;font-size:13px;color:var(--t1)"></select>
     </div>
   </div>
   <div class="proj-body">
