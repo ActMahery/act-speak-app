@@ -3384,6 +3384,8 @@ function go(screen) {
   if (screen === 'logistique-demandes') loadDemandesLogistique();
   if (screen === 'logistique-reservations') loadReservationsLogistique();
   if (screen === 'logistique-commandes') loadCommandesLogistique();
+  if (screen === 'logistique-caisse') loadCaisseLogistique();
+  if (screen === 'logistique-depenses') loadDepensesLogistique();
   if (screen === 'langues') loadLangues();
   if (screen === 'dictionnaire') loadDictionnaire();
   if (screen === 'statuts') loadStatuts();
@@ -9586,6 +9588,10 @@ async function loadLogistique() {
   if (navReservations) navReservations.style.display = isLogResponsable(CU?.uid) ? 'inline-block' : 'none';
   const navCommandes = document.getElementById('lg-nav-commandes');
   if (navCommandes) navCommandes.style.display = isLogResponsable(CU?.uid) ? 'inline-block' : 'none';
+  const navCaisse = document.getElementById('lg-nav-caisse');
+  if (navCaisse) navCaisse.style.display = isLogResponsable(CU?.uid) ? 'inline-block' : 'none';
+  const navDepenses = document.getElementById('lg-nav-depenses');
+  if (navDepenses) navDepenses.style.display = isLogResponsable(CU?.uid) ? 'inline-block' : 'none';
   try {
     const snap = await db.collection('logistique_materiel').get();
     allMateriels = []; snap.forEach(d => allMateriels.push({ id:d.id, ...d.data() }));
@@ -10602,6 +10608,238 @@ window.deleteCommande = async function() {
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
+/* ══ LOGISTIQUE — Bloc D : Argent (caisse logistique, indépendante de la Trésorerie) ══ */
+let allCaisseLog = [], allDepensesLog = [];
+
+// -- Journal de caisse (entrées/sorties + validation) --
+async function loadCaisseLogistique() {
+  const body = document.getElementById('lca-body');
+  body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+  await loadLogResponsablesConfig();
+  const canManage = isLogResponsable(CU?.uid);
+  document.getElementById('lca-add-btn').style.display = canManage ? 'flex' : 'none';
+  if (!canManage) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">🔒</div><div class="empty-t">Section réservée</div><div class="empty-b">Réservée aux responsables logistique.</div></div>';
+    document.getElementById('lca-solde').textContent = '—';
+    return;
+  }
+  try {
+    const snap = await db.collection('logistique_caisse').get();
+    allCaisseLog = [];
+    snap.forEach(d => allCaisseLog.push({ id:d.id, ...d.data() }));
+    allCaisseLog.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+    renderCaisseLog();
+  } catch(e) { body.innerHTML = '<div class="empty"><div class="empty-t">Erreur de chargement</div></div>'; }
+}
+function renderCaisseLog() {
+  const body = document.getElementById('lca-body');
+  const soldeValide = allCaisseLog.filter(m => m.valide).reduce((s,m) => s + (m.type === 'Entrée' ? Number(m.montant)||0 : -(Number(m.montant)||0)), 0);
+  document.getElementById('lca-solde').textContent = soldeValide.toLocaleString('fr-FR') + ' Ar';
+  const enAttente = allCaisseLog.filter(m => !m.valide).length;
+  document.getElementById('lca-attente').textContent = enAttente;
+  if (!allCaisseLog.length) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">💰</div><div class="empty-t">Aucun mouvement</div><div class="empty-b">Le journal de caisse est vide.</div></div>';
+    return;
+  }
+  body.innerHTML = allCaisseLog.map(m => {
+    const isEntree = m.type === 'Entrée';
+    const montantColor = isEntree ? '#155724' : '#C0392B';
+    const badge = m.valide ? { label:'✅ Validé', bg:'#D4EDDA', fg:'#155724' } : { label:'⏳ À valider', bg:'#FFF3CD', fg:'#856404' };
+    return `<div class="tc">
+      <div class="tc-top">
+        <div class="tc-info">
+          <div class="tc-nom">${escHtml(m.motif||'—')}</div>
+          <div class="tc-who">${m.date ? new Date(m.date).toLocaleDateString('fr-FR') : '—'} · ${escHtml(m.creeParNom||'')}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:14px;font-weight:700;color:${montantColor}">${isEntree?'+':'-'}${(Number(m.montant)||0).toLocaleString('fr-FR')} Ar</div>
+        </div>
+      </div>
+      <div class="tc-meta" style="flex-wrap:wrap;gap:8px;padding-top:8px;align-items:center">
+        <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:${badge.bg};color:${badge.fg}">${badge.label}</span>
+        ${!m.valide ? `<button data-action="valider-mvt" data-id="${m.id}" style="font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;background:var(--surface2);color:var(--t1)">✅ Valider</button>` : ''}
+        <button data-action="del-mvt" data-id="${m.id}" style="font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;background:var(--surface2);color:var(--red)">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+  body.querySelectorAll('[data-action="valider-mvt"]').forEach(b => b.addEventListener('click', () => validerMouvementCaisse(b.getAttribute('data-id'))));
+  body.querySelectorAll('[data-action="del-mvt"]').forEach(b => b.addEventListener('click', () => deleteMouvementCaisse(b.getAttribute('data-id'))));
+}
+window.openNewMouvementModal = function() {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  document.getElementById('mvt-type').value = 'Entrée';
+  document.getElementById('mvt-montant').value = 0;
+  document.getElementById('mvt-motif').value = '';
+  document.getElementById('mvt-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('ov-mouvement').classList.add('on');
+};
+window.saveMouvement = async function() {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  const motif = document.getElementById('mvt-motif').value.trim();
+  const montant = Number(document.getElementById('mvt-montant').value) || 0;
+  if (!motif) { toast('Le motif est obligatoire'); return; }
+  if (montant <= 0) { toast('Montant invalide'); return; }
+  try {
+    await db.collection('logistique_caisse').add({
+      type: document.getElementById('mvt-type').value,
+      montant, motif,
+      date: document.getElementById('mvt-date').value || null,
+      valide: false,
+      creePar: CU.uid, creeParNom: CP?.nom || '—',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-mouvement');
+    toast('Mouvement ajouté ✅');
+    loadCaisseLogistique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+async function validerMouvementCaisse(id) {
+  if (!isLogResponsable(CU?.uid)) return;
+  try {
+    await db.collection('logistique_caisse').doc(id).update({ valide: true, valideParNom: CP?.nom || '—' });
+    toast('Mouvement validé ✅');
+    loadCaisseLogistique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+async function deleteMouvementCaisse(id) {
+  if (!isLogResponsable(CU?.uid)) return;
+  if (!confirm('Supprimer ce mouvement ?')) return;
+  try {
+    await db.collection('logistique_caisse').doc(id).delete();
+    toast('Mouvement supprimé');
+    loadCaisseLogistique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+
+// -- Dépenses / factures fournisseurs (avance / reste à payer) --
+function depenseStatutInfo(d) {
+  const reste = (Number(d.montantTotal)||0) - (Number(d.avancePayee)||0);
+  if (reste <= 0) return { label:'✅ Payé', bg:'#D4EDDA', fg:'#155724', reste:0 };
+  if ((Number(d.avancePayee)||0) > 0) return { label:'🟡 Partiel', bg:'#FFF3CD', fg:'#856404', reste };
+  return { label:'❌ Impayé', bg:'#FDE8E8', fg:'#C0392B', reste };
+}
+async function loadDepensesLogistique() {
+  const body = document.getElementById('ldp-body');
+  body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+  await loadLogResponsablesConfig();
+  const canManage = isLogResponsable(CU?.uid);
+  document.getElementById('ldp-add-btn').style.display = canManage ? 'flex' : 'none';
+  if (!canManage) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">🔒</div><div class="empty-t">Section réservée</div><div class="empty-b">Réservée aux responsables logistique.</div></div>';
+    document.getElementById('ldp-total').textContent = '—';
+    document.getElementById('ldp-reste').textContent = '—';
+    return;
+  }
+  try {
+    const snap = await db.collection('logistique_depenses').get();
+    allDepensesLog = [];
+    snap.forEach(d => allDepensesLog.push({ id:d.id, ...d.data() }));
+    allDepensesLog.sort((a,b) => (b.dateFacture||'').localeCompare(a.dateFacture||''));
+    renderDepensesLog();
+  } catch(e) { body.innerHTML = '<div class="empty"><div class="empty-t">Erreur de chargement</div></div>'; }
+}
+function renderDepensesLog() {
+  const body = document.getElementById('ldp-body');
+  const total = allDepensesLog.reduce((s,d) => s + (Number(d.montantTotal)||0), 0);
+  const resteTotal = allDepensesLog.reduce((s,d) => s + Math.max((Number(d.montantTotal)||0) - (Number(d.avancePayee)||0), 0), 0);
+  document.getElementById('ldp-total').textContent = total.toLocaleString('fr-FR') + ' Ar';
+  document.getElementById('ldp-reste').textContent = resteTotal.toLocaleString('fr-FR') + ' Ar';
+  if (!allDepensesLog.length) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">🧾</div><div class="empty-t">Aucune dépense</div><div class="empty-b">Rien à afficher pour le moment.</div></div>';
+    return;
+  }
+  body.innerHTML = allDepensesLog.map(d => {
+    const st = depenseStatutInfo(d);
+    return `<div class="tc" data-action="edit-depense" data-id="${d.id}" style="cursor:pointer">
+      <div class="tc-top">
+        <div class="tc-info">
+          <div class="tc-nom">${escHtml(d.fournisseur||'—')}</div>
+          <div class="tc-who">${escHtml(d.article||'')} · ${d.dateFacture ? new Date(d.dateFacture).toLocaleDateString('fr-FR') : '—'}</div>
+        </div>
+        <div class="tc-badge" style="background:${st.bg};color:${st.fg}">${st.label}</div>
+      </div>
+      <div class="tc-meta" style="flex-wrap:wrap;gap:8px;padding-top:6px;font-size:11.5px;color:var(--t2)">
+        <span>Total : ${(Number(d.montantTotal)||0).toLocaleString('fr-FR')} Ar</span>
+        <span>Avance : ${(Number(d.avancePayee)||0).toLocaleString('fr-FR')} Ar</span>
+        <span>Reste : ${st.reste.toLocaleString('fr-FR')} Ar</span>
+      </div>
+    </div>`;
+  }).join('');
+  body.querySelectorAll('[data-action="edit-depense"]').forEach(el => {
+    el.addEventListener('click', () => openEditDepenseModal(el.getAttribute('data-id')));
+  });
+}
+window.openNewDepenseModal = function() {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  curDepenseId = null;
+  document.getElementById('dp-modal-title').textContent = 'Nouvelle dépense';
+  document.getElementById('dp-fournisseur').value = '';
+  document.getElementById('dp-article').value = '';
+  document.getElementById('dp-total').value = 0;
+  document.getElementById('dp-avance').value = 0;
+  document.getElementById('dp-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('dp-notes').value = '';
+  document.getElementById('dp-sub-btn').querySelector('span').textContent = 'Ajouter';
+  document.getElementById('dp-del-btn').style.display = 'none';
+  document.getElementById('ov-depense').classList.add('on');
+};
+window.openEditDepenseModal = function(id) {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  const d = allDepensesLog.find(x => x.id === id);
+  if (!d) return;
+  curDepenseId = id;
+  document.getElementById('dp-modal-title').textContent = 'Modifier la dépense';
+  document.getElementById('dp-fournisseur').value = d.fournisseur || '';
+  document.getElementById('dp-article').value = d.article || '';
+  document.getElementById('dp-total').value = d.montantTotal || 0;
+  document.getElementById('dp-avance').value = d.avancePayee || 0;
+  document.getElementById('dp-date').value = d.dateFacture || '';
+  document.getElementById('dp-notes').value = d.notes || '';
+  document.getElementById('dp-sub-btn').querySelector('span').textContent = 'Enregistrer';
+  document.getElementById('dp-del-btn').style.display = 'block';
+  document.getElementById('ov-depense').classList.add('on');
+};
+window.saveDepense = async function() {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  const fournisseur = document.getElementById('dp-fournisseur').value.trim();
+  if (!fournisseur) { toast('Le fournisseur est obligatoire'); return; }
+  const payload = {
+    fournisseur,
+    article: document.getElementById('dp-article').value.trim(),
+    montantTotal: Number(document.getElementById('dp-total').value) || 0,
+    avancePayee: Number(document.getElementById('dp-avance').value) || 0,
+    dateFacture: document.getElementById('dp-date').value || null,
+    notes: document.getElementById('dp-notes').value.trim()
+  };
+  const btn = document.getElementById('dp-sub-btn');
+  btn.disabled = true;
+  try {
+    if (curDepenseId) {
+      await db.collection('logistique_depenses').doc(curDepenseId).update(payload);
+      toast('Dépense modifiée ✅');
+    } else {
+      payload.createdBy = CU.uid; payload.createdByNom = CP?.nom || '—';
+      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('logistique_depenses').add(payload);
+      toast('Dépense ajoutée ✅');
+    }
+    closeOverlay('ov-depense');
+    loadDepensesLogistique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+  finally { btn.disabled = false; }
+};
+window.deleteDepense = async function() {
+  if (!isLogResponsable(CU?.uid) || !curDepenseId) return;
+  if (!confirm('Supprimer cette dépense ?')) return;
+  try {
+    await db.collection('logistique_depenses').doc(curDepenseId).delete();
+    closeOverlay('ov-depense');
+    toast('Dépense supprimée');
+    loadDepensesLogistique();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+let curDepenseId = null;
+
 </script>
 <!-- ══ LOGISTIQUE (Module additionnel) ══ -->
 <div id="s-logistique" class="scr">
@@ -10616,6 +10854,8 @@ window.deleteCommande = async function() {
       <button class="chip" id="lg-nav-demandes" style="display:none" onclick="go('logistique-demandes')">📝 Demandes</button>
       <button class="chip" id="lg-nav-reservations" style="display:none" onclick="go('logistique-reservations')">🚚 Réservations</button>
       <button class="chip" id="lg-nav-commandes" style="display:none" onclick="go('logistique-commandes')">📥 Commandes</button>
+      <button class="chip" id="lg-nav-caisse" style="display:none" onclick="go('logistique-caisse')">💰 Caisse</button>
+      <button class="chip" id="lg-nav-depenses" style="display:none" onclick="go('logistique-depenses')">🧾 Dépenses</button>
     </div>
     <div class="filters" style="padding:10px 0 0">
       <button class="chip on" data-lgf="tous" onclick="filterLogistique(this,'tous')">Tous</button>
@@ -10783,6 +11023,8 @@ window.deleteCommande = async function() {
       <button class="chip on">📝 Demandes</button>
       <button class="chip" onclick="go('logistique-reservations')">🚚 Réservations</button>
       <button class="chip" onclick="go('logistique-commandes')">📥 Commandes</button>
+      <button class="chip" onclick="go('logistique-caisse')">💰 Caisse</button>
+      <button class="chip" onclick="go('logistique-depenses')">🧾 Dépenses</button>
     </div>
     <div class="filters" style="padding:10px 0 0">
       <button class="chip on" data-ldf="toutes" onclick="filterDemandes(this,'toutes')">Toutes</button>
@@ -10884,6 +11126,8 @@ window.deleteCommande = async function() {
       <button class="chip" onclick="go('logistique-demandes')">📝 Demandes</button>
       <button class="chip on">🚚 Réservations</button>
       <button class="chip" onclick="go('logistique-commandes')">📥 Commandes</button>
+      <button class="chip" onclick="go('logistique-caisse')">💰 Caisse</button>
+      <button class="chip" onclick="go('logistique-depenses')">🧾 Dépenses</button>
     </div>
     <div class="filters" style="padding:10px 0 0">
       <button class="chip on" data-lrf="toutes" onclick="filterReservationsLog(this,'toutes')">Toutes</button>
@@ -10950,6 +11194,8 @@ window.deleteCommande = async function() {
       <button class="chip" onclick="go('logistique-demandes')">📝 Demandes</button>
       <button class="chip" onclick="go('logistique-reservations')">🚚 Réservations</button>
       <button class="chip on">📥 Commandes</button>
+      <button class="chip" onclick="go('logistique-caisse')">💰 Caisse</button>
+      <button class="chip" onclick="go('logistique-depenses')">🧾 Dépenses</button>
     </div>
     <div class="filters" style="padding:10px 0 0">
       <button class="chip on" data-lcf="toutes" onclick="filterCommandesLog(this,'toutes')">Toutes</button>
@@ -11020,6 +11266,106 @@ window.deleteCommande = async function() {
     </div>
     <div class="mfield"><label>Notes (optionnel)</label><textarea id="cmd-notes" placeholder="Référence de commande, transporteur..."></textarea></div>
     <button class="bsub" id="cmd-sub-btn" style="margin-top:6px" onclick="saveCommande()"><span>Ajouter</span></button>
+  </div>
+</div>
+
+<!-- ══ LOGISTIQUE — Bloc D : Argent (caisse logistique, indépendante de la Trésorerie) ══ -->
+<div id="s-logistique-caisse" class="scr">
+  <div class="proj-hd">
+    <div class="proj-hd-top">
+      <div><div class="proj-title">Caisse logistique</div><div class="proj-sub">Indépendante de la Trésorerie de l'association</div></div>
+      <button class="btn-new-proj" id="lca-add-btn" style="display:none" onclick="openNewMouvementModal()">➕ Mouvement</button>
+    </div>
+    <div class="filters" style="padding:10px 0 0">
+      <button class="chip" onclick="go('logistique')">📦 Inventaire</button>
+      <button class="chip" onclick="go('logistique-demandes')">📝 Demandes</button>
+      <button class="chip" onclick="go('logistique-reservations')">🚚 Réservations</button>
+      <button class="chip" onclick="go('logistique-commandes')">📥 Commandes</button>
+      <button class="chip on">💰 Caisse</button>
+      <button class="chip" onclick="go('logistique-depenses')">🧾 Dépenses</button>
+    </div>
+  </div>
+  <div class="proj-body">
+    <div class="card" style="overflow:hidden;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;padding:14px 16px;gap:10px">
+        <div style="text-align:center"><div style="font-size:11px;color:var(--t3)">SOLDE (VALIDÉ)</div><div style="font-size:19px;font-weight:700;color:var(--t1)" id="lca-solde">0 Ar</div></div>
+        <div style="text-align:center"><div style="font-size:11px;color:var(--t3)">À VALIDER</div><div style="font-size:19px;font-weight:700;color:var(--gold)" id="lca-attente">0</div></div>
+      </div>
+    </div>
+    <div id="lca-body"></div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<div id="s-logistique-depenses" class="scr">
+  <div class="proj-hd">
+    <div class="proj-hd-top">
+      <div><div class="proj-title">Dépenses & factures</div><div class="proj-sub">Suivi fournisseurs — avance / reste à payer</div></div>
+      <button class="btn-new-proj" id="ldp-add-btn" style="display:none" onclick="openNewDepenseModal()">➕ Dépense</button>
+    </div>
+    <div class="filters" style="padding:10px 0 0">
+      <button class="chip" onclick="go('logistique')">📦 Inventaire</button>
+      <button class="chip" onclick="go('logistique-demandes')">📝 Demandes</button>
+      <button class="chip" onclick="go('logistique-reservations')">🚚 Réservations</button>
+      <button class="chip" onclick="go('logistique-commandes')">📥 Commandes</button>
+      <button class="chip" onclick="go('logistique-caisse')">💰 Caisse</button>
+      <button class="chip on">🧾 Dépenses</button>
+    </div>
+  </div>
+  <div class="proj-body">
+    <div class="card" style="overflow:hidden;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;padding:14px 16px;gap:10px">
+        <div style="text-align:center"><div style="font-size:11px;color:var(--t3)">TOTAL DÉPENSES</div><div style="font-size:17px;font-weight:700;color:var(--t1)" id="ldp-total">0 Ar</div></div>
+        <div style="text-align:center"><div style="font-size:11px;color:var(--t3)">RESTE À PAYER</div><div style="font-size:17px;font-weight:700;color:var(--red)" id="ldp-reste">0 Ar</div></div>
+      </div>
+    </div>
+    <div id="ldp-body"></div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- MODAL NOUVEAU MOUVEMENT DE CAISSE -->
+<div class="overlay" id="ov-mouvement" onclick="closeOverlay('ov-mouvement')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouveau mouvement</div>
+    <div class="mfield"><label>Type</label>
+      <select id="mvt-type"><option>Entrée</option><option>Sortie</option></select>
+    </div>
+    <div class="mfield"><label>Montant (Ar) *</label><input type="number" id="mvt-montant" min="0" value="0"></div>
+    <div class="mfield"><label>Motif *</label><input type="text" id="mvt-motif" placeholder="Ex: Achat de rubans adhésifs"></div>
+    <div class="mfield"><label>Date</label><input type="date" id="mvt-date"></div>
+    <button class="bsub" style="margin-top:6px" onclick="saveMouvement()"><span>Ajouter</span></button>
+  </div>
+</div>
+
+<!-- MODAL DÉPENSE / FACTURE -->
+<div class="overlay" id="ov-depense" onclick="closeOverlay('ov-depense')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="dp-modal-title">Nouvelle dépense</div>
+    <div class="mfield"><label>Fournisseur *</label><input type="text" id="dp-fournisseur" placeholder="Ex: Quincaillerie X"></div>
+    <div class="mfield"><label>Article / motif</label><input type="text" id="dp-article" placeholder="Ex: Peinture et accessoires"></div>
+    <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>Montant total (Ar) *</label><input type="number" id="dp-total" min="0" value="0"></div>
+      <div class="mfield" style="margin-bottom:0"><label>Avance payée (Ar)</label><input type="number" id="dp-avance" min="0" value="0"></div>
+    </div>
+    <div class="mfield"><label>Date de facture</label><input type="date" id="dp-date"></div>
+    <div class="mfield"><label>Notes (optionnel)</label><textarea id="dp-notes" placeholder="Référence facture, échéance..."></textarea></div>
+    <button class="bsub" id="dp-sub-btn" style="margin-top:6px" onclick="saveDepense()"><span>Ajouter</span></button>
+    <button id="dp-del-btn" style="display:none;width:100%;text-align:center;margin-top:10px;font-size:12px;color:var(--red)" onclick="deleteDepense()">🗑 Supprimer cette dépense</button>
   </div>
 </div>
 
