@@ -1532,7 +1532,6 @@ input,select,textarea{font-family:inherit}
       <div class="cal-grid" id="ag-cal-grid"></div>
     </div>
     <div class="ag-legend">
-      <div class="ag-legend-item"><span class="ag-dot reun"></span>Réunion</div>
       <div class="ag-legend-item"><span class="ag-dot tache"></span>Tâche</div>
       <div class="ag-legend-item"><span class="ag-dot perso"></span>Personnel</div>
     </div>
@@ -1543,7 +1542,6 @@ input,select,textarea{font-family:inherit}
   <div id="ag-liste" class="ag-body" style="display:none">
     <div class="filters" style="padding:14px 14px 0">
       <button class="chip on" data-agf="tous" onclick="filterAgListe(this,'tous')">Tous</button>
-      <button class="chip" data-agf="reun" onclick="filterAgListe(this,'reun')">📅 Réunions</button>
       <button class="chip" data-agf="tache" onclick="filterAgListe(this,'tache')">✅ Tâches</button>
       <button class="chip" data-agf="perso" onclick="filterAgListe(this,'perso')">👤 Perso</button>
     </div>
@@ -2772,45 +2770,71 @@ input,select,textarea{font-family:inherit}
       <div><div class="treso-title">Trésorerie</div></div>
     </div>
     <div class="solde-box">
-      <div class="solde-label">Solde actuel</div>
+      <div class="solde-label">Solde disponible</div>
       <div class="solde-amount" id="solde-amount">0 Ar</div>
       <div class="solde-month" id="solde-month">—</div>
     </div>
   </div>
   <div class="treso-body">
-    <div class="treso-actions" id="treso-actions">
-      <button class="treso-btn entree" onclick="openModalTx('entree')">📈 Entrée</button>
-      <button class="treso-btn depense" onclick="openModalTx('depense')">📉 Dépense</button>
-    </div>
-    <div class="treso-readonly-note" id="treso-readonly-note" style="display:none">
-      👁️ Accès en lecture seule — seuls le Président, le Trésorier, le Trésorier Adjoint et le Secrétaire Financier peuvent saisir ou valider des transactions.
-    </div>
-    <div class="card" id="treso-pending-card" style="display:none;margin-bottom:14px">
-      <div class="sec-title" style="display:flex;align-items:center;gap:8px;padding:14px 16px 0">
-        ⏳ À valider <span class="treso-pending-count" id="treso-pending-badge">0</span>
+    <div id="treso-bureau-only" style="display:none">
+      <div class="treso-actions" id="treso-actions">
+        <button class="treso-btn entree" onclick="openModalTx('entree')">📈 Entrée</button>
+        <button class="treso-btn depense" onclick="openModalTx('depense')">📉 Dépense</button>
       </div>
-      <div id="treso-pending-list" style="padding:10px 12px"></div>
-    </div>
-    <div>
-      <div class="sec-title">Ce mois</div>
-      <div class="card" style="overflow:hidden">
-        <div style="display:grid;grid-template-columns:1fr 1fr;padding:14px 16px;gap:10px;border-bottom:1px solid var(--surface2)">
-          <div style="text-align:center">
-            <div style="font-size:11px;color:var(--t3);margin-bottom:4px">ENTRÉES</div>
-            <div style="font-size:18px;font-weight:700;color:#155724" id="total-entrees">0 Ar</div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-size:11px;color:var(--t3);margin-bottom:4px">DÉPENSES</div>
-            <div style="font-size:18px;font-weight:700;color:#C0392B" id="total-depenses">0 Ar</div>
+      <div class="treso-readonly-note" id="treso-readonly-note" style="display:none">
+        👁️ Accès en lecture seule — seuls le Président, le Trésorier, le Trésorier Adjoint et le Secrétaire Financier peuvent saisir ou valider des transactions.
+      </div>
+      <div class="card" id="treso-pending-card" style="display:none;margin-bottom:14px">
+        <div class="sec-title" style="display:flex;align-items:center;gap:8px;padding:14px 16px 0">
+          ⏳ À valider <span class="treso-pending-count" id="treso-pending-badge">0</span>
+        </div>
+        <div id="treso-pending-list" style="padding:10px 12px"></div>
+      </div>
+      <div>
+        <div class="sec-title">Détails</div>
+        <div class="card" style="overflow:hidden;margin-bottom:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:14px 16px;gap:8px">
+            <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">SOLDE CAISSE</div><div style="font-size:13px;font-weight:700;color:var(--t1)" id="treso-solde-caisse">0 Ar</div></div>
+            <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">FONDS BLOQUÉS</div><div style="font-size:13px;font-weight:700;color:var(--gold)" id="treso-total-fonds">0 Ar</div></div>
+            <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">DISPONIBLE</div><div style="font-size:13px;font-weight:700;color:#155724" id="treso-disponible-detail">0 Ar</div></div>
           </div>
         </div>
-        <div class="treso-chart" id="treso-chart"></div>
       </div>
-    </div>
-    <div>
-      <div class="sec-title">Transactions récentes</div>
-      <div class="card" id="tx-list">
-        <div class="empty"><div class="empty-ic">💰</div><div class="empty-t">Aucune transaction</div></div>
+      <div>
+        <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>🔒 Fonds bloqués</span>
+          <button id="fonds-add-btn" style="display:none;font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;background:var(--surface2);color:var(--t1)" onclick="openNewFondsModal()">➕ Fonds</button>
+        </div>
+        <div class="card" id="fonds-list"></div>
+      </div>
+      <div>
+        <div class="sec-title">📊 Répartition des dépenses</div>
+        <div class="card" style="padding:16px" id="treso-donut-wrap"></div>
+      </div>
+      <div>
+        <div class="sec-title">Ce mois</div>
+        <div class="card" style="overflow:hidden">
+          <div style="display:grid;grid-template-columns:1fr 1fr;padding:14px 16px;gap:10px;border-bottom:1px solid var(--surface2)">
+            <div style="text-align:center">
+              <div style="font-size:11px;color:var(--t3);margin-bottom:4px">ENTRÉES</div>
+              <div style="font-size:18px;font-weight:700;color:#155724" id="total-entrees">0 Ar</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:11px;color:var(--t3);margin-bottom:4px">DÉPENSES</div>
+              <div style="font-size:18px;font-weight:700;color:#C0392B" id="total-depenses">0 Ar</div>
+            </div>
+          </div>
+          <div class="treso-chart" id="treso-chart"></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>Transactions récentes</span>
+          <button onclick="go('cotisations')" style="font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;background:var(--surface2);color:var(--t1)">📋 Cotisations</button>
+        </div>
+        <div class="card" id="tx-list">
+          <div class="empty"><div class="empty-ic">💰</div><div class="empty-t">Aucune transaction</div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -2989,7 +3013,7 @@ input,select,textarea{font-family:inherit}
     <div class="mfield"><label>Montant (Ar) *</label><input type="number" id="tx-montant" placeholder="0" min="0"></div>
     <div class="mfield"><label>Description *</label><input type="text" id="tx-desc" placeholder="Ex: Cotisation mensuelle"></div>
     <div class="mfield"><label>Catégorie</label>
-      <select id="tx-cat">
+      <select id="tx-cat" onchange="toggleTxCotisationFields()">
         <option>Cotisation</option>
         <option>Don</option>
         <option>Activité</option>
@@ -2998,8 +3022,17 @@ input,select,textarea{font-family:inherit}
         <option>Transport</option>
         <option>Communication</option>
         <option>Événement</option>
+        <option>Fonds bloqué</option>
+        <option>Partenariat</option>
         <option>Autre</option>
       </select>
+    </div>
+    <div class="mfield"><label>Mode de paiement</label>
+      <select id="tx-mode"><option>Cash</option><option>Mobile Money</option><option>Virement</option></select>
+    </div>
+    <div id="tx-cotis-row" style="display:none">
+      <div class="mfield"><label>Membre</label><select id="tx-membre"><option value="">— Choisir —</option></select></div>
+      <div class="mfield"><label>Période</label><input type="text" id="tx-periode" placeholder="Ex: T1 2026, Année 2026"></div>
     </div>
     <div class="mfield"><label>Justificatif (photo)</label>
       <div style="display:flex;gap:8px;align-items:center">
@@ -3280,11 +3313,11 @@ const CAT_SHORT = {
 // Classe CSS courte par catégorie (badges annuaire/admin)
 const CAT_CLASS = { bureau:'cat-bureau', actif:'cat-actif', benevole:'cat-benevole', honoraire:'cat-honoraire', bienfaiteur:'cat-bienfaiteur' };
 const QA = {
-  bureau:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🚀',lb:'Projets',bg:'#FFF7ED',fn:"go('projets')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Mon agenda',bg:'#F0FDF4',fn:"go('agenda')"},{ic:'💰',lb:'Trésorerie',bg:'#D4EDDA',fn:"go('treso')"},{ic:'📦',lb:'Logistique',bg:'#FDEBD0',fn:"go('logistique')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
-  actif:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
-  benevole:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'👥',lb:'Annuaire',bg:'#F5F3FF',fn:"go('annuaire')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
-  honoraire:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
-  bienfaiteur:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('reunion')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'💰',lb:'Trésorerie',bg:'#F5F3FF',fn:"go('treso')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}]
+  bureau:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🚀',lb:'Projets',bg:'#FFF7ED',fn:"go('projets')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'💰',lb:'Trésorerie',bg:'#D4EDDA',fn:"go('treso')"},{ic:'📦',lb:'Logistique',bg:'#FDEBD0',fn:"go('logistique')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
+  actif:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
+  benevole:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'👥',lb:'Annuaire',bg:'#F5F3FF',fn:"go('annuaire')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
+  honoraire:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
+  bienfaiteur:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'💰',lb:'Trésorerie',bg:'#F5F3FF',fn:"go('treso')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}]
 };
 // ── Catégories — helpers de migration douce niveau → categorie ─────
 // Une catégorie non reconnue retombe sur 'benevole' (accès sûr, non-admin).
@@ -3320,6 +3353,8 @@ function canValidateTx(p, tx) { return (isPresident(p) || isTresorier(p)) && p &
 
 // ── Rôles Président / Vice-Président (Session 7 — v2.0 Architecture) ──
 function isVP(p) { return isBureau(p) && normAccents(p && p.role).includes('vice president'); }
+function isSG(p) { return isBureau(p) && normAccents(p && p.role).includes('secretaire general'); }
+function canManageAgendaAsso(p) { return isPresident(p) || isVP(p) || isSG(p); }
 // Supervision globale des tâches (vue de toutes les tâches, délégation à tout membre, rappels)
 function isPresidentOrVP(p) { return isPresident(p) || isVP(p); }
 // Accès aux données personnelles (agenda/finances/programmes) d'un autre membre :
@@ -3378,6 +3413,8 @@ function go(screen) {
   if (screen === 'admin')  loadMembers();
   if (screen === 'supervision') loadSupervision();
   if (screen === 'agenda') loadAgenda();
+  if (screen === 'agenda-asso') loadAgendaAsso();
+  if (screen === 'cotisations') loadCotisations();
   if (screen === 'finperso') loadFinPerso();
   if (screen === 'biblio') loadBiblio();
   if (screen === 'logistique') loadLogistique();
@@ -3606,7 +3643,7 @@ function agCalNav(delta) {
 async function loadAgenda() {
   if (!CU || !CP) return;
   const sub = document.getElementById('ag-sub');
-  if (sub) sub.textContent = 'Événements associatifs et personnels réunis';
+  if (sub) sub.textContent = 'Mes tâches et événements personnels';
 
   const y = agViewDate.getFullYear(), m = agViewDate.getMonth();
   const monthLabel = agViewDate.toLocaleDateString('fr-FR', {month:'long', year:'numeric'});
@@ -3615,14 +3652,7 @@ async function loadAgenda() {
 
   agEvents = [];
   try {
-    // Réunions (toutes — filtrage fin par canal non nécessaire, l'agenda perso montre tout ce qui est visible)
-    const rSnap = await db.collection('reunions').get();
-    rSnap.forEach(d => {
-      const r = d.data();
-      if (!r.date) return;
-      const dt = r.date?.toDate ? r.date.toDate() : new Date(r.date);
-      agEvents.push({ type:'reun', id:d.id, nom:r.nom||'Réunion', date:dt, heure:r.heure||'', cat:null });
-    });
+    // Agenda personnel, indépendant de l'agenda de l'association (plus de fusion avec les réunions ici).
     // Tâches assignées à moi, avec échéance
     const tSnap = await db.collection('taches').where('assigneeId','==',CU.uid).get();
     tSnap.forEach(d => {
@@ -8791,11 +8821,12 @@ window.submitProjet = async function() {
 /* ══ TRÉSORERIE ══════════════════════════════════════════════════ */
 
 async function loadTreso() {
-  if (!CU || !CP || !isBureau(CP)) {
-    go('dash');
-    toast('Accès réservé au Bureau');
-    return;
-  }
+  if (!CU || !CP) { go('dash'); return; }
+
+  // Détail complet réservé au Bureau — le reste des membres ne voit que le solde disponible.
+  var canSeeDetails = isBureau(CP);
+  var detailsWrap = document.getElementById('treso-bureau-only');
+  if (detailsWrap) detailsWrap.style.display = canSeeDetails ? 'block' : 'none';
 
   var actionsEl = document.getElementById('treso-actions');
   var roNoteEl  = document.getElementById('treso-readonly-note');
@@ -8805,7 +8836,6 @@ async function loadTreso() {
 
   try {
     var now   = new Date();
-    var start = new Date(now.getFullYear(), now.getMonth(), 1);
     var label = now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
     var el = document.getElementById('solde-month');
     if (el) el.textContent = label.charAt(0).toUpperCase() + label.slice(1);
@@ -8824,11 +8854,33 @@ async function loadTreso() {
       if (tx.type === 'depense') { solde -= tx.montant; totalD += tx.montant; }
     }
 
+    // Fonds bloqués — détail réservé au Bureau, mais impacte le solde disponible affiché à tous.
+    var totalFonds = 0;
+    if (canSeeDetails) {
+      var fSnap = await db.collection('tresorerie_fonds').get();
+      allFonds = [];
+      fSnap.forEach(function(d) { allFonds.push(Object.assign({id:d.id}, d.data())); });
+      totalFonds = allFonds.filter(function(f){return f.statut!=='libere';}).reduce(function(s,f){return s+(Number(f.montant)||0);},0);
+      renderFondsBloques();
+      renderDonutCategories();
+    }
+    var disponible = solde - totalFonds;
+
     var sa = document.getElementById('solde-amount');
     if (sa) {
-      sa.textContent = solde.toLocaleString('fr-FR') + ' Ar';
-      sa.className   = 'solde-amount ' + (solde >= 0 ? 'pos' : 'neg');
+      sa.textContent = disponible.toLocaleString('fr-FR') + ' Ar';
+      sa.className   = 'solde-amount ' + (disponible >= 0 ? 'pos' : 'neg');
     }
+
+    if (!canSeeDetails) return;
+
+    var scEl = document.getElementById('treso-solde-caisse');
+    var tfEl = document.getElementById('treso-total-fonds');
+    var tdEl2 = document.getElementById('treso-disponible-detail');
+    if (scEl) scEl.textContent = solde.toLocaleString('fr-FR') + ' Ar';
+    if (tfEl) tfEl.textContent = totalFonds.toLocaleString('fr-FR') + ' Ar';
+    if (tdEl2) tdEl2.textContent = disponible.toLocaleString('fr-FR') + ' Ar';
+
     var te = document.getElementById('total-entrees');
     var td = document.getElementById('total-depenses');
     if (te) te.textContent = totalE.toLocaleString('fr-FR') + ' Ar';
@@ -8850,6 +8902,144 @@ async function loadTreso() {
   } catch(e) {
     toast('Erreur trésorerie : ' + e.message);
   }
+}
+
+/* ── Fonds bloqués (Argent — Trésorerie) ───────────────────────────── */
+let allFonds = [];
+function renderFondsBloques() {
+  const list = document.getElementById('fonds-list');
+  const addBtn = document.getElementById('fonds-add-btn');
+  if (!list) return;
+  if (addBtn) addBtn.style.display = (isPresident(CP) || isTresorier(CP)) ? 'inline-flex' : 'none';
+  if (!allFonds.length) { list.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">Aucun fonds bloqué.</div></div>'; return; }
+  list.innerHTML = allFonds.map(f => {
+    const libere = f.statut === 'libere';
+    return `<div style="padding:11px 16px;border-bottom:1px solid var(--surface2)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:13px;font-weight:600;color:var(--t1)">${escHtml(f.nom||'—')}</div>
+        <div style="font-size:13px;font-weight:700;color:${libere?'var(--t3)':'var(--t1)'}">${(Number(f.montant)||0).toLocaleString('fr-FR')} Ar</div>
+      </div>
+      <div style="font-size:11px;color:var(--t3);margin-top:2px">${escHtml(f.origine||'')}${f.condition ? ' · '+escHtml(f.condition) : ''}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:${libere?'var(--surface2)':'#FFF3CD'};color:${libere?'var(--t3)':'#856404'}">${libere?'✅ Libéré':'🔒 Actif'}</span>
+        ${!libere && (isPresident(CP)||isTresorier(CP)) ? `<button data-action="lib-fonds" data-id="${f.id}" style="font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;background:var(--surface2);color:var(--t1)">Libérer</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('[data-action="lib-fonds"]').forEach(b => b.addEventListener('click', () => libererFonds(b.getAttribute('data-id'))));
+}
+window.openNewFondsModal = function() {
+  if (!isPresident(CP) && !isTresorier(CP)) { toast('Réservé au Président et au Trésorier'); return; }
+  document.getElementById('fonds-nom').value = '';
+  document.getElementById('fonds-montant').value = 0;
+  document.getElementById('fonds-origine').value = '';
+  document.getElementById('fonds-condition').value = '';
+  document.getElementById('ov-fonds').classList.add('on');
+};
+window.saveFonds = async function() {
+  if (!isPresident(CP) && !isTresorier(CP)) { toast('Réservé au Président et au Trésorier'); return; }
+  const nom = document.getElementById('fonds-nom').value.trim();
+  const montant = Number(document.getElementById('fonds-montant').value) || 0;
+  if (!nom) { toast('Le nom du fonds est obligatoire'); return; }
+  if (montant <= 0) { toast('Montant invalide'); return; }
+  try {
+    await db.collection('tresorerie_fonds').add({
+      nom, montant,
+      origine: document.getElementById('fonds-origine').value.trim(),
+      condition: document.getElementById('fonds-condition').value.trim(),
+      statut: 'actif',
+      createdBy: CU.uid, createdByNom: CP?.nom || '—',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-fonds');
+    toast('Fonds bloqué ajouté ✅');
+    loadTreso();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+async function libererFonds(id) {
+  if (!isPresident(CP) && !isTresorier(CP)) return;
+  if (!confirm('Libérer ce fonds ? Le montant redeviendra disponible.')) return;
+  try {
+    await db.collection('tresorerie_fonds').doc(id).update({ statut: 'libere' });
+    toast('Fonds libéré ✅');
+    loadTreso();
+  } catch(e) { toast('Erreur : ' + e.message); }
+}
+
+/* ── Résumé en donut par catégorie (dépenses validées) ─────────────── */
+function renderDonutCategories() {
+  const wrap = document.getElementById('treso-donut-wrap');
+  if (!wrap) return;
+  const validated = allTx.filter(t => t.statut === 'validee' && t.type === 'depense');
+  if (!validated.length) { wrap.innerHTML = '<div style="font-size:12px;color:var(--t3);text-align:center;padding:10px 0">Pas encore de dépenses validées</div>'; return; }
+  const byCat = {};
+  validated.forEach(t => { const c = t.categorie || 'Autre'; byCat[c] = (byCat[c]||0) + (Number(t.montant)||0); });
+  const total = Object.values(byCat).reduce((a,b)=>a+b,0);
+  const colors = ['#1C3557','#5B21B6','#856404','#155724','#C0392B','#2E9E6C','#F5A623','#8E44AD','#16A085','#D35400'];
+  const entries = Object.entries(byCat).sort((a,b) => b[1]-a[1]);
+  let cursor = 0;
+  const gradParts = entries.map(([cat,val], i) => {
+    const pct = (val/total)*100;
+    const part = `${colors[i%colors.length]} ${cursor}% ${cursor+pct}%`;
+    cursor += pct;
+    return part;
+  });
+  const gradient = 'conic-gradient(' + gradParts.join(', ') + ')';
+  let html = '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">';
+  html += `<div style="width:110px;height:110px;border-radius:50%;background:${gradient};flex-shrink:0;position:relative">
+    <div style="position:absolute;inset:18px;background:var(--surface);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9.5px;color:var(--t3);text-align:center">Dépenses</div>
+  </div>`;
+  html += '<div style="flex:1;min-width:140px">' + entries.map(([cat,val], i) => {
+    const pct = Math.round((val/total)*100);
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11.5px;color:var(--t2)"><span style="width:9px;height:9px;border-radius:50%;background:${colors[i%colors.length]};flex-shrink:0"></span>${escHtml(cat)} — ${pct}% (${val.toLocaleString('fr-FR')} Ar)</div>`;
+  }).join('') + '</div></div>';
+  wrap.innerHTML = html;
+}
+
+/* ── Suivi des cotisations par membre ──────────────────────────────── */
+let cotisPeriode = '';
+async function loadCotisations() {
+  if (!CU || !CP || !isBureau(CP)) { go('dash'); toast('Accès réservé au Bureau'); return; }
+  if (!cotisPeriode) cotisPeriode = 'Année ' + new Date().getFullYear();
+  const input = document.getElementById('cotis-periode-input');
+  if (input) input.value = cotisPeriode;
+  renderCotisations();
+}
+window.checkCotisations = function() {
+  const periode = document.getElementById('cotis-periode-input').value.trim();
+  if (!periode) { toast('Indique une période'); return; }
+  cotisPeriode = periode;
+  renderCotisations();
+};
+async function renderCotisations() {
+  const body = document.getElementById('cotis-body');
+  const summary = document.getElementById('cotis-summary');
+  if (!body) return;
+  body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+  try {
+    const [usersSnap, txSnap] = await Promise.all([
+      db.collection('users').get(),
+      db.collection('tresorerie').where('categorie','==','Cotisation').get()
+    ]);
+    const membresPayes = new Set();
+    txSnap.forEach(d => {
+      const t = d.data();
+      if (t.statut === 'validee' && t.periode === cotisPeriode && t.membreUid) membresPayes.add(t.membreUid);
+    });
+    const membres = [];
+    usersSnap.forEach(d => {
+      const u = d.data();
+      if (u.nom && u.categorie !== 'honoraire') membres.push({ uid: d.id, nom: u.nom, paye: membresPayes.has(d.id) });
+    });
+    membres.sort((a,b) => (a.paye === b.paye) ? a.nom.localeCompare(b.nom) : (a.paye ? 1 : -1));
+    const payeCount = membres.filter(m => m.paye).length;
+    if (summary) summary.textContent = payeCount + ' / ' + membres.length + ' ont payé pour « ' + cotisPeriode + ' »';
+    if (!membres.length) { body.innerHTML = '<div class="empty"><div class="empty-b">Aucun membre trouvé.</div></div>'; return; }
+    body.innerHTML = membres.map(m => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--surface2)">
+      <span style="font-size:13px;color:var(--t1)">${escHtml(m.nom)}</span>
+      <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:${m.paye?'#D4EDDA':'#FDE8E8'};color:${m.paye?'#155724':'#C0392B'}">${m.paye?'✅ Payé':'❌ Non payé'}</span>
+    </div>`).join('');
+  } catch(e) { body.innerHTML = '<div class="empty"><div class="empty-t">Erreur de chargement</div></div>'; }
 }
 
 /* ── Section transactions en attente de validation (Session 7) ────── */
@@ -9085,8 +9275,21 @@ window.openModalTx = function(type) {
   if (titleEl) titleEl.textContent = type === 'entree' ? 'Nouvelle entrée' : 'Nouvelle dépense';
   document.getElementById('tx-montant').value = '';
   document.getElementById('tx-desc').value    = '';
+  document.getElementById('tx-cat').value = 'Cotisation';
+  document.getElementById('tx-mode').value = 'Cash';
+  document.getElementById('tx-periode').value = '';
   document.getElementById('tx-justif-name').value = '';
+  const memSel = document.getElementById('tx-membre');
+  memSel.innerHTML = '<option value="">— Choisir —</option>';
+  ensureMentionCache().then(members => {
+    memSel.innerHTML = '<option value="">— Choisir —</option>' + members.map(m => `<option value="${m.uid}">${escHtml(m.nom)}</option>`).join('');
+  });
+  toggleTxCotisationFields();
   document.getElementById('ov-tx').classList.add('on');
+};
+window.toggleTxCotisationFields = function() {
+  const row = document.getElementById('tx-cotis-row');
+  if (row) row.style.display = document.getElementById('tx-cat').value === 'Cotisation' ? 'block' : 'none';
 };
 
 window.uploadJustif = function() {
@@ -9114,10 +9317,16 @@ window.submitTransaction = async function() {
 
   var btn = document.getElementById('tx-sub');
   btn.disabled = true; btn.querySelector('span').textContent = '...';
+  var memSel = document.getElementById('tx-membre');
+  var membreUid = cat === 'Cotisation' ? memSel.value : '';
+  var membreNom = cat === 'Cotisation' && memSel.selectedIndex > 0 ? memSel.options[memSel.selectedIndex].textContent : '';
+  var periode = cat === 'Cotisation' ? document.getElementById('tx-periode').value.trim() : '';
   try {
     await db.collection('tresorerie').add({
       type: curTxType, montant: montant,
       description: desc, categorie: cat,
+      mode: document.getElementById('tx-mode').value,
+      membreUid: membreUid || null, membreNom: membreNom || null, periode: periode || null,
       justificatif: txJustifUrl || '',
       auteurId: CU.uid, auteurNom: CP.nom || '',
       statut: 'attente', // double contrôle — validation requise avant impact sur le solde
@@ -10840,6 +11049,143 @@ window.deleteDepense = async function() {
 };
 let curDepenseId = null;
 
+/* ══ AGENDA DE L'ASSOCIATION — visible à tous, ajout réservé Président/VP/SG ══ */
+const AG_ASSO_TYPES = [
+  { key:'Réunion',             bg:'#EFF6FF', fg:'#1C3557' },
+  { key:'Formation',           bg:'#F5F3FF', fg:'#5B21B6' },
+  { key:'Concours',            bg:'#FFF3CD', fg:'#856404' },
+  { key:'Sortie',              bg:'#D4EDDA', fg:'#155724' },
+  { key:'Assemblée générale',  bg:'#FDE8E8', fg:'#C0392B' },
+  { key:'Autre',               bg:'var(--surface2)', fg:'var(--t3)' }
+];
+let agAssoEvents = [], curAgAssoId = null;
+function agAssoTypeInfo(type) { return AG_ASSO_TYPES.find(t => t.key === type) || AG_ASSO_TYPES[AG_ASSO_TYPES.length-1]; }
+async function loadAgendaAsso() {
+  const body = document.getElementById('aga-body');
+  body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+  const canManage = canManageAgendaAsso(CP);
+  const addBtn = document.getElementById('aga-add-btn');
+  if (addBtn) addBtn.style.display = canManage ? 'flex' : 'none';
+  agAssoEvents = [];
+  try {
+    const rSnap = await db.collection('reunions').get();
+    rSnap.forEach(d => {
+      const r = d.data();
+      if (!r.date) return;
+      const dt = r.date && r.date.toDate ? r.date.toDate() : new Date(r.date);
+      agAssoEvents.push({ id:d.id, source:'reunion', titre:r.nom||'Réunion', type:'Réunion', date:dt, heure:r.heure||'', lieu:r.lieu||'', organisateur:'', description:'' });
+    });
+    const eSnap = await db.collection('agenda_association').get();
+    eSnap.forEach(d => {
+      const e = d.data();
+      if (!e.dateDebut) return;
+      agAssoEvents.push({ id:d.id, source:'asso', titre:e.titre||'Événement', type:e.type||'Autre', date:new Date(e.dateDebut), heure:e.heureDebut||'', heureFin:e.heureFin||'', lieu:e.lieu||'', organisateur:e.organisateur||'', description:e.description||'' });
+    });
+    agAssoEvents.sort((a,b) => a.date - b.date);
+    renderAgendaAsso();
+  } catch(e) { body.innerHTML = '<div class="empty"><div class="empty-t">Erreur de chargement</div></div>'; }
+}
+function renderAgendaAsso() {
+  const body = document.getElementById('aga-body');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const list = agAssoEvents.filter(e => e.date >= today);
+  if (!list.length) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">📅</div><div class="empty-t">Aucun événement à venir</div><div class="empty-b">Rien de prévu pour le moment.</div></div>';
+    return;
+  }
+  body.innerHTML = list.map(e => {
+    const t = agAssoTypeInfo(e.type);
+    const dateLbl = e.date.toLocaleDateString('fr-FR', {weekday:'short', day:'2-digit', month:'short'});
+    const heureLbl = e.heure ? (e.heure + (e.heureFin ? ' – ' + e.heureFin : '')) : '';
+    const canEdit = e.source === 'asso' && canManageAgendaAsso(CP);
+    return `<div class="tc" ${canEdit ? `data-action="open-aga" data-id="${e.id}" style="cursor:pointer"` : ''}>
+      <div class="tc-top">
+        <div class="tc-info">
+          <div class="tc-nom">${escHtml(e.titre)}</div>
+          <div class="tc-who">${dateLbl}${heureLbl ? ' · '+heureLbl : ''}${e.lieu ? ' · 📍 '+escHtml(e.lieu) : ''}</div>
+        </div>
+        <div class="tc-badge" style="background:${t.bg};color:${t.fg}">${escHtml(e.type)}</div>
+      </div>
+      ${e.description ? `<div class="tc-meta" style="padding-top:6px;font-size:12px;color:var(--t2)">${escHtml(e.description)}</div>` : ''}
+      ${e.organisateur ? `<div class="tc-meta" style="padding-top:2px;font-size:11px;color:var(--t3)">👤 ${escHtml(e.organisateur)}</div>` : ''}
+    </div>`;
+  }).join('');
+  body.querySelectorAll('[data-action="open-aga"]').forEach(el => {
+    el.addEventListener('click', () => openEditAgendaAssoModal(el.getAttribute('data-id')));
+  });
+}
+window.openNewAgendaAssoModal = function() {
+  if (!canManageAgendaAsso(CP)) { toast('Réservé au Président, Vice-Président et Secrétaire Général'); return; }
+  curAgAssoId = null;
+  document.getElementById('aga-modal-title').textContent = 'Nouvel événement';
+  document.getElementById('aga-titre').value = '';
+  document.getElementById('aga-type').value = 'Réunion';
+  document.getElementById('aga-date').value = '';
+  document.getElementById('aga-heure-debut').value = '';
+  document.getElementById('aga-heure-fin').value = '';
+  document.getElementById('aga-lieu').value = '';
+  document.getElementById('aga-organisateur').value = CP?.nom || '';
+  document.getElementById('aga-desc').value = '';
+  document.getElementById('aga-del-btn').style.display = 'none';
+  document.getElementById('ov-agenda-asso').classList.add('on');
+};
+window.openEditAgendaAssoModal = function(id) {
+  if (!canManageAgendaAsso(CP)) return;
+  const e = agAssoEvents.find(x => x.id === id && x.source === 'asso');
+  if (!e) return;
+  curAgAssoId = id;
+  document.getElementById('aga-modal-title').textContent = "Modifier l'événement";
+  document.getElementById('aga-titre').value = e.titre || '';
+  document.getElementById('aga-type').value = e.type || 'Réunion';
+  document.getElementById('aga-date').value = e.date.toISOString().slice(0,10);
+  document.getElementById('aga-heure-debut').value = e.heure || '';
+  document.getElementById('aga-heure-fin').value = e.heureFin || '';
+  document.getElementById('aga-lieu').value = e.lieu || '';
+  document.getElementById('aga-organisateur').value = e.organisateur || '';
+  document.getElementById('aga-desc').value = e.description || '';
+  document.getElementById('aga-del-btn').style.display = 'block';
+  document.getElementById('ov-agenda-asso').classList.add('on');
+};
+window.saveAgendaAsso = async function() {
+  if (!canManageAgendaAsso(CP)) { toast('Réservé au Président, Vice-Président et Secrétaire Général'); return; }
+  const titre = document.getElementById('aga-titre').value.trim();
+  const dateDebut = document.getElementById('aga-date').value;
+  if (!titre) { toast('Le titre est obligatoire'); return; }
+  if (!dateDebut) { toast('La date est obligatoire'); return; }
+  const payload = {
+    titre, dateDebut,
+    type: document.getElementById('aga-type').value,
+    heureDebut: document.getElementById('aga-heure-debut').value || null,
+    heureFin: document.getElementById('aga-heure-fin').value || null,
+    lieu: document.getElementById('aga-lieu').value.trim(),
+    organisateur: document.getElementById('aga-organisateur').value.trim(),
+    description: document.getElementById('aga-desc').value.trim()
+  };
+  try {
+    if (curAgAssoId) {
+      await db.collection('agenda_association').doc(curAgAssoId).update(payload);
+      toast('Événement modifié ✅');
+    } else {
+      payload.createdBy = CU.uid; payload.createdByNom = CP?.nom || '—';
+      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('agenda_association').add(payload);
+      toast('Événement ajouté ✅');
+    }
+    closeOverlay('ov-agenda-asso');
+    loadAgendaAsso();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.deleteAgendaAsso = async function() {
+  if (!canManageAgendaAsso(CP) || !curAgAssoId) return;
+  if (!confirm('Supprimer cet événement ?')) return;
+  try {
+    await db.collection('agenda_association').doc(curAgAssoId).delete();
+    closeOverlay('ov-agenda-asso');
+    toast('Événement supprimé');
+    loadAgendaAsso();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+
 </script>
 <!-- ══ LOGISTIQUE (Module additionnel) ══ -->
 <div id="s-logistique" class="scr">
@@ -11366,6 +11712,84 @@ let curDepenseId = null;
     <div class="mfield"><label>Notes (optionnel)</label><textarea id="dp-notes" placeholder="Référence facture, échéance..."></textarea></div>
     <button class="bsub" id="dp-sub-btn" style="margin-top:6px" onclick="saveDepense()"><span>Ajouter</span></button>
     <button id="dp-del-btn" style="display:none;width:100%;text-align:center;margin-top:10px;font-size:12px;color:var(--red)" onclick="deleteDepense()">🗑 Supprimer cette dépense</button>
+  </div>
+</div>
+
+<!-- ══ AGENDA DE L'ASSOCIATION — visible à tous, ajout réservé Président/VP/SG ══ -->
+<div id="s-agenda-asso" class="scr">
+  <div class="proj-hd">
+    <div class="proj-hd-top">
+      <div><div class="proj-title">Agenda de l'association</div><div class="proj-sub">Réunions et événements à venir</div></div>
+      <button class="btn-new-proj" id="aga-add-btn" style="display:none" onclick="openNewAgendaAssoModal()">➕ Événement</button>
+    </div>
+  </div>
+  <div class="proj-body">
+    <div id="aga-body"></div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- MODAL ÉVÉNEMENT ASSOCIATION -->
+<div class="overlay" id="ov-agenda-asso" onclick="closeOverlay('ov-agenda-asso')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="aga-modal-title">Nouvel événement</div>
+    <div class="mfield"><label>Titre *</label><input type="text" id="aga-titre" placeholder="Ex: Concours de slam trimestriel"></div>
+    <div class="mfield"><label>Type</label>
+      <select id="aga-type"><option>Réunion</option><option>Formation</option><option>Concours</option><option>Sortie</option><option>Assemblée générale</option><option>Autre</option></select>
+    </div>
+    <div class="mfield"><label>Date *</label><input type="date" id="aga-date"></div>
+    <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>Heure de début</label><input type="time" id="aga-heure-debut"></div>
+      <div class="mfield" style="margin-bottom:0"><label>Heure de fin</label><input type="time" id="aga-heure-fin"></div>
+    </div>
+    <div class="mfield"><label>Lieu (optionnel)</label><input type="text" id="aga-lieu" placeholder="Ex: Salle Café YO"></div>
+    <div class="mfield"><label>Organisateur</label><input type="text" id="aga-organisateur" placeholder="Nom du responsable"></div>
+    <div class="mfield"><label>Description (optionnel)</label><textarea id="aga-desc" placeholder="Détails utiles aux membres"></textarea></div>
+    <button class="bsub" style="margin-top:6px" onclick="saveAgendaAsso()"><span>Enregistrer</span></button>
+    <button id="aga-del-btn" style="display:none;width:100%;text-align:center;margin-top:10px;font-size:12px;color:var(--red)" onclick="deleteAgendaAsso()">🗑 Supprimer cet événement</button>
+  </div>
+</div>
+
+<!-- ══ SUIVI DES COTISATIONS PAR MEMBRE (Trésorerie, Bureau uniquement) ══ -->
+<div id="s-cotisations" class="scr">
+  <div class="proj-hd">
+    <div class="proj-hd-top">
+      <div><div class="proj-title">Cotisations</div><div class="proj-sub" id="cotis-summary">—</div></div>
+    </div>
+    <div style="display:flex;gap:8px;padding:10px 16px 4px">
+      <input type="text" id="cotis-periode-input" placeholder="Ex: T1 2026, Année 2026" style="flex:1;height:40px;border-radius:var(--r8);border:1px solid var(--surface3);background:var(--surface2);padding:0 12px;font-size:13px;color:var(--t1)">
+      <button onclick="checkCotisations()" style="height:40px;padding:0 16px;border-radius:var(--r8);background:var(--gold);color:#fff;font-size:13px;font-weight:600">Vérifier</button>
+    </div>
+  </div>
+  <div class="proj-body">
+    <div class="card" id="cotis-body"></div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="go('treso')"><div class="ni-ic">💰</div><div class="ni-lb">Trésorerie</div></button>
+    <button class="ni-plus" onclick="openNewTask()">＋</button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- MODAL NOUVEAU FONDS BLOQUÉ -->
+<div class="overlay" id="ov-fonds" onclick="closeOverlay('ov-fonds')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouveau fonds bloqué</div>
+    <div class="mfield"><label>Nom du fonds *</label><input type="text" id="fonds-nom" placeholder="Ex: Légalisation"></div>
+    <div class="mfield"><label>Montant (Ar) *</label><input type="number" id="fonds-montant" min="0" value="0"></div>
+    <div class="mfield"><label>Origine</label><input type="text" id="fonds-origine" placeholder="Nom de l'entité/personne"></div>
+    <div class="mfield"><label>Condition d'utilisation</label><textarea id="fonds-condition" placeholder="Dans quel cadre ce fonds peut être utilisé"></textarea></div>
+    <button class="bsub" style="margin-top:6px" onclick="saveFonds()"><span>Bloquer ce montant</span></button>
   </div>
 </div>
 
