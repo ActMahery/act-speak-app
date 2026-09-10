@@ -85,7 +85,8 @@ input,select,textarea{font-family:inherit}
 .bnav{position:fixed;bottom:0;left:0;right:0;height:68px;background:var(--surface);border-top:1px solid var(--surface3);display:flex;align-items:center;justify-content:space-around;z-index:100;box-shadow:0 -2px 12px rgba(15,31,51,.06);padding-bottom:env(safe-area-inset-bottom)}
 .ni{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 14px;border-radius:10px;flex:1;transition:background var(--tr)}
 .ni:active{background:var(--surface2)}
-.ni-ic{font-size:22px;line-height:1;transition:transform var(--tr)}
+.ni-ic{font-size:22px;line-height:1;transition:transform var(--tr);display:flex;align-items:center;justify-content:center}
+.ni-ic svg,.qa-ic svg,.prow-ic svg{width:19px;height:19px;stroke:currentColor}
 .ni.on .ni-ic{transform:scale(1.12)}
 .ni-lb{font-size:9px;font-weight:500;color:var(--t3)}
 .ni.on .ni-lb{color:var(--navy);font-weight:700}
@@ -1182,11 +1183,11 @@ input,select,textarea{font-family:inherit}
     </div>
   </div>
   <nav class="bnav">
-    <button class="ni on" id="ni-dash" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" id="ni-taches" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" id="ni-chat" onclick="navTo(this,'chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" id="ni-profil" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni on" id="ni-dash" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" id="ni-taches" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" id="ni-chat" onclick="navTo(this,'chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" id="ni-profil" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -1211,11 +1212,11 @@ input,select,textarea{font-family:inherit}
   </div>
   <div class="taches-body" id="t-body"></div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni on"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni on"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -1320,58 +1321,58 @@ input,select,textarea{font-family:inherit}
   <div class="prof-body">
     <div class="pcard">
       <div class="pcard-t">Mon compte</div>
-      <div class="prow"><div class="prow-l"><div class="prow-ic" style="background:#EFF6FF">📧</div><div><div class="prow-lbl">E-mail</div><div class="prow-sub" id="p-email">—</div></div></div></div>
-      <div class="prow"><div class="prow-l"><div class="prow-ic" style="background:#FFF7ED">🎖️</div><div><div class="prow-lbl">Rôle</div><div class="prow-sub" id="p-role-d">—</div></div></div></div>
-      <div class="prow"><div class="prow-l"><div class="prow-ic" style="background:#F0FDF4">⭐</div><div><div class="prow-lbl">Score</div><div class="prow-sub" id="p-score-d">0 pts</div></div></div></div>
+      <div class="prow"><div class="prow-l"><div class="prow-ic" style="background:#EFF6FF"><i data-feather="mail"></i></div><div><div class="prow-lbl">E-mail</div><div class="prow-sub" id="p-email">—</div></div></div></div>
+      <div class="prow"><div class="prow-l"><div class="prow-ic" style="background:#FFF7ED"><i data-feather="award"></i></div><div><div class="prow-lbl">Rôle</div><div class="prow-sub" id="p-role-d">—</div></div></div></div>
+      <div class="prow"><div class="prow-l"><div class="prow-ic" style="background:#F0FDF4"><i data-feather="star"></i></div><div><div class="prow-lbl">Score</div><div class="prow-sub" id="p-score-d">0 pts</div></div></div></div>
     </div>
     <div class="pcard">
       <div class="pcard-t">Mon Espace</div>
-      <div class="prow" onclick="go('agenda')"><div class="prow-l"><div class="prow-ic" style="background:#F0FDF4">📅</div><div><div class="prow-lbl">Mon agenda</div><div class="prow-sub">Calendrier, programmes, points</div></div></div><div class="prow-r">›</div></div>
-      <div class="prow" onclick="go('finperso')"><div class="prow-l"><div class="prow-ic" style="background:#D4EDDA">💰</div><div><div class="prow-lbl">Mes finances</div><div class="prow-sub">Solde, entrées, dépenses personnelles</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('agenda')"><div class="prow-l"><div class="prow-ic" style="background:#F0FDF4"><i data-feather="calendar"></i></div><div><div class="prow-lbl">Mon agenda</div><div class="prow-sub">Calendrier, programmes, points</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('finperso')"><div class="prow-l"><div class="prow-ic" style="background:#D4EDDA"><i data-feather="dollar-sign"></i></div><div><div class="prow-lbl">Mes finances</div><div class="prow-sub">Solde, entrées, dépenses personnelles</div></div></div><div class="prow-r">›</div></div>
     </div>
     <div class="pcard">
       <div class="pcard-t">Association</div>
-      <div class="prow" onclick="go('biblio')"><div class="prow-l"><div class="prow-ic" style="background:#FFF3CD">📚</div><div><div class="prow-lbl">Bibliothèque</div><div class="prow-sub">Emprunter un livre, avis, suggestions</div></div></div><div class="prow-r">›</div></div>
-      <div class="prow" onclick="go('logistique')"><div class="prow-l"><div class="prow-ic" style="background:#FDEBD0">📦</div><div><div class="prow-lbl">Logistique</div><div class="prow-sub">Inventaire, matériel, demandes</div></div></div><div class="prow-r">›</div></div>
-      <div class="prow" onclick="go('langues')"><div class="prow-l"><div class="prow-ic" style="background:#F5F3FF">🗣️</div><div><div class="prow-lbl">Langues</div><div class="prow-sub">Leçons, quiz, dictionnaire</div></div></div><div class="prow-r">›</div></div>
-      <div class="prow" onclick="go('statuts')"><div class="prow-l"><div class="prow-ic" style="background:#EFF6FF">📜</div><div><div class="prow-lbl">Statuts & Historique</div><div class="prow-sub">Objets, règlement intérieur, historique</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('biblio')"><div class="prow-l"><div class="prow-ic" style="background:#FFF3CD"><i data-feather="book-open"></i></div><div><div class="prow-lbl">Bibliothèque</div><div class="prow-sub">Emprunter un livre, avis, suggestions</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('logistique')"><div class="prow-l"><div class="prow-ic" style="background:#FDEBD0"><i data-feather="package"></i></div><div><div class="prow-lbl">Logistique</div><div class="prow-sub">Inventaire, matériel, demandes</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('langues')"><div class="prow-l"><div class="prow-ic" style="background:#F5F3FF"><i data-feather="globe"></i></div><div><div class="prow-lbl">Langues</div><div class="prow-sub">Leçons, quiz, dictionnaire</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('statuts')"><div class="prow-l"><div class="prow-ic" style="background:#EFF6FF"><i data-feather="file-text"></i></div><div><div class="prow-lbl">Statuts & Historique</div><div class="prow-sub">Objets, règlement intérieur, historique</div></div></div><div class="prow-r">›</div></div>
     </div>
     <div class="pcard">
       <div class="pcard-t">Apparence</div>
       <div class="prow">
-        <div class="prow-l"><div class="prow-ic" style="background:#F5F3FF">🌙</div><div><div class="prow-lbl">Mode nuit</div><div class="prow-sub">Thème sombre</div></div></div>
+        <div class="prow-l"><div class="prow-ic" style="background:#F5F3FF"><i data-feather="moon"></i></div><div><div class="prow-lbl">Mode nuit</div><div class="prow-sub">Thème sombre</div></div></div>
         <div class="tog" id="theme-tog" onclick="toggleTheme()"><div class="tog-dot"></div></div>
       </div>
     </div>
     <div class="pcard" id="stats-btn" style="display:none">
       <div class="pcard-t">Bureau</div>
-      <div class="prow" onclick="go('stats')"><div class="prow-l"><div class="prow-ic" style="background:#EFF6FF">📊</div><div><div class="prow-lbl">Statistiques</div><div class="prow-sub">Taux, classement, avancement</div></div></div><div class="prow-r">›</div></div>
-      <div class="prow" onclick="go('annuaire')"><div class="prow-l"><div class="prow-ic" style="background:#F0FDF4">👥</div><div><div class="prow-lbl">Annuaire</div><div class="prow-sub">Tous les membres</div></div></div><div class="prow-r">›</div></div>
-      <div class="prow" onclick="go('sondages')"><div class="prow-l"><div class="prow-ic" style="background:#FFF3CD">🗳️</div><div><div class="prow-lbl">Sondages</div><div class="prow-sub">Votes et résultats</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('stats')"><div class="prow-l"><div class="prow-ic" style="background:#EFF6FF"><i data-feather="bar-chart-2"></i></div><div><div class="prow-lbl">Statistiques</div><div class="prow-sub">Taux, classement, avancement</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('annuaire')"><div class="prow-l"><div class="prow-ic" style="background:#F0FDF4"><i data-feather="users"></i></div><div><div class="prow-lbl">Annuaire</div><div class="prow-sub">Tous les membres</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('sondages')"><div class="prow-l"><div class="prow-ic" style="background:#FFF3CD"><i data-feather="bar-chart-2"></i></div><div><div class="prow-lbl">Sondages</div><div class="prow-sub">Votes et résultats</div></div></div><div class="prow-r">›</div></div>
     </div>
     <div class="pcard" id="supervision-btn" style="display:none">
       <div class="pcard-t">Direction</div>
-      <div class="prow" onclick="go('supervision')"><div class="prow-l"><div class="prow-ic" style="background:#F5F3FF">🧭</div><div><div class="prow-lbl">Supervision des tâches</div><div class="prow-sub">Vue globale, par membre, par groupe</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('supervision')"><div class="prow-l"><div class="prow-ic" style="background:#F5F3FF"><i data-feather="compass"></i></div><div><div class="prow-lbl">Supervision des tâches</div><div class="prow-sub">Vue globale, par membre, par groupe</div></div></div><div class="prow-r">›</div></div>
     </div>
     <div class="pcard" id="treso-btn" style="display:none">
       <div class="pcard-t">Finances</div>
-      <div class="prow" onclick="go('treso')"><div class="prow-l"><div class="prow-ic" style="background:#D4EDDA">💰</div><div><div class="prow-lbl">Trésorerie</div><div class="prow-sub">Solde, entrées, dépenses</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('treso')"><div class="prow-l"><div class="prow-ic" style="background:#D4EDDA"><i data-feather="dollar-sign"></i></div><div><div class="prow-lbl">Trésorerie</div><div class="prow-sub">Solde, entrées, dépenses</div></div></div><div class="prow-r">›</div></div>
     </div>
     <div class="pcard" id="admin-btn" style="display:none">
       <div class="pcard-t">Administration</div>
-      <div class="prow" onclick="go('admin')"><div class="prow-l"><div class="prow-ic" style="background:#FEF3C7">⚙️</div><div><div class="prow-lbl">Gérer les membres</div><div class="prow-sub">Invitations, rôles, accès</div></div></div><div class="prow-r">›</div></div>
+      <div class="prow" onclick="go('admin')"><div class="prow-l"><div class="prow-ic" style="background:#FEF3C7"><i data-feather="settings"></i></div><div><div class="prow-lbl">Gérer les membres</div><div class="prow-sub">Invitations, rôles, accès</div></div></div><div class="prow-r">›</div></div>
     </div>
     <div class="pcard">
       <div class="pcard-t">Compte</div>
-      <div class="prow" onclick="doLogout()"><div class="prow-l"><div class="prow-ic" style="background:#FDE8E8">🚪</div><div><div class="prow-lbl" style="color:var(--red)">Se déconnecter</div></div></div></div>
+      <div class="prow" onclick="doLogout()"><div class="prow-l"><div class="prow-ic" style="background:#FDE8E8"><i data-feather="log-out"></i></div><div><div class="prow-lbl" style="color:var(--red)">Se déconnecter</div></div></div></div>
     </div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni on"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni on"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -1463,11 +1464,11 @@ input,select,textarea{font-family:inherit}
   </div>
 
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni on"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni on"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -1610,11 +1611,11 @@ input,select,textarea{font-family:inherit}
   </div>
 
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -1847,11 +1848,11 @@ input,select,textarea{font-family:inherit}
   </div>
 
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -2111,11 +2112,11 @@ input,select,textarea{font-family:inherit}
     <button class="ag-add-btn" style="width:100%;margin-top:4px" onclick="openSuggestionModal()">💡 Suggérer un livre</button>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -2282,11 +2283,11 @@ input,select,textarea{font-family:inherit}
     </div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -2302,11 +2303,11 @@ input,select,textarea{font-family:inherit}
   </div>
   <div class="proj-body" id="lgd-lecons-list"></div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -2343,11 +2344,11 @@ input,select,textarea{font-family:inherit}
   </div>
   <div class="proj-body" id="dic-list"></div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -2438,11 +2439,11 @@ input,select,textarea{font-family:inherit}
     <div id="st-historique-list"></div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -2492,11 +2493,11 @@ input,select,textarea{font-family:inherit}
   </div>
 
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -2607,11 +2608,11 @@ input,select,textarea{font-family:inherit}
     <div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -2845,11 +2846,11 @@ input,select,textarea{font-family:inherit}
     </div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -3091,11 +3092,11 @@ input,select,textarea{font-family:inherit}
     <div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -3111,11 +3112,11 @@ input,select,textarea{font-family:inherit}
     <div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -3238,10 +3239,25 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
 <script>
 if (window.pdfjsLib) {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 }
+// ── Système d'icônes cohérent (Feather) — remplace les émojis de la navigation ──
+// Un MutationObserver ré-applique automatiquement les icônes après chaque re-rendu
+// dynamique (innerHTML), sans avoir à modifier chaque fonction render*() une par une.
+function refreshIcons() {
+  if (window.feather) { try { feather.replace({ 'stroke-width': 2, width: 18, height: 18 }); } catch(e) {} }
+}
+document.addEventListener('DOMContentLoaded', function() {
+  refreshIcons();
+  var iconObserver = new MutationObserver(function() {
+    clearTimeout(window._iconRefreshT);
+    window._iconRefreshT = setTimeout(refreshIcons, 60);
+  });
+  iconObserver.observe(document.body, { childList: true, subtree: true });
+});
 </script>
 <script>
 // ── INIT ──────────────────────────────────────────────────────
@@ -3329,11 +3345,11 @@ const CAT_SHORT = {
 // Classe CSS courte par catégorie (badges annuaire/admin)
 const CAT_CLASS = { bureau:'cat-bureau', actif:'cat-actif', benevole:'cat-benevole', honoraire:'cat-honoraire', bienfaiteur:'cat-bienfaiteur' };
 const QA = {
-  bureau:[{ic:'📋',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🚀',lb:'Projets',bg:'#FFF7ED',fn:"go('projets')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'💰',lb:'Trésorerie',bg:'#D4EDDA',fn:"go('treso')"},{ic:'📦',lb:'Logistique',bg:'#FDEBD0',fn:"go('logistique')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
-  actif:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
-  benevole:[{ic:'✅',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'🤝',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'📅',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'💬',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'👥',lb:'Annuaire',bg:'#F5F3FF',fn:"go('annuaire')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
-  honoraire:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'🗳️',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}],
-  bienfaiteur:[{ic:'📰',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'📅',lb:'Événements',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'👥',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'💰',lb:'Trésorerie',bg:'#F5F3FF',fn:"go('treso')"},{ic:'📚',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"}]
+  bureau:[{ic:'check-square',lb:'Tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'layers',lb:'Projets',bg:'#FFF7ED',fn:"go('projets')"},{ic:'users',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'calendar',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'dollar-sign',lb:'Trésorerie',bg:'#D4EDDA',fn:"go('treso')"},{ic:'package',lb:'Logistique',bg:'#FDEBD0',fn:"go('logistique')"},{ic:'book-open',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"},{ic:'globe',lb:'Langues',bg:'#F5F3FF',fn:"go('langues')"}],
+  actif:[{ic:'check-square',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'users',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'calendar',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'message-circle',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'bar-chart-2',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"},{ic:'book-open',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"},{ic:'globe',lb:'Langues',bg:'#F5F3FF',fn:"go('langues')"}],
+  benevole:[{ic:'check-square',lb:'Mes tâches',bg:'#EFF6FF',fn:"go('taches')"},{ic:'users',lb:'Réunion',bg:'#FFF3CD',fn:"go('reunion')"},{ic:'calendar',lb:'Agenda',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'message-circle',lb:'Chat',bg:'#FFF7ED',fn:"go('chat')"},{ic:'users',lb:'Annuaire',bg:'#F5F3FF',fn:"go('annuaire')"},{ic:'book-open',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"},{ic:'globe',lb:'Langues',bg:'#F5F3FF',fn:"go('langues')"}],
+  honoraire:[{ic:'file-text',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'calendar',lb:'Événements',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'users',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'bar-chart-2',lb:'Sondages',bg:'#F5F3FF',fn:"go('sondages')"},{ic:'book-open',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"},{ic:'globe',lb:'Langues',bg:'#F5F3FF',fn:"go('langues')"}],
+  bienfaiteur:[{ic:'file-text',lb:'Actualités',bg:'#EFF6FF',fn:"go('annuaire')"},{ic:'calendar',lb:'Événements',bg:'#F0FDF4',fn:"go('agenda-asso')"},{ic:'users',lb:'Annuaire',bg:'#FFF7ED',fn:"go('annuaire')"},{ic:'dollar-sign',lb:'Trésorerie',bg:'#F5F3FF',fn:"go('treso')"},{ic:'book-open',lb:'Bibliothèque',bg:'#FFF3CD',fn:"go('biblio')"},{ic:'globe',lb:'Langues',bg:'#F5F3FF',fn:"go('langues')"}]
 };
 // ── Catégories — helpers de migration douce niveau → categorie ─────
 // Une catégorie non reconnue retombe sur 'benevole' (accès sûr, non-admin).
@@ -3589,7 +3605,7 @@ function fillDash() {
 
   const qa = document.getElementById('d-qa');
   if (qa) qa.innerHTML = (QA[categorie]||QA['benevole']).map(a =>
-    `<button class="qa" onclick="${a.fn}"><div class="qa-ic" style="background:${a.bg}">${a.ic}</div><div class="qa-lb">${a.lb}</div></button>`
+    `<button class="qa" onclick="${a.fn}"><div class="qa-ic" style="background:${a.bg}"><i data-feather="${a.ic}"></i></div><div class="qa-lb">${a.lb}</div></button>`
   ).join('');
 
   safe('p-name',    el => el.textContent = CP.nom || CU.email);
@@ -11318,11 +11334,11 @@ window.deleteAgendaAsso = async function() {
     <div id="lg-table-wrap" style="display:none"></div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -11474,11 +11490,11 @@ window.deleteAgendaAsso = async function() {
     <div id="ld-body"></div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -11576,11 +11592,11 @@ window.deleteAgendaAsso = async function() {
     <div id="lr-body"></div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -11643,11 +11659,11 @@ window.deleteAgendaAsso = async function() {
     <div id="lc-body"></div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -11731,11 +11747,11 @@ window.deleteAgendaAsso = async function() {
     <div id="lca-body"></div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -11764,11 +11780,11 @@ window.deleteAgendaAsso = async function() {
     <div id="ldp-body"></div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -11817,11 +11833,11 @@ window.deleteAgendaAsso = async function() {
     <div id="aga-body"></div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic">✅</div><div class="ni-lb">Tâches</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
@@ -11861,11 +11877,11 @@ window.deleteAgendaAsso = async function() {
     <div class="card" id="cotis-body"></div>
   </div>
   <nav class="bnav">
-    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic">🏠</div><div class="ni-lb">Accueil</div></button>
-    <button class="ni" onclick="go('treso')"><div class="ni-ic">💰</div><div class="ni-lb">Trésorerie</div></button>
-    <button class="ni-plus" onclick="openNewTask()">＋</button>
-    <button class="ni" onclick="go('chat')"><div class="ni-ic">💬</div><div class="ni-lb">Chat</div></button>
-    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic">👤</div><div class="ni-lb">Profil</div></button>
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="go('treso')"><div class="ni-ic"><i data-feather="dollar-sign"></i></div><div class="ni-lb">Trésorerie</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
   </nav>
 </div>
 
