@@ -1102,6 +1102,33 @@ input,select,textarea{font-family:inherit}
 .prog-fill{height:100%;border-radius:3px;transition:width .8s ease}
 
 </style>
+<script>
+// Application immédiate du thème et de la couleur d'accent (avant le premier rendu, évite le flash).
+(function() {
+  try {
+    var ACCENTS = {
+      gold:   { base:'#C9A030', light:'#E8C55A' },
+      bleu:   { base:'#2563EB', light:'#60A5FA' },
+      vert:   { base:'#0F9D58', light:'#4ADE80' },
+      violet: { base:'#7C3AED', light:'#A78BFA' },
+      corail: { base:'#E4572E', light:'#F4A38A' },
+      rose:   { base:'#DB2777', light:'#F472B6' }
+    };
+    var accentKey = localStorage.getItem('accent') || 'gold';
+    var acc = ACCENTS[accentKey] || ACCENTS.gold;
+    document.documentElement.style.setProperty('--gold', acc.base);
+    document.documentElement.style.setProperty('--gold-light', acc.light);
+
+    var mode = localStorage.getItem('themeMode');
+    if (!mode) {
+      var legacy = localStorage.getItem('theme');
+      mode = legacy === 'dark' ? 'sombre' : (legacy === 'light' ? 'clair' : 'auto');
+    }
+    var dark = mode === 'sombre' || (mode === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.documentElement.setAttribute('data-dark','');
+  } catch(e) {}
+})();
+</script>
 </head>
 <body>
 <div id="app">
@@ -1339,9 +1366,17 @@ input,select,textarea{font-family:inherit}
     </div>
     <div class="pcard">
       <div class="pcard-t">Apparence</div>
-      <div class="prow">
-        <div class="prow-l"><div class="prow-ic" style="background:#F5F3FF"><i data-feather="moon"></i></div><div><div class="prow-lbl">Mode nuit</div><div class="prow-sub">Thème sombre</div></div></div>
-        <div class="tog" id="theme-tog" onclick="toggleTheme()"><div class="tog-dot"></div></div>
+      <div class="prow" style="display:block">
+        <div class="prow-l" style="margin-bottom:10px"><div class="prow-ic" style="background:#F5F3FF"><i data-feather="moon"></i></div><div><div class="prow-lbl">Thème</div><div class="prow-sub">Clair, sombre, ou suit ton téléphone</div></div></div>
+        <div class="filters" style="padding:0">
+          <button class="chip" id="theme-mode-clair" onclick="setThemeMode('clair')">☀️ Clair</button>
+          <button class="chip" id="theme-mode-sombre" onclick="setThemeMode('sombre')">🌙 Sombre</button>
+          <button class="chip" id="theme-mode-auto" onclick="setThemeMode('auto')">📱 Auto</button>
+        </div>
+      </div>
+      <div class="prow" style="display:block">
+        <div class="prow-l" style="margin-bottom:10px"><div class="prow-ic" style="background:#FEF3C7"><i data-feather="droplet"></i></div><div><div class="prow-lbl">Couleur d'accent</div><div class="prow-sub">Personnalise l'application</div></div></div>
+        <div id="accent-swatches" style="display:flex;gap:10px;flex-wrap:wrap"></div>
       </div>
     </div>
     <div class="pcard" id="stats-btn" style="display:none">
@@ -3629,9 +3664,14 @@ function fillDash() {
     safe('btn-new',         el => el.style.display = 'flex');
     safe('supervision-btn', el => el.style.display = 'block');
   }
-  if (localStorage.getItem('theme') === 'dark') {
-    document.documentElement.setAttribute('data-dark','');
-    safe('theme-tog', el => el.classList.add('on'));
+  applyThemeMode(getThemeMode());
+  renderAccentSwatches();
+  if (window.matchMedia) {
+    try {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+        if (getThemeMode() === 'auto') applyThemeMode('auto');
+      });
+    } catch(e) {}
   }
   db.collection('users').get().then(s => {
     safe('d-mems', el => el.textContent = s.size);
@@ -5711,13 +5751,61 @@ function changePhoto() {
   inp.click();
 }
 
-// ── THEME ─────────────────────────────────────────────────────────
-function toggleTheme() {
-  const dark = document.documentElement.hasAttribute('data-dark');
-  dark ? document.documentElement.removeAttribute('data-dark') : document.documentElement.setAttribute('data-dark','');
-  document.getElementById('theme-tog').classList.toggle('on', !dark);
-  localStorage.setItem('theme', dark ? 'light' : 'dark');
-  toast(dark ? '☀️ Mode jour' : '🌙 Mode nuit');
+// ── THEME & PERSONNALISATION ────────────────────────────────────────
+const ACCENT_PRESETS = [
+  { key:'gold',   base:'#C9A030', light:'#E8C55A', label:'Or' },
+  { key:'bleu',   base:'#2563EB', light:'#60A5FA', label:'Bleu' },
+  { key:'vert',   base:'#0F9D58', light:'#4ADE80', label:'Vert' },
+  { key:'violet', base:'#7C3AED', light:'#A78BFA', label:'Violet' },
+  { key:'corail', base:'#E4572E', light:'#F4A38A', label:'Corail' },
+  { key:'rose',   base:'#DB2777', light:'#F472B6', label:'Rose' }
+];
+function computeEffectiveDark(mode) {
+  if (mode === 'sombre') return true;
+  if (mode === 'clair') return false;
+  return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+}
+function applyThemeMode(mode) {
+  const dark = computeEffectiveDark(mode);
+  if (dark) document.documentElement.setAttribute('data-dark','');
+  else document.documentElement.removeAttribute('data-dark');
+  ['clair','sombre','auto'].forEach(m => {
+    const btn = document.getElementById('theme-mode-' + m);
+    if (btn) btn.classList.toggle('on', m === mode);
+  });
+}
+function getThemeMode() {
+  var mode = localStorage.getItem('themeMode');
+  if (!mode) {
+    var legacy = localStorage.getItem('theme');
+    mode = legacy === 'dark' ? 'sombre' : (legacy === 'light' ? 'clair' : 'auto');
+  }
+  return mode;
+}
+window.setThemeMode = function(mode) {
+  localStorage.setItem('themeMode', mode);
+  applyThemeMode(mode);
+  toast(mode === 'sombre' ? '🌙 Mode sombre' : mode === 'clair' ? '☀️ Mode clair' : '📱 Suit ton téléphone');
+};
+function applyAccent(key) {
+  const p = ACCENT_PRESETS.find(a => a.key === key) || ACCENT_PRESETS[0];
+  document.documentElement.style.setProperty('--gold', p.base);
+  document.documentElement.style.setProperty('--gold-light', p.light);
+}
+window.setAccent = function(key) {
+  applyAccent(key);
+  localStorage.setItem('accent', key);
+  renderAccentSwatches();
+  toast('🎨 Couleur mise à jour');
+};
+function renderAccentSwatches() {
+  const wrap = document.getElementById('accent-swatches');
+  if (!wrap) return;
+  const current = localStorage.getItem('accent') || 'gold';
+  wrap.innerHTML = ACCENT_PRESETS.map(p =>
+    `<button data-accent="${p.key}" title="${p.label}" style="width:34px;height:34px;border-radius:50%;background:${p.base};border:3px solid ${p.key===current?'var(--t1)':'transparent'};box-shadow:0 1px 4px rgba(0,0,0,.25)"></button>`
+  ).join('');
+  wrap.querySelectorAll('[data-accent]').forEach(b => b.addEventListener('click', () => setAccent(b.getAttribute('data-accent'))));
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────
