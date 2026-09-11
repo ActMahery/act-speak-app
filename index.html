@@ -38,8 +38,8 @@ input,select,textarea{font-family:inherit}
 #app{height:100dvh;position:relative;overflow:hidden}
 
 /* SCREENS */
-.scr{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .25s;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column}
-.scr.on{opacity:1;pointer-events:all}
+.scr{position:absolute;inset:0;opacity:0;pointer-events:none;transform:scale(.98) translateY(6px);transition:opacity .28s cubic-bezier(.4,0,.2,1),transform .28s cubic-bezier(.4,0,.2,1);overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column}
+.scr.on{opacity:1;pointer-events:all;transform:scale(1) translateY(0)}
 
 /* SPLASH */
 #s-splash{background:linear-gradient(160deg,var(--navy-deep),var(--navy) 55%,var(--navy-mid));align-items:center;justify-content:center;gap:16px;overflow:hidden}
@@ -329,6 +329,13 @@ input,select,textarea{font-family:inherit}
 .prow-sub{font-size:11px;color:var(--t3);margin-top:1px}
 .prow-r{font-size:17px;color:var(--t3)}
 /* toggle */
+/* ── Retour tactile (Animations) — feedback visuel sur les éléments interactifs ── */
+.qa,.tc,.chip,.ni,.btn-join-proj,.btn-new,.btn-new-proj,.btn-new-reun,.btn-new-sond,.btn-new-sond,.btn-rappel-new,.prow,.tog,.btn-danger-full,.btn-inv,.btn-pv,.btn-presence{
+  transition:transform .12s ease,background var(--tr),opacity var(--tr);
+}
+.qa:active,.tc:active,.chip:active,.ni:active,.btn-join-proj:active,.btn-new:active,.btn-new-proj:active,.btn-new-reun:active,.btn-new-sond:active,.btn-rappel-new:active,.prow:active,.tog:active,.btn-danger-full:active,.btn-inv:active,.btn-pv:active,.btn-presence:active{
+  transform:scale(.96);
+}
 .tog{width:44px;height:26px;background:var(--surface3);border-radius:13px;position:relative;cursor:pointer;transition:background var(--tr)}
 .tog.on{background:var(--navy)}
 [data-dark] .tog.on{background:var(--gold)}
@@ -390,6 +397,10 @@ input,select,textarea{font-family:inherit}
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--navy-deep);color:#fff;font-size:13px;font-weight:500;padding:11px 18px;border-radius:30px;box-shadow:0 4px 20px rgba(0,0,0,.25);opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap;z-index:9999}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 [data-dark] #toast{background:var(--surface3)}
+#toast.success{background:#155724}
+[data-dark] #toast.success{background:#155724}
+@keyframes toastPop{0%{transform:translateX(-50%) translateY(16px) scale(.9)}60%{transform:translateX(-50%) translateY(-3px) scale(1.04)}100%{transform:translateX(-50%) translateY(0) scale(1)}}
+#toast.on.success{animation:toastPop .4s cubic-bezier(.34,1.56,.64,1)}
 
 /* ── CHAT ────────────────────────────────────────────────────── */
 #s-chat{background:var(--bg)}
@@ -5811,7 +5822,9 @@ function renderAccentSwatches() {
 // ── TOAST ─────────────────────────────────────────────────────────
 function toast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('on');
+  t.textContent = msg;
+  t.classList.toggle('success', msg.indexOf('✅') !== -1);
+  t.classList.add('on');
   clearTimeout(t._t);
   t._t = setTimeout(() => t.classList.remove('on'), 2800);
 }
