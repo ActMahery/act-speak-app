@@ -1421,6 +1421,13 @@ input,select,textarea{font-family:inherit}
         <div id="accent-swatches" style="display:flex;gap:10px;flex-wrap:wrap"></div>
       </div>
     </div>
+    <div class="pcard">
+      <div class="pcard-t">Notifications</div>
+      <div class="prow">
+        <div class="prow-l"><div class="prow-ic" style="background:#EFF6FF"><i data-feather="bell"></i></div><div><div class="prow-lbl">Notifications push</div><div class="prow-sub">Tâches et messages, même app fermée</div></div></div>
+        <div class="tog" id="notif-tog" onclick="toggleNotifications()"><div class="tog-dot"></div></div>
+      </div>
+    </div>
     <div class="pcard" id="stats-btn" style="display:none">
       <div class="pcard-t">Bureau</div>
       <div class="prow" onclick="go('stats')"><div class="prow-l"><div class="prow-ic" style="background:#EFF6FF"><i data-feather="bar-chart-2"></i></div><div><div class="prow-lbl">Statistiques</div><div class="prow-sub">Taux, classement, avancement</div></div></div><div class="prow-r">›</div></div>
@@ -3311,6 +3318,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
@@ -3348,6 +3356,111 @@ if (!firebase.apps.length) {
 }
 const auth    = firebase.auth();
 const db      = firebase.firestore();
+
+/* ══ NOTIFICATIONS PUSH (FCM) ══════════════════════════════════════
+   Compte de service dédié et restreint (rôle "Firebase Cloud Messaging
+   API Admin" uniquement — ne peut qu'envoyer des notifications, aucun
+   accès aux données). Décision assumée : ce fichier est public (app
+   cliente + dépôt GitHub), donc uniquement des permissions minimales ici. */
+const FCM_VAPID_KEY = 'BCVLpmHi2Uoo-Z_6jbQOVQyf07X9dbsVUJVL-Spkh-FW8GI3dNsjeLd3bEgx-mUa3f7YaARmgxZUy4gVB5WIuqQ';
+const FCM_SERVICE_ACCOUNT = {
+  "project_id": "act-speak",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC0I1Li8cT7a60b\nt/pC6RXVhSrA8uXGQpUVXizeNXgVl7bOWFbpkiAhXaYNcMVUGu6ptq7otEUV52Hc\nj9lYxYGcfAinbmtHVcuZN55byD+4L33yp8PGrGCPRq1tUdTG7dMMsEDxaJIHjRL0\nUKtJ2RXF6ohZEi5FNemACKgAW4hEyIn3ctUwcNRRYC6kMZbcB8SYnpftNWkMN1Vt\nbqNdqEpf5qAB/183088uQAxDcZjkvfkGXN7t7kFYKRf0Rm0NMD6s9Cm2WGfIKdRK\nYt26DonpX7ff0vt9UW6wVX+e/r9ikHn+j0ENDPxrVeNEdooKt+cYS9YhMrh2G2HY\nhAzXIeXFAgMBAAECggEANXfQp+0EP25H/RTAMzEVGoIC3S+btRvZPXTtE23CfYJB\nMAE3lu+ZGt49pfqlj5/I3FYNl6O+Z9B8kyedZ0SEgqqsNOpI7G0SWCGSnwKSqzxp\ngWd7bFKI/K4JVwv1gLBhtv/v3tfflF8y05LILMzDMjI5k1qaok9sxeSL3UNN8MAn\n+DNETOBfPTJVPNEju/fPqPo9IyR7rNvhvcKOCe/9+Va9Ntdu8CYZTKCijUbta4Ba\nnJ+tgz5QJu8YPYYMKOjca1J+5UtLmU7TUfBlJtgMnk5Y6oNL1hREYY8zEnNiTRzO\nnqU6fBAiTpeYXwFuYiaK4Sa40JYaLEdOHS1iFovlBwKBgQDaFUIUtprGVcw18dm/\neSDaMJhq34RVIaY4FQFTDYG9aPUsMAj3WuDZ/K1Jb0lFGrbRRgRvSlw5zdPo96iO\ndfoNB8oPNfL9cmkprYQtwysSnUlDn8cm3Wq9s44v+gyDa2lOULjom2XIcj6iiHaf\nM4BLmmI3qvTBFCP9y0DkCpmhswKBgQDTdSeQ5KLQSVj+n5W1AqQDhoY8q3EzRc5j\nMr7Ko0iXQGhUEDp12EN1tQuQNX24vhMn7DfL/fvVL5pHefpAiwZnmY7og9rTeI//\nhPESMIBjtBf9rZU2aDFAWCzu1DEwitlloYIUIA0mlFf+yXcZH89pHk760rhmQLyr\n0KBgaJfupwKBgCo0UPyHNj7J3eJWsqgufeAb5XNRXF/JSkyyK/Zxt7j7Ne9eQG32\nRWuKTdLXWZupBtZLMZKEFoMNRURhoVoolMKuzjjRXPwVhyqMrPbaPVy12bbflf/8\ne6rIs+yu/Hr2b4O7dX12jWUUTvDPbf1zTxHSh810JTe0eR6lliJLtt2nAoGAC6hQ\nxxcjtrHkex0XJsR/gEZBTkTxV69IgoWAqTE5RkVhuwiuAGMszOdvPMMGLFImQjQu\nm0tkP8uBCOG7nyVK9BkuHLlwLepeneqZU7Riz5xVGkIgkMBLvs1dpMkD8TYmaAjw\nX+Woc/EHrN80dqkfSR9HoWJOkiyNejdlMAt0HM8CgYB+fKk0LQdd7AONmgQpxH76\nJ0DjMEbCegW6ANKj7xWmPwhfPSPKCh3h5IDLsggwXPKGTsYxhiqpT0+suaZzYWSG\nqooYf9ijXdMbv6utD5LMLmQqLUsX+gOfJHQFOx/KaFX3Hyo7+qcXiYcvhaVM8kIs\nvTjLVvbeLfYHgqT6W/oUsg==\n-----END PRIVATE KEY-----\n",
+  "client_email": "fcm-sender-app@act-speak.iam.gserviceaccount.com"
+};
+let _fcmAccessToken = null, _fcmAccessTokenExp = 0;
+function base64url(input) {
+  const bytes = typeof input === 'string' ? new TextEncoder().encode(input) : new Uint8Array(input);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+async function importFcmPrivateKey() {
+  const pem = FCM_SERVICE_ACCOUNT.private_key
+    .replace('-----BEGIN PRIVATE KEY-----', '')
+    .replace('-----END PRIVATE KEY-----', '')
+    .replace(/\s/g, '');
+  const der = Uint8Array.from(atob(pem), c => c.charCodeAt(0));
+  return crypto.subtle.importKey('pkcs8', der.buffer, { name:'RSASSA-PKCS1-v1_5', hash:'SHA-256' }, false, ['sign']);
+}
+async function getFcmAccessToken() {
+  const now = Math.floor(Date.now()/1000);
+  if (_fcmAccessToken && _fcmAccessTokenExp > now + 60) return _fcmAccessToken;
+  const header = { alg:'RS256', typ:'JWT' };
+  const claims = {
+    iss: FCM_SERVICE_ACCOUNT.client_email,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600, iat: now
+  };
+  const signingInput = base64url(JSON.stringify(header)) + '.' + base64url(JSON.stringify(claims));
+  const key = await importFcmPrivateKey();
+  const sigBuf = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(signingInput));
+  const jwt = signingInput + '.' + base64url(sigBuf);
+  const resp = await fetch('https://oauth2.googleapis.com/token', {
+    method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:'grant_type=' + encodeURIComponent('urn:ietf:params:oauth:grant-type:jwt-bearer') + '&assertion=' + encodeURIComponent(jwt)
+  });
+  const data = await resp.json();
+  if (!data.access_token) throw new Error('Auth FCM échouée');
+  _fcmAccessToken = data.access_token;
+  _fcmAccessTokenExp = now + (data.expires_in || 3600);
+  return _fcmAccessToken;
+}
+// Envoie une notification push à un membre précis (silencieux si non activé/erreur — jamais bloquant).
+async function envoyerNotification(targetUid, titre, corps, data) {
+  try {
+    if (!targetUid || targetUid === CU?.uid) return; // pas de notif à soi-même
+    const snap = await db.collection('users').doc(targetUid).get();
+    const fcmToken = snap.exists ? snap.data().fcmToken : null;
+    if (!fcmToken) return;
+    const accessToken = await getFcmAccessToken();
+    await fetch('https://fcm.googleapis.com/v1/projects/' + FCM_SERVICE_ACCOUNT.project_id + '/messages:send', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer ' + accessToken, 'Content-Type':'application/json' },
+      body: JSON.stringify({ message: {
+        token: fcmToken,
+        notification: { title: titre, body: corps },
+        data: data || {},
+        webpush: { fcm_options: { link: location.origin + location.pathname } }
+      }})
+    });
+  } catch(e) { console.warn('Notification non envoyée :', e.message); }
+}
+// Active/désactive les notifications push pour l'utilisateur courant.
+async function initFcmMessaging() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+  const reg = await navigator.serviceWorker.register('sw.js');
+  const messaging = firebase.messaging();
+  return { messaging, reg };
+}
+window.activerNotifications = async function() {
+  if (!CU) { toast('Connecte-toi d\'abord'); return; }
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') { toast('Notifications refusées par le navigateur'); return; }
+    const ctx = await initFcmMessaging();
+    if (!ctx) { toast('Notifications non supportées sur cet appareil'); return; }
+    const token = await ctx.messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: ctx.reg });
+    if (!token) { toast('Impossible d\'activer les notifications'); return; }
+    await db.collection('users').doc(CU.uid).update({ fcmToken: token });
+    document.getElementById('notif-tog').classList.add('on');
+    toast('Notifications activées ✅');
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.desactiverNotifications = async function() {
+  if (!CU) return;
+  try {
+    await db.collection('users').doc(CU.uid).update({ fcmToken: firebase.firestore.FieldValue.delete() });
+    document.getElementById('notif-tog').classList.remove('on');
+    toast('Notifications désactivées');
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.toggleNotifications = function() {
+  const isOn = document.getElementById('notif-tog').classList.contains('on');
+  if (isOn) desactiverNotifications(); else activerNotifications();
+};
 
 // ── CLOUDINARY (remplace Firebase Storage — nécessite le plan Blaze payant) ──
 // Session 7 v2.0 : Storage désactivé (Spark gratuit incompatible), upload de fichiers
@@ -3695,6 +3808,7 @@ function fillDash() {
   safe('p-role',    el => el.textContent = CP.role || 'Membre');
   safe('p-email',   el => el.textContent = CU.email);
   safe('p-role-d',  el => el.textContent = (CAT_LABEL[categorie]||'Membre') + (CP.role ? ' · ' + CP.role : ''));
+  safe('notif-tog', el => el.classList.toggle('on', !!CP.fcmToken));
 
   renderTodaySummary();
   renderDashAnnoncePreview();
@@ -5727,6 +5841,7 @@ async function submitTask() {
       updatedAt:firebase.firestore.FieldValue.serverTimestamp()
     });
     closeOverlay('ov-task');
+    envoyerNotification(aid, 'Nouvelle tâche assignée', nom, { type:'tache' });
     loadTasks();
     toast('✅ Tâche créée — ' + anom);
   } catch(e) { toast('Erreur : ' + e.message); }
@@ -6194,6 +6309,11 @@ window.sendMsg = async function() {
       lastTime: firebase.firestore.FieldValue.serverTimestamp(),
       lastBy:   CP?.nom || '',
     }, { merge: true });
+    // Notification push — pour l'instant limitée aux messages privés (1-1), pas aux canaux de groupe.
+    if (curConvId.indexOf('priv_') === 0) {
+      const otherUid = curConvId.replace('priv_', '').split('_').find(u => u !== CU.uid);
+      if (otherUid) envoyerNotification(otherUid, CP?.nom || 'Nouveau message', txt, { type:'message', convId: curConvId });
+    }
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
