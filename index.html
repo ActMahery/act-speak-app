@@ -1030,7 +1030,7 @@ input,select,textarea{font-family:inherit}
 .annonce-date{font-size:11px;color:var(--t3)}
 .annonce-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;flex-shrink:0;white-space:nowrap}
 .annonce-content{display:flex;gap:12px;padding:4px 16px 10px;align-items:flex-start}
-.annonce-thumb-wrap{width:132px;height:132px;border-radius:12px;background:var(--surface2);flex-shrink:0;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.annonce-thumb-wrap{width:42%;max-width:200px;aspect-ratio:1/1;border-radius:12px;background:var(--surface2);flex-shrink:0;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .annonce-thumb{width:100%;height:100%;object-fit:contain}
 .annonce-texte-inline{flex:1;min-width:0;font-size:13.5px;color:var(--t1);line-height:1.5;white-space:pre-wrap}
 .annonce-proj-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--gold);padding:0 16px 8px;cursor:pointer}
@@ -11757,7 +11757,7 @@ async function renderDashAnnoncePreview() {
         <span style="font-size:11px;color:var(--t3)">${timeAgoAnnonce(dt)}</span>
       </div>
       <div style="display:flex;gap:10px;align-items:flex-start">
-        ${a.photoUrl ? `<div style="width:64px;height:64px;border-radius:10px;background:var(--surface2);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="${a.photoUrl}" style="width:100%;height:100%;object-fit:contain"></div>` : ''}
+        ${a.photoUrl ? `<div style="width:92px;height:92px;border-radius:10px;background:var(--surface2);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="${a.photoUrl}" style="width:100%;height:100%;object-fit:contain"></div>` : ''}
         <div style="flex:1;min-width:0">
           <div style="font-size:13.5px;font-weight:600;color:var(--t1);margin-bottom:2px">${escHtml(a.auteurNom||'—')}</div>
           <div style="font-size:12.5px;color:var(--t2);line-height:1.4">${escHtml(extrait)}</div>
