@@ -86,7 +86,8 @@ input,select,textarea{font-family:inherit}
 .ni{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 14px;border-radius:10px;flex:1;transition:background var(--tr)}
 .ni:active{background:var(--surface2)}
 .ni-ic{font-size:22px;line-height:1;transition:transform var(--tr);display:flex;align-items:center;justify-content:center}
-.ni-ic svg,.qa-ic svg,.prow-ic svg{width:19px;height:19px;stroke:currentColor}
+.ni-ic svg{width:19px;height:19px;stroke:currentColor}
+.qa-ic svg,.prow-ic svg{width:19px;height:19px;stroke:#1C3557}
 .ni.on .ni-ic{transform:scale(1.12)}
 .ni-lb{font-size:9px;font-weight:500;color:var(--t3)}
 .ni.on .ni-lb{color:var(--navy);font-weight:700}
@@ -1028,8 +1029,10 @@ input,select,textarea{font-family:inherit}
 .annonce-auteur{font-size:13.5px;font-weight:700;color:var(--t1)}
 .annonce-date{font-size:11px;color:var(--t3)}
 .annonce-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;flex-shrink:0;white-space:nowrap}
-.annonce-photo{width:100%;max-height:340px;object-fit:cover;display:block;margin-top:6px}
-.annonce-texte{padding:4px 16px 10px;font-size:13.5px;color:var(--t1);line-height:1.5;white-space:pre-wrap}
+.annonce-content{display:flex;gap:12px;padding:4px 16px 10px;align-items:flex-start}
+.annonce-thumb-wrap{width:132px;height:132px;border-radius:12px;background:var(--surface2);flex-shrink:0;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.annonce-thumb{width:100%;height:100%;object-fit:contain}
+.annonce-texte-inline{flex:1;min-width:0;font-size:13.5px;color:var(--t1);line-height:1.5;white-space:pre-wrap}
 .annonce-proj-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--gold);padding:0 16px 8px;cursor:pointer}
 .annonce-likes-line{padding:0 16px 6px;font-size:11.5px;color:var(--t3)}
 .annonce-bar{display:flex;align-items:center;gap:18px;padding:8px 16px;border-top:1px solid var(--surface2)}
@@ -9577,8 +9580,10 @@ window.openModalTx = function(type) {
   toggleTxCotisationFields();
   document.getElementById('ov-tx').classList.add('on');
 };
-window.viewJustif = function(url) {
+window.viewJustif = function(url, title) {
   document.getElementById('justif-view-img').src = url;
+  const t = document.querySelector('#ov-justif-view .mtitle');
+  if (t) t.textContent = title || 'Justificatif';
   document.getElementById('ov-justif-view').classList.add('on');
 };
 window.toggleTxCotisationFields = function() {
@@ -11555,8 +11560,10 @@ function renderAnnonceCard(a) {
       ${canManage ? `<button data-action="annonce-pin" data-id="${a.id}" title="${a.epingle?'Désépingler':'Épingler'}" style="background:none;color:${a.epingle?'var(--gold)':'var(--t3)'};padding:4px 4px"><i data-feather="bookmark" style="width:16px;height:16px"></i></button><button data-action="annonce-delete" data-id="${a.id}" title="Supprimer" style="background:none;color:var(--red);padding:4px 4px"><i data-feather="trash-2" style="width:16px;height:16px"></i></button>` : ''}
     </div>
     ${a.projetId ? `<div class="annonce-proj-badge" data-action="annonce-open-projet" data-id="${a.projetId}"><i data-feather="link" style="width:13px;height:13px"></i> ${escHtml(a.projetNom||'Projet')}</div>` : ''}
-    ${a.texte ? `<div class="annonce-texte">${escHtml(a.texte)}</div>` : ''}
-    ${a.photoUrl ? `<img class="annonce-photo" src="${a.photoUrl}" loading="lazy">` : ''}
+    <div class="annonce-content">
+      ${a.photoUrl ? `<div class="annonce-thumb-wrap" data-action="annonce-view-photo" data-url="${escHtml(a.photoUrl)}"><img class="annonce-thumb" src="${a.photoUrl}" loading="lazy"></div>` : ''}
+      ${a.texte ? `<div class="annonce-texte-inline">${escHtml(a.texte)}</div>` : ''}
+    </div>
     ${likes.length ? `<div class="annonce-likes-line">❤️ ${likes.length} j'aime</div>` : ''}
     <div class="annonce-bar">
       <button class="annonce-like-btn ${liked?'liked':''}" data-action="annonce-like" data-id="${a.id}"><i data-feather="heart"></i> J'aime</button>
@@ -11584,6 +11591,7 @@ function renderAnnonces() {
   body.querySelectorAll('[data-action="annonce-pin"]').forEach(b => b.addEventListener('click', () => toggleEpingleAnnonce(b.getAttribute('data-id'))));
   body.querySelectorAll('[data-action="annonce-delete"]').forEach(b => b.addEventListener('click', () => deleteAnnonce(b.getAttribute('data-id'))));
   body.querySelectorAll('[data-action="annonce-open-projet"]').forEach(b => b.addEventListener('click', () => openProjDetail(b.getAttribute('data-id'))));
+  body.querySelectorAll('[data-action="annonce-view-photo"]').forEach(b => b.addEventListener('click', () => viewJustif(b.getAttribute('data-url'), 'Photo')));
 }
 window.toggleLikeAnnonce = async function(id) {
   if (!CU) return;
@@ -11748,9 +11756,13 @@ async function renderDashAnnoncePreview() {
         <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:${t.bg};color:${t.fg}">${t.icon} ${escHtml(a.type||'Annonce')}</span>
         <span style="font-size:11px;color:var(--t3)">${timeAgoAnnonce(dt)}</span>
       </div>
-      ${a.photoUrl ? `<img src="${a.photoUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px;margin-bottom:8px">` : ''}
-      <div style="font-size:13.5px;font-weight:600;color:var(--t1);margin-bottom:2px">${escHtml(a.auteurNom||'—')}</div>
-      <div style="font-size:12.5px;color:var(--t2);line-height:1.4">${escHtml(extrait)}</div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        ${a.photoUrl ? `<div style="width:64px;height:64px;border-radius:10px;background:var(--surface2);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center"><img src="${a.photoUrl}" style="width:100%;height:100%;object-fit:contain"></div>` : ''}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13.5px;font-weight:600;color:var(--t1);margin-bottom:2px">${escHtml(a.auteurNom||'—')}</div>
+          <div style="font-size:12.5px;color:var(--t2);line-height:1.4">${escHtml(extrait)}</div>
+        </div>
+      </div>
     </div>`;
   } catch(e) { el.innerHTML = ''; }
 }
