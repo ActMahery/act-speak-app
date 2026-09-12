@@ -3416,7 +3416,7 @@ async function envoyerNotification(targetUid, titre, corps, data) {
     const fcmToken = snap.exists ? snap.data().fcmToken : null;
     if (!fcmToken) return;
     const accessToken = await getFcmAccessToken();
-    await fetch('https://fcm.googleapis.com/v1/projects/' + FCM_SERVICE_ACCOUNT.project_id + '/messages:send', {
+    const resp = await fetch('https://fcm.googleapis.com/v1/projects/' + FCM_SERVICE_ACCOUNT.project_id + '/messages:send', {
       method:'POST',
       headers:{ 'Authorization':'Bearer ' + accessToken, 'Content-Type':'application/json' },
       body: JSON.stringify({ message: {
@@ -3426,7 +3426,15 @@ async function envoyerNotification(targetUid, titre, corps, data) {
         webpush: { fcm_options: { link: location.origin + location.pathname } }
       }})
     });
-  } catch(e) { console.warn('Notification non envoyée :', e.message); }
+    if (!resp.ok) {
+      const errTxt = await resp.text();
+      console.warn('FCM refusé (' + resp.status + ') :', errTxt);
+      toast('🔔 Envoi notif échoué (' + resp.status + ') — voir console');
+    }
+  } catch(e) {
+    console.warn('Notification non envoyée :', e.message);
+    toast('🔔 Erreur notif : ' + e.message);
+  }
 }
 // Active/désactive les notifications push pour l'utilisateur courant.
 async function initFcmMessaging() {
