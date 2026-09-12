@@ -38,8 +38,8 @@ input,select,textarea{font-family:inherit}
 #app{height:100dvh;position:relative;overflow:hidden}
 
 /* SCREENS */
-.scr{position:absolute;inset:0;opacity:0;pointer-events:none;transform:scale(.98) translateY(6px);transition:opacity .28s cubic-bezier(.4,0,.2,1),transform .28s cubic-bezier(.4,0,.2,1);overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column}
-.scr.on{opacity:1;pointer-events:all;transform:scale(1) translateY(0)}
+.scr{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .28s cubic-bezier(.4,0,.2,1);overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column}
+.scr.on{opacity:1;pointer-events:all}
 
 /* SPLASH */
 #s-splash{background:linear-gradient(160deg,var(--navy-deep),var(--navy) 55%,var(--navy-mid));align-items:center;justify-content:center;gap:16px;overflow:hidden}
@@ -1019,6 +1019,33 @@ input,select,textarea{font-family:inherit}
 .chart-bar.d{background:rgba(192,57,43,.5)}
 .chart-bar-label{font-size:9px;color:var(--t3);text-align:center}
 
+/* ══ ANNONCES — fil façon Facebook (remplace l'ancien canal de chat) ══ */
+.annonce-card{background:var(--surface);border-radius:var(--r16);margin-bottom:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+[data-dark] .annonce-card{box-shadow:none;border:1px solid var(--surface2)}
+.annonce-hd{display:flex;align-items:center;gap:10px;padding:14px 16px 8px}
+.annonce-av{width:38px;height:38px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0}
+.annonce-meta{flex:1;min-width:0}
+.annonce-auteur{font-size:13.5px;font-weight:700;color:var(--t1)}
+.annonce-date{font-size:11px;color:var(--t3)}
+.annonce-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;flex-shrink:0;white-space:nowrap}
+.annonce-photo{width:100%;max-height:340px;object-fit:cover;display:block;margin-top:6px}
+.annonce-texte{padding:4px 16px 10px;font-size:13.5px;color:var(--t1);line-height:1.5;white-space:pre-wrap}
+.annonce-proj-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--gold);padding:0 16px 8px;cursor:pointer}
+.annonce-likes-line{padding:0 16px 6px;font-size:11.5px;color:var(--t3)}
+.annonce-bar{display:flex;align-items:center;gap:18px;padding:8px 16px;border-top:1px solid var(--surface2)}
+.annonce-like-btn,.annonce-comment-btn{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--t2);background:none;transition:transform .12s ease}
+.annonce-like-btn svg,.annonce-comment-btn svg{width:17px;height:17px}
+.annonce-like-btn.liked{color:#E0245E}
+.annonce-like-btn.liked svg{fill:#E0245E;stroke:#E0245E}
+.annonce-like-btn:active{transform:scale(1.2)}
+.annonce-comments{padding:0 16px 14px}
+.annonce-comment-item{display:flex;gap:8px;padding:5px 0}
+.annonce-comment-bubble{background:var(--surface2);border-radius:14px;padding:7px 12px;flex:1;min-width:0}
+.annonce-comment-auteur{font-size:11.5px;font-weight:700;color:var(--t1)}
+.annonce-comment-texte{font-size:12.5px;color:var(--t2);word-break:break-word}
+.annonce-comment-input-row{display:flex;gap:8px;align-items:center;padding-top:8px}
+.annonce-comment-input{flex:1;height:38px;border-radius:19px;border:1px solid var(--surface3);background:var(--surface2);padding:0 14px;font-size:12.5px;color:var(--t1)}
+
 
 /* ══ ANNUAIRE ══════════════════════════════════════════════════ */
 #s-annuaire{background:var(--bg)}
@@ -1178,7 +1205,7 @@ input,select,textarea{font-family:inherit}
   <div class="dash-hd">
     <div class="dash-top">
       <div>
-        <div class="dash-greet-lbl">Bonjour</div>
+        <div class="dash-greet-lbl" id="d-greet-lbl">Bonjour</div>
         <div class="dash-greet-name" id="d-name">—</div>
       </div>
       <div class="dash-av" id="d-av" onclick="go('profil')"><span id="d-av-i">?</span></div>
@@ -1191,6 +1218,10 @@ input,select,textarea{font-family:inherit}
     </div>
   </div>
   <div class="dash-body">
+    <div>
+      <div class="sec-title">Aujourd'hui</div>
+      <div class="card" style="padding:4px 16px" id="d-today-card"><div id="d-today-content"></div></div>
+    </div>
     <div><div class="sec-title">Actions rapides</div><div class="qa-grid" id="d-qa"></div></div>
     <div>
       <div class="sec-title">Mes tâches récentes</div>
@@ -1210,14 +1241,11 @@ input,select,textarea{font-family:inherit}
       </div>
     </div>
     <div>
-      <div class="sec-title">Annonces</div>
-      <div class="card">
-        <div class="ann-item">
-          <div class="ann-top"><div class="ann-badge gold">Officiel</div><div class="ann-date">Aujourd'hui</div></div>
-          <div class="ann-title">Bienvenue sur ACT & SPEAK App !</div>
-          <div class="ann-body">L'application officielle est en ligne. Tâches, chat, réunions et bien plus arrivent progressivement.</div>
-        </div>
+      <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Annonces</span>
+        <span style="font-size:11px;font-weight:600;color:var(--gold);cursor:pointer" onclick="go('annonces')">Voir tout</span>
       </div>
+      <div class="card" style="overflow:hidden" id="d-annonce-preview"></div>
     </div>
   </div>
   <nav class="bnav">
@@ -1489,16 +1517,13 @@ input,select,textarea{font-family:inherit}
         <div class="canal-unread" id="unread-bureau" style="display:none">0</div>
       </div>
     </div>
-    <div class="canal-item" onclick="openConv('annonces','📢 Annonces','Annonces officielles','annonces')">
+    <div class="canal-item" onclick="go('annonces')">
       <div class="canal-ic" style="background:#F0FDF4">📢</div>
       <div class="canal-info">
         <div class="canal-name">Annonces</div>
-        <div class="canal-last" id="last-annonces">Annonces officielles du bureau</div>
+        <div class="canal-last">Fil des publications de l'association</div>
       </div>
-      <div class="canal-meta">
-        <div class="canal-time" id="time-annonces"></div>
-        <div class="canal-unread" id="unread-annonces" style="display:none">0</div>
-      </div>
+      <div class="canal-meta"></div>
     </div>
   </div>
 
@@ -3492,6 +3517,7 @@ function go(screen) {
   if (screen === 'supervision') loadSupervision();
   if (screen === 'agenda') loadAgenda();
   if (screen === 'agenda-asso') loadAgendaAsso();
+  if (screen === 'annonces') loadAnnonces();
   if (screen === 'cotisations') loadCotisations();
   if (screen === 'finperso') loadFinPerso();
   if (screen === 'biblio') loadBiblio();
@@ -3629,6 +3655,13 @@ function doLogout() {
 }
 
 // ── FILL DASHBOARD ────────────────────────────────────────────────
+function greetingLabel() {
+  const h = new Date().getHours();
+  if (h < 5)  return 'Bonsoir';
+  if (h < 12) return 'Bonjour';
+  if (h < 18) return 'Bon après-midi';
+  return 'Bonsoir';
+}
 function fillDash() {
   if (!CP || !CU) return;
   const prenom  = CP.prenom || CP.nom || 'Membre';
@@ -3638,6 +3671,7 @@ function fillDash() {
 
   const safe = (id, fn) => { const el = document.getElementById(id); if (el) fn(el); };
 
+  safe('d-greet-lbl',  el => el.textContent = greetingLabel() + ' 👋');
   safe('d-name',       el => el.textContent = prenom);
   safe('d-av-i',       el => el.textContent = initial);
   safe('d-lvl',        el => el.textContent = CAT_LABEL[categorie] || 'Membre');
@@ -3658,6 +3692,9 @@ function fillDash() {
   safe('p-role',    el => el.textContent = CP.role || 'Membre');
   safe('p-email',   el => el.textContent = CU.email);
   safe('p-role-d',  el => el.textContent = (CAT_LABEL[categorie]||'Membre') + (CP.role ? ' · ' + CP.role : ''));
+
+  renderTodaySummary();
+  renderDashAnnoncePreview();
   safe('p-score-d', el => el.textContent = score + ' pts');
   safe('p-av-i',    el => el.textContent = initial);
 
@@ -5075,6 +5112,67 @@ async function loadFpStats() {
 }
 
 // ── TACHES ────────────────────────────────────────────────────────
+/* ── Résumé du jour (accueil) — tâches urgentes + prochain événement ─────── */
+async function renderTodaySummary() {
+  const el = document.getElementById('d-today-content');
+  if (!el || !CU || !CP) return;
+  el.innerHTML = '<div style="font-size:12px;color:var(--t3);padding:8px 0">Chargement...</div>';
+  const todayStr = new Date().toISOString().slice(0,10);
+  let urgentHtml = '';
+  let eventHtml = '';
+  try {
+    const tSnap = await db.collection('taches').where('assigneeId','==',CU.uid).get();
+    const urgent = [];
+    tSnap.forEach(d => {
+      const t = d.data();
+      if (t.statut === 'Terminée' || !t.echeance) return;
+      if (t.echeance <= todayStr) urgent.push({ id:d.id, nom:t.nom, echeance:t.echeance, retard: t.echeance < todayStr });
+    });
+    urgent.sort((a,b) => a.echeance.localeCompare(b.echeance));
+    if (urgent.length) {
+      const u = urgent[0];
+      const extra = urgent.length > 1 ? ` (+${urgent.length - 1} autre${urgent.length>2?'s':''})` : '';
+      urgentHtml = `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;cursor:pointer" data-action="today-task" data-id="${u.id}">
+        <div style="width:34px;height:34px;border-radius:10px;background:${u.retard?'#FDE8E8':'#FFF3CD'};display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-feather="${u.retard?'alert-circle':'clock'}" style="color:${u.retard?'#C0392B':'#856404'}"></i></div>
+        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(u.nom||'—')}${extra}</div><div style="font-size:11px;color:${u.retard?'#C0392B':'var(--t3)'}">${u.retard ? 'En retard' : "À faire aujourd'hui"}</div></div>
+      </div>`;
+    }
+  } catch(e) {}
+  try {
+    const events = [];
+    const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+    const rSnap = await db.collection('reunions').get();
+    rSnap.forEach(d => {
+      const r = d.data();
+      if (!r.date) return;
+      const dt = r.date && r.date.toDate ? r.date.toDate() : new Date(r.date);
+      if (dt >= startOfToday) events.push({ titre:r.nom||'Réunion', date:dt, lieu:r.lieu||'' });
+    });
+    const eSnap = await db.collection('agenda_association').get();
+    eSnap.forEach(d => {
+      const e = d.data();
+      if (!e.dateDebut) return;
+      const dt = new Date(e.dateDebut);
+      if (dt >= startOfToday) events.push({ titre:e.titre||'Événement', date:dt, lieu:e.lieu||'' });
+    });
+    events.sort((a,b) => a.date - b.date);
+    if (events.length) {
+      const ev = events[0];
+      const isToday = ev.date.toDateString() === new Date().toDateString();
+      const dateLbl = isToday ? "Aujourd'hui" : ev.date.toLocaleDateString('fr-FR', {weekday:'long', day:'2-digit', month:'short'});
+      eventHtml = `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;${urgentHtml?'border-top:1px solid var(--surface2);':''}cursor:pointer" onclick="go('agenda-asso')">
+        <div style="width:34px;height:34px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-feather="calendar" style="color:#1C3557"></i></div>
+        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ev.titre)}</div><div style="font-size:11px;color:var(--t3)">${dateLbl}${ev.lieu ? ' · 📍 '+escHtml(ev.lieu) : ''}</div></div>
+      </div>`;
+    }
+  } catch(e) {}
+  if (!urgentHtml && !eventHtml) {
+    el.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:10px 0"><i data-feather="check-circle" style="color:#155724"></i><div style="font-size:13px;color:var(--t2)">Rien d'urgent aujourd'hui — bonne journée !</div></div>`;
+  } else {
+    el.innerHTML = urgentHtml + eventHtml;
+    el.querySelectorAll('[data-action="today-task"]').forEach(x => x.addEventListener('click', () => openDetail(x.getAttribute('data-id'))));
+  }
+}
 function loadRecentTasks() {
   if (!CU || !CP) return;
   const requestUid = CU.uid; // garde-fou anti-flash si le compte change pendant la requête
@@ -6375,7 +6473,7 @@ async function loadPrives() {
 
 /* ── Charger aperçu des derniers messages des canaux ────────────── */
 async function loadCanalPreviews() {
-  ['general','bureau','annonces'].forEach(async id => {
+  ['general','bureau'].forEach(async id => {
     try {
       const snap = await db.collection('chat').doc(id).get();
       if (snap.exists) {
@@ -11393,6 +11491,270 @@ window.deleteAgendaAsso = async function() {
   } catch(e) { toast('Erreur : ' + e.message); }
 };
 
+/* ══ ANNONCES — fil façon Facebook (remplace l'ancien canal de chat) ══ */
+let allAnnonces = [];
+let annonceResponsables = { resp1Id:null, resp1Nom:null, resp2Id:null, resp2Nom:null };
+const ANNONCE_TYPES = {
+  'Annonce':   { bg:'#EFF6FF', fg:'#1C3557', icon:'📢' },
+  'Événement': { bg:'#FFF3CD', fg:'#856404', icon:'📅' },
+  'Projet':    { bg:'#D4EDDA', fg:'#155724', icon:'🚀' }
+};
+async function loadAnnonceResponsablesConfig() {
+  try {
+    const snap = await db.collection('association_config').doc('annonces').get();
+    if (snap.exists) annonceResponsables = snap.data();
+  } catch(e) { /* non bloquant */ }
+}
+// Le Président est automatiquement responsable des annonces, + 2 personnes configurables.
+function isAnnonceResponsable(uid) {
+  if (!uid) return false;
+  if (isPresident(CP)) return true;
+  return uid === annonceResponsables.resp1Id || uid === annonceResponsables.resp2Id;
+}
+function timeAgoAnnonce(date) {
+  const s = Math.floor((new Date() - date) / 1000);
+  if (s < 60) return "à l'instant";
+  const m = Math.floor(s/60); if (m < 60) return m + ' min';
+  const h = Math.floor(m/60); if (h < 24) return h + ' h';
+  const j = Math.floor(h/24); if (j < 7) return j + ' j';
+  return date.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
+}
+async function loadAnnonces() {
+  const body = document.getElementById('annonces-body');
+  body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
+  await loadAnnonceResponsablesConfig();
+  const addBtn = document.getElementById('annonce-add-btn');
+  if (addBtn) addBtn.style.display = isAnnonceResponsable(CU?.uid) ? 'flex' : 'none';
+  const respBtn = document.getElementById('annonce-resp-btn');
+  if (respBtn) respBtn.style.display = isPresidentOrVP(CP) ? 'block' : 'none';
+  try {
+    const snap = await db.collection('annonces').orderBy('createdAt','desc').get();
+    allAnnonces = [];
+    snap.forEach(d => allAnnonces.push({ id:d.id, ...d.data() }));
+    allAnnonces.sort((a,b) => (b.epingle?1:0) - (a.epingle?1:0));
+    renderAnnonces();
+  } catch(e) { body.innerHTML = '<div class="empty"><div class="empty-t">Erreur de chargement</div></div>'; }
+}
+function renderAnnonceCard(a) {
+  const t = ANNONCE_TYPES[a.type] || ANNONCE_TYPES['Annonce'];
+  const dt = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate() : new Date();
+  const initial = (a.auteurNom||'?').charAt(0).toUpperCase();
+  const likes = a.likes || [];
+  const liked = CU && likes.indexOf(CU.uid) !== -1;
+  const comments = a.commentaires || [];
+  const canManage = isAnnonceResponsable(CU?.uid) || a.auteurId === CU?.uid;
+  return `<div class="annonce-card" data-id="${a.id}">
+    ${a.epingle ? `<div style="padding:8px 16px 0;font-size:11px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:5px"><i data-feather="bookmark" style="width:13px;height:13px"></i> Épinglé</div>` : ''}
+    <div class="annonce-hd">
+      <div class="annonce-av">${escHtml(initial)}</div>
+      <div class="annonce-meta">
+        <div class="annonce-auteur">${escHtml(a.auteurNom||'—')}</div>
+        <div class="annonce-date">${timeAgoAnnonce(dt)}</div>
+      </div>
+      <span class="annonce-badge" style="background:${t.bg};color:${t.fg}">${t.icon} ${escHtml(a.type||'Annonce')}</span>
+      ${canManage ? `<button data-action="annonce-pin" data-id="${a.id}" title="${a.epingle?'Désépingler':'Épingler'}" style="background:none;color:${a.epingle?'var(--gold)':'var(--t3)'};padding:4px 4px"><i data-feather="bookmark" style="width:16px;height:16px"></i></button><button data-action="annonce-delete" data-id="${a.id}" title="Supprimer" style="background:none;color:var(--red);padding:4px 4px"><i data-feather="trash-2" style="width:16px;height:16px"></i></button>` : ''}
+    </div>
+    ${a.projetId ? `<div class="annonce-proj-badge" data-action="annonce-open-projet" data-id="${a.projetId}"><i data-feather="link" style="width:13px;height:13px"></i> ${escHtml(a.projetNom||'Projet')}</div>` : ''}
+    ${a.texte ? `<div class="annonce-texte">${escHtml(a.texte)}</div>` : ''}
+    ${a.photoUrl ? `<img class="annonce-photo" src="${a.photoUrl}" loading="lazy">` : ''}
+    ${likes.length ? `<div class="annonce-likes-line">❤️ ${likes.length} j'aime</div>` : ''}
+    <div class="annonce-bar">
+      <button class="annonce-like-btn ${liked?'liked':''}" data-action="annonce-like" data-id="${a.id}"><i data-feather="heart"></i> J'aime</button>
+      <button class="annonce-comment-btn" data-action="annonce-toggle-comments" data-id="${a.id}"><i data-feather="message-circle"></i> ${comments.length ? comments.length + ' ' : ''}Commenter</button>
+    </div>
+    <div class="annonce-comments" id="comments-${a.id}" style="display:none">
+      ${comments.map(c => `<div class="annonce-comment-item"><div class="annonce-comment-bubble"><div class="annonce-comment-auteur">${escHtml(c.auteurNom||'—')}</div><div class="annonce-comment-texte">${escHtml(c.texte||'')}</div></div></div>`).join('')}
+      <div class="annonce-comment-input-row">
+        <input type="text" class="annonce-comment-input" id="comment-input-${a.id}" placeholder="Écrire un commentaire...">
+        <button data-action="annonce-send-comment" data-id="${a.id}" style="color:var(--gold);font-weight:700;font-size:13px;background:none">Envoyer</button>
+      </div>
+    </div>
+  </div>`;
+}
+function renderAnnonces() {
+  const body = document.getElementById('annonces-body');
+  if (!allAnnonces.length) {
+    body.innerHTML = '<div class="empty"><div class="empty-ic">📢</div><div class="empty-t">Aucune publication</div><div class="empty-b">Rien à afficher pour le moment.</div></div>';
+    return;
+  }
+  body.innerHTML = allAnnonces.map(a => renderAnnonceCard(a)).join('');
+  body.querySelectorAll('[data-action="annonce-like"]').forEach(b => b.addEventListener('click', () => toggleLikeAnnonce(b.getAttribute('data-id'))));
+  body.querySelectorAll('[data-action="annonce-toggle-comments"]').forEach(b => b.addEventListener('click', () => toggleAnnonceComments(b.getAttribute('data-id'))));
+  body.querySelectorAll('[data-action="annonce-send-comment"]').forEach(b => b.addEventListener('click', () => sendAnnonceComment(b.getAttribute('data-id'))));
+  body.querySelectorAll('[data-action="annonce-pin"]').forEach(b => b.addEventListener('click', () => toggleEpingleAnnonce(b.getAttribute('data-id'))));
+  body.querySelectorAll('[data-action="annonce-delete"]').forEach(b => b.addEventListener('click', () => deleteAnnonce(b.getAttribute('data-id'))));
+  body.querySelectorAll('[data-action="annonce-open-projet"]').forEach(b => b.addEventListener('click', () => openProjDetail(b.getAttribute('data-id'))));
+}
+window.toggleLikeAnnonce = async function(id) {
+  if (!CU) return;
+  const a = allAnnonces.find(x => x.id === id);
+  if (!a) return;
+  const likes = a.likes || [];
+  const idx = likes.indexOf(CU.uid);
+  try {
+    if (idx === -1) {
+      await db.collection('annonces').doc(id).update({ likes: firebase.firestore.FieldValue.arrayUnion(CU.uid) });
+      a.likes = likes.concat([CU.uid]);
+    } else {
+      await db.collection('annonces').doc(id).update({ likes: firebase.firestore.FieldValue.arrayRemove(CU.uid) });
+      a.likes = likes.filter(u => u !== CU.uid);
+    }
+    renderAnnonces();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.toggleAnnonceComments = function(id) {
+  const el = document.getElementById('comments-' + id);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+};
+window.sendAnnonceComment = async function(id) {
+  if (!CU || !CP) return;
+  const input = document.getElementById('comment-input-' + id);
+  const texte = input.value.trim();
+  if (!texte) return;
+  const a = allAnnonces.find(x => x.id === id);
+  if (!a) return;
+  const comment = { id:'c'+Date.now(), auteurId:CU.uid, auteurNom:CP.nom||'—', texte, createdAt:new Date().toISOString() };
+  try {
+    const comments = (a.commentaires || []).concat([comment]);
+    await db.collection('annonces').doc(id).update({ commentaires: comments });
+    a.commentaires = comments;
+    input.value = '';
+    renderAnnonces();
+    setTimeout(() => { const el = document.getElementById('comments-' + id); if (el) el.style.display = 'block'; }, 60);
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.toggleEpingleAnnonce = async function(id) {
+  const a = allAnnonces.find(x => x.id === id);
+  if (!a) return;
+  try {
+    await db.collection('annonces').doc(id).update({ epingle: !a.epingle });
+    toast(!a.epingle ? 'Publication épinglée 📌' : 'Publication désépinglée');
+    loadAnnonces();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.deleteAnnonce = async function(id) {
+  if (!confirm('Supprimer cette publication ?')) return;
+  try {
+    await db.collection('annonces').doc(id).delete();
+    toast('Publication supprimée');
+    loadAnnonces();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.openNewAnnonceModal = function() {
+  if (!isAnnonceResponsable(CU?.uid)) { toast('Réservé aux responsables des annonces'); return; }
+  document.getElementById('an-type').value = 'Annonce';
+  document.getElementById('an-texte').value = '';
+  document.getElementById('an-photo-file').value = '';
+  document.getElementById('an-epingle-chk').checked = false;
+  document.getElementById('an-projet-row').style.display = 'none';
+  document.getElementById('ov-annonce').classList.add('on');
+};
+window.toggleAnnonceProjetRow = async function() {
+  const type = document.getElementById('an-type').value;
+  const row = document.getElementById('an-projet-row');
+  row.style.display = type === 'Projet' ? 'block' : 'none';
+  if (type === 'Projet') {
+    const sel = document.getElementById('an-projet');
+    sel.innerHTML = '<option value="">Chargement...</option>';
+    try {
+      const snap = await db.collection('projets').get();
+      const projs = [];
+      snap.forEach(d => { const p = d.data(); if (p.statutPublication !== 'archive') projs.push({ id:d.id, nom:p.nom||'—' }); });
+      projs.sort((a,b) => a.nom.localeCompare(b.nom));
+      sel.innerHTML = '<option value="">— Choisir —</option>' + projs.map(p => `<option value="${p.id}">${escHtml(p.nom)}</option>`).join('');
+    } catch(e) { sel.innerHTML = '<option value="">Erreur de chargement</option>'; }
+  }
+};
+window.publierAnnonce = async function() {
+  if (!isAnnonceResponsable(CU?.uid)) { toast('Réservé aux responsables des annonces'); return; }
+  const type = document.getElementById('an-type').value;
+  const texte = document.getElementById('an-texte').value.trim();
+  const projetSel = document.getElementById('an-projet');
+  const projetId = type === 'Projet' ? projetSel.value : '';
+  const projetNom = type === 'Projet' && projetSel.selectedIndex > 0 ? projetSel.options[projetSel.selectedIndex].textContent : '';
+  if (!texte) { toast('Écris un texte pour ta publication'); return; }
+  if (type === 'Projet' && !projetId) { toast('Choisis un projet'); return; }
+  const btn = document.getElementById('an-sub-btn');
+  btn.disabled = true;
+  try {
+    let photoUrl = '';
+    const file = document.getElementById('an-photo-file').files[0];
+    if (file) photoUrl = await uploadToCloudinary(file, 'annonces/photos');
+    await db.collection('annonces').add({
+      type, texte, photoUrl: photoUrl || null,
+      projetId: projetId || null, projetNom: projetNom || null,
+      epingle: document.getElementById('an-epingle-chk').checked,
+      likes: [], commentaires: [],
+      auteurId: CU.uid, auteurNom: CP.nom || '—',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeOverlay('ov-annonce');
+    toast('Publication ajoutée ✅');
+    loadAnnonces();
+  } catch(e) { toast('Erreur : ' + e.message); }
+  finally { btn.disabled = false; }
+};
+window.openAnnonceRespModal = async function() {
+  if (!isPresidentOrVP(CP)) { toast('Réservé au Président et au Vice-Président'); return; }
+  await loadAnnonceResponsablesConfig();
+  const sel1 = document.getElementById('anr-resp1-select');
+  const sel2 = document.getElementById('anr-resp2-select');
+  sel1.innerHTML = '<option value="">Chargement...</option>';
+  sel2.innerHTML = '<option value="">Chargement...</option>';
+  document.getElementById('ov-annonce-resp').classList.add('on');
+  try {
+    const members = await ensureMentionCache();
+    const opts = '<option value="">— Choisir —</option>' + members.map(m => `<option value="${m.uid}">${escHtml(m.nom)}</option>`).join('');
+    sel1.innerHTML = opts; sel2.innerHTML = opts;
+    sel1.value = annonceResponsables.resp1Id || '';
+    sel2.value = annonceResponsables.resp2Id || '';
+  } catch(e) { sel1.innerHTML = sel2.innerHTML = '<option value="">Erreur de chargement</option>'; }
+};
+window.saveAnnonceResp = async function() {
+  if (!isPresidentOrVP(CP)) return;
+  const sel1 = document.getElementById('anr-resp1-select');
+  const sel2 = document.getElementById('anr-resp2-select');
+  const resp1Id = sel1.value, resp2Id = sel2.value;
+  if (resp1Id && resp1Id === resp2Id) { toast('Choisis deux personnes différentes'); return; }
+  const resp1Nom = resp1Id ? sel1.options[sel1.selectedIndex].textContent : null;
+  const resp2Nom = resp2Id ? sel2.options[sel2.selectedIndex].textContent : null;
+  try {
+    await db.collection('association_config').doc('annonces').set({
+      resp1Id: resp1Id || null, resp1Nom, resp2Id: resp2Id || null, resp2Nom
+    });
+    closeOverlay('ov-annonce-resp');
+    toast('Responsables mis à jour ✅');
+    loadAnnonces();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
+async function renderDashAnnoncePreview() {
+  const el = document.getElementById('d-annonce-preview');
+  if (!el) return;
+  try {
+    const snap = await db.collection('annonces').orderBy('createdAt','desc').limit(5).get();
+    const list = [];
+    snap.forEach(d => list.push({ id:d.id, ...d.data() }));
+    if (!list.length) {
+      el.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-b">Aucune publication pour le moment.</div></div>';
+      return;
+    }
+    list.sort((a,b) => (b.epingle?1:0) - (a.epingle?1:0));
+    const a = list[0];
+    const t = ANNONCE_TYPES[a.type] || ANNONCE_TYPES['Annonce'];
+    const dt = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate() : new Date();
+    const extrait = (a.texte||'').slice(0,110) + ((a.texte||'').length > 110 ? '…' : '');
+    el.innerHTML = `<div style="padding:14px 16px;cursor:pointer" onclick="go('annonces')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:${t.bg};color:${t.fg}">${t.icon} ${escHtml(a.type||'Annonce')}</span>
+        <span style="font-size:11px;color:var(--t3)">${timeAgoAnnonce(dt)}</span>
+      </div>
+      ${a.photoUrl ? `<img src="${a.photoUrl}" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px;margin-bottom:8px">` : ''}
+      <div style="font-size:13.5px;font-weight:600;color:var(--t1);margin-bottom:2px">${escHtml(a.auteurNom||'—')}</div>
+      <div style="font-size:12.5px;color:var(--t2);line-height:1.4">${escHtml(extrait)}</div>
+    </div>`;
+  } catch(e) { el.innerHTML = ''; }
+}
+
 </script>
 <!-- ══ LOGISTIQUE (Module additionnel) ══ -->
 <div id="s-logistique" class="scr">
@@ -11996,6 +12358,57 @@ window.deleteAgendaAsso = async function() {
     <div class="mfield"><label>Origine</label><input type="text" id="fonds-origine" placeholder="Nom de l'entité/personne"></div>
     <div class="mfield"><label>Condition d'utilisation</label><textarea id="fonds-condition" placeholder="Dans quel cadre ce fonds peut être utilisé"></textarea></div>
     <button class="bsub" style="margin-top:6px" onclick="saveFonds()"><span>Bloquer ce montant</span></button>
+  </div>
+</div>
+
+<!-- ══ ANNONCES — fil façon Facebook ══ -->
+<div id="s-annonces" class="scr">
+  <div class="proj-hd">
+    <div class="proj-hd-top">
+      <div><div class="proj-title">Annonces</div><div class="proj-sub">Fil des publications de l'association</div></div>
+      <button class="btn-new-proj" id="annonce-add-btn" style="display:none" onclick="openNewAnnonceModal()">➕ Publier</button>
+    </div>
+    <button id="annonce-resp-btn" style="display:none;width:100%;height:38px;margin-top:8px;background:var(--surface2);color:var(--t2);border-radius:var(--r8);font-size:11.5px;font-weight:600" onclick="openAnnonceRespModal()">⚙️ Gérer les responsables des annonces</button>
+  </div>
+  <div class="proj-body">
+    <div id="annonces-body"></div>
+  </div>
+  <nav class="bnav">
+    <button class="ni" onclick="navTo(this,'dash')"><div class="ni-ic"><i data-feather="home"></i></div><div class="ni-lb">Accueil</div></button>
+    <button class="ni" onclick="navTo(this,'taches')"><div class="ni-ic"><i data-feather="check-square"></i></div><div class="ni-lb">Tâches</div></button>
+    <button class="ni-plus" onclick="openNewTask()"><i data-feather="plus"></i></button>
+    <button class="ni" onclick="go('chat')"><div class="ni-ic"><i data-feather="message-circle"></i></div><div class="ni-lb">Chat</div></button>
+    <button class="ni" onclick="navTo(this,'profil')"><div class="ni-ic"><i data-feather="user"></i></div><div class="ni-lb">Profil</div></button>
+  </nav>
+</div>
+
+<!-- MODAL NOUVELLE PUBLICATION -->
+<div class="overlay" id="ov-annonce" onclick="closeOverlay('ov-annonce')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Nouvelle publication</div>
+    <div class="mfield"><label>Type</label>
+      <select id="an-type" onchange="toggleAnnonceProjetRow()"><option>Annonce</option><option>Événement</option><option>Projet</option></select>
+    </div>
+    <div class="mfield" id="an-projet-row" style="display:none"><label>Projet concerné</label><select id="an-projet"></select></div>
+    <div class="mfield"><label>Texte *</label><textarea id="an-texte" placeholder="Quoi de neuf ?"></textarea></div>
+    <div class="mfield"><label>Photo (optionnel)</label><input type="file" id="an-photo-file" accept="image/*"></div>
+    <label style="display:flex;align-items:center;gap:9px;padding:8px 0 4px;font-size:13px;color:var(--t1);cursor:pointer">
+      <input type="checkbox" id="an-epingle-chk" style="width:18px;height:18px"> Épingler cette publication
+    </label>
+    <button class="bsub" id="an-sub-btn" style="margin-top:10px" onclick="publierAnnonce()"><span>Publier</span></button>
+  </div>
+</div>
+
+<!-- MODAL RESPONSABLES DES ANNONCES -->
+<div class="overlay" id="ov-annonce-resp" onclick="closeOverlay('ov-annonce-resp')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mhandle"></div>
+    <div class="mtitle">Responsables des annonces</div>
+    <div class="mfield" style="font-size:12px;color:var(--t3)">Le Président est automatiquement responsable. Choisis 2 autres personnes.</div>
+    <div class="mfield"><label>Responsable 1</label><select id="anr-resp1-select"></select></div>
+    <div class="mfield"><label>Responsable 2</label><select id="anr-resp2-select"></select></div>
+    <button class="bsub" style="margin-top:6px" onclick="saveAnnonceResp()"><span>Enregistrer</span></button>
   </div>
 </div>
 
