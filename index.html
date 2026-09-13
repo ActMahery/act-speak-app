@@ -3429,7 +3429,9 @@ async function envoyerNotification(targetUid, titre, corps, data) {
     if (!resp.ok) {
       const errTxt = await resp.text();
       console.warn('FCM refusé (' + resp.status + ') :', errTxt);
-      toast('🔔 Envoi notif échoué (' + resp.status + ') — voir console');
+      let detail = errTxt;
+      try { detail = JSON.parse(errTxt).error?.message || errTxt; } catch(e) {}
+      toast('🔔 ' + resp.status + ' : ' + detail.slice(0,120));
     }
   } catch(e) {
     console.warn('Notification non envoyée :', e.message);
