@@ -3445,6 +3445,20 @@ async function initFcmMessaging() {
   const messaging = firebase.messaging();
   return { messaging, reg };
 }
+// Affiche un toast quand une notification arrive pendant que l'app est ouverte
+// au premier plan (le service worker ne gère que le cas app fermée/arrière-plan).
+let _fcmForegroundSetup = false;
+function setupFcmForegroundHandler(messaging) {
+  if (_fcmForegroundSetup) return;
+  try {
+    messaging.onMessage(payload => {
+      const title = (payload.notification && payload.notification.title) || 'ACT & SPEAK';
+      const body = (payload.notification && payload.notification.body) || '';
+      toast('🔔 ' + title + (body ? ' — ' + body : ''));
+    });
+    _fcmForegroundSetup = true;
+  } catch(e) { /* messaging non disponible sur cet appareil */ }
+}
 window.activerNotifications = async function() {
   if (!CU) { toast('Connecte-toi d\'abord'); return; }
   try {
@@ -3455,6 +3469,7 @@ window.activerNotifications = async function() {
     const token = await ctx.messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: ctx.reg });
     if (!token) { toast('Impossible d\'activer les notifications'); return; }
     await db.collection('users').doc(CU.uid).update({ fcmToken: token });
+    setupFcmForegroundHandler(ctx.messaging);
     document.getElementById('notif-tog').classList.add('on');
     toast('Notifications activées ✅');
   } catch(e) { toast('Erreur : ' + e.message); }
@@ -3819,6 +3834,7 @@ function fillDash() {
   safe('p-email',   el => el.textContent = CU.email);
   safe('p-role-d',  el => el.textContent = (CAT_LABEL[categorie]||'Membre') + (CP.role ? ' · ' + CP.role : ''));
   safe('notif-tog', el => el.classList.toggle('on', !!CP.fcmToken));
+  if (CP.fcmToken) { initFcmMessaging().then(ctx => { if (ctx) setupFcmForegroundHandler(ctx.messaging); }); }
 
   renderTodaySummary();
   renderDashAnnoncePreview();
