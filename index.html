@@ -97,7 +97,9 @@ input,select,textarea{font-family:inherit}
 
 /* DASHBOARD */
 #s-dash{background:var(--bg)}
-.dash-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 20px 24px}
+.dash-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 20px 24px;position:relative;overflow:hidden}
+#dash-bg-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.55;pointer-events:none}
+.dash-hd>*{position:relative;z-index:1}
 .dash-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .dash-greet-lbl{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
 .dash-greet-name{font-family:'Playfair Display',serif;font-size:22px;color:#fff}
@@ -1206,6 +1208,7 @@ input,select,textarea{font-family:inherit}
 <!-- DASHBOARD -->
 <div id="s-dash" class="scr">
   <div class="dash-hd">
+    <canvas id="dash-bg-canvas"></canvas>
     <div class="dash-top">
       <div>
         <div class="dash-greet-lbl" id="d-greet-lbl">Bonjour</div>
@@ -3310,9 +3313,90 @@ input,select,textarea{font-family:inherit}
 <!-- FIREBASE SDK compat v10 — chargement non-bloquant -->
 <script>
 // Afficher login immédiatement sans attendre Firebase
+/* ── Animation d'arrière-plan du tableau de bord (Canvas léger, pas de WebGL) ── */
+let _dashBgAnimId = null;
+function initDashBgAnimation() {
+  const canvas = document.getElementById('dash-bg-canvas');
+  if (!canvas || !canvas.getContext) return;
+  const ctx = canvas.getContext('2d');
+  const dashHd = canvas.parentElement;
+  let W = 0, H = 0, dpr = 1, particles = [];
+  const COUNT = 26;
+
+  function getColors() {
+    const style = getComputedStyle(document.documentElement);
+    const accent = (style.getPropertyValue('--gold') || '#C9A030').trim() || '#C9A030';
+    const accentLight = (style.getPropertyValue('--gold-light') || '#E8C55A').trim() || '#E8C55A';
+    return [accent, accentLight, '#ffffff'];
+  }
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = dashHd.clientWidth; H = dashHd.clientHeight;
+    if (!W || !H) return;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function makeParticles() {
+    const colors = getColors();
+    particles = [];
+    for (let i = 0; i < COUNT; i++) {
+      particles.push({
+        x: Math.random() * (W || 300), y: Math.random() * (H || 200),
+        vx: (Math.random() - 0.5) * 0.18, vy: (Math.random() - 0.5) * 0.18,
+        r: Math.random() * 1.4 + 0.6,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      });
+    }
+  }
+  function step() {
+    _dashBgAnimId = requestAnimationFrame(step);
+    const dashScr = document.getElementById('s-dash');
+    if (!dashScr || !dashScr.classList.contains('on')) return;
+    if (!W || !H) resize();
+    if (!W || !H) return;
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > W) p.vx *= -1;
+      if (p.y < 0 || p.y > H) p.vy *= -1;
+    });
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const a = particles[i], b = particles[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 90) {
+          ctx.strokeStyle = a.color;
+          ctx.globalAlpha = (1 - dist / 90) * 0.35;
+          ctx.lineWidth = 0.6;
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        }
+      }
+    }
+    ctx.globalAlpha = 0.85;
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.fillStyle = p.color;
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+  resize();
+  makeParticles();
+  window.addEventListener('resize', resize);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && _dashBgAnimId) { cancelAnimationFrame(_dashBgAnimId); _dashBgAnimId = null; }
+    else if (!document.hidden && !_dashBgAnimId) { step(); }
+  });
+  window._refreshDashBgColors = makeParticles; // rafraîchit les couleurs si l'accent change
+  step();
+}
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
   document.getElementById('s-login').classList.add('on');
+  initDashBgAnimation();
 });
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -6049,6 +6133,7 @@ window.setAccent = function(key) {
   applyAccent(key);
   localStorage.setItem('accent', key);
   renderAccentSwatches();
+  if (window._refreshDashBgColors) window._refreshDashBgColors();
   toast('🎨 Couleur mise à jour');
 };
 function renderAccentSwatches() {
