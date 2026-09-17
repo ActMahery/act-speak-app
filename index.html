@@ -98,7 +98,7 @@ input,select,textarea{font-family:inherit}
 /* DASHBOARD */
 #s-dash{background:var(--bg)}
 .dash-hd{background:linear-gradient(135deg,var(--navy-deep),var(--navy));padding:52px 20px 24px;position:relative;overflow:hidden}
-#dash-bg-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.55;pointer-events:none}
+#dash-bg-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.75;pointer-events:none}
 .dash-hd>*{position:relative;z-index:1}
 .dash-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .dash-greet-lbl{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
@@ -3320,8 +3320,7 @@ function initDashBgAnimation() {
   if (!canvas || !canvas.getContext) return;
   const ctx = canvas.getContext('2d');
   const dashHd = canvas.parentElement;
-  let W = 0, H = 0, dpr = 1, particles = [];
-  const COUNT = 26;
+  let W = 0, H = 0, dpr = 1, particles = [], linkDist = 90;
 
   function getColors() {
     const style = getComputedStyle(document.documentElement);
@@ -3336,15 +3335,24 @@ function initDashBgAnimation() {
     canvas.width = W * dpr; canvas.height = H * dpr;
     canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Densité constante quelle que soit la largeur d'écran (mobile ou PC très large) :
+    // nombre de points ET distance de connexion adaptés à la surface réelle.
+    const area = W * H;
+    const targetCount = Math.max(20, Math.min(140, Math.round(area / 3500)));
+    linkDist = Math.max(70, Math.min(150, Math.round(Math.sqrt(area / targetCount) * 1.1)));
+    if (!particles.length || Math.abs(particles.length - targetCount) > 6) {
+      makeParticles(targetCount);
+    }
   }
-  function makeParticles() {
+  function makeParticles(count) {
+    const n = count || particles.length || 26;
     const colors = getColors();
     particles = [];
-    for (let i = 0; i < COUNT; i++) {
+    for (let i = 0; i < n; i++) {
       particles.push({
         x: Math.random() * (W || 300), y: Math.random() * (H || 200),
         vx: (Math.random() - 0.5) * 0.18, vy: (Math.random() - 0.5) * 0.18,
-        r: Math.random() * 1.4 + 0.6,
+        r: Math.random() * 1.4 + 0.7,
         color: colors[Math.floor(Math.random() * colors.length)]
       });
     }
@@ -3366,9 +3374,9 @@ function initDashBgAnimation() {
         const a = particles[i], b = particles[j];
         const dx = a.x - b.x, dy = a.y - b.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < 90) {
+        if (dist < linkDist) {
           ctx.strokeStyle = a.color;
-          ctx.globalAlpha = (1 - dist / 90) * 0.35;
+          ctx.globalAlpha = (1 - dist / linkDist) * 0.4;
           ctx.lineWidth = 0.6;
           ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
         }
@@ -3384,13 +3392,14 @@ function initDashBgAnimation() {
     ctx.globalAlpha = 1;
   }
   resize();
-  makeParticles();
+  if (!particles.length) makeParticles(26);
   window.addEventListener('resize', resize);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && _dashBgAnimId) { cancelAnimationFrame(_dashBgAnimId); _dashBgAnimId = null; }
     else if (!document.hidden && !_dashBgAnimId) { step(); }
   });
-  window._refreshDashBgColors = makeParticles; // rafraîchit les couleurs si l'accent change
+  window._refreshDashBgColors = () => makeParticles(particles.length); // rafraîchit les couleurs si l'accent change
+  window._resizeDashBg = resize; // re-mesure forcée à chaque retour sur l'accueil (corrige le cas 0×0 au premier chargement)
   step();
 }
 document.addEventListener('DOMContentLoaded', function() {
@@ -3738,6 +3747,7 @@ function go(screen) {
   const el = document.getElementById('s-' + screen);
   if (el) el.classList.add('on');
   if (screen === 'taches') loadTasks();
+  if (screen === 'dash') { if (window._resizeDashBg) requestAnimationFrame(window._resizeDashBg); }
   if (screen === 'admin')  loadMembers();
   if (screen === 'supervision') loadSupervision();
   if (screen === 'agenda') loadAgenda();
