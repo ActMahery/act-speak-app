@@ -2876,10 +2876,14 @@ input,select,textarea{font-family:inherit}
         <div id="treso-pending-list" style="padding:10px 12px"></div>
       </div>
       <div>
-        <div class="sec-title">Détails</div>
+        <div class="sec-title">Comptes</div>
         <div class="card" style="overflow:hidden;margin-bottom:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;padding:14px 16px;gap:8px;border-bottom:1px solid var(--surface2)">
+            <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">💰 SOUS-CAISSE</div><div style="font-size:15px;font-weight:700;color:var(--t1)" id="treso-solde-souscaisse">0 Ar</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Resp. Hajatiana</div></div>
+            <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">🏦 BANQUE</div><div style="font-size:15px;font-weight:700;color:var(--t1)" id="treso-solde-banque">0 Ar</div><div style="font-size:10px;color:var(--t3);margin-top:2px">Resp. Sitraka</div></div>
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:14px 16px;gap:8px">
-            <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">SOLDE CAISSE</div><div style="font-size:13px;font-weight:700;color:var(--t1)" id="treso-solde-caisse">0 Ar</div></div>
+            <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">TOTAL ASSOCIATION</div><div style="font-size:13px;font-weight:700;color:var(--t1)" id="treso-solde-caisse">0 Ar</div></div>
             <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">FONDS BLOQUÉS</div><div style="font-size:13px;font-weight:700;color:var(--gold)" id="treso-total-fonds">0 Ar</div></div>
             <div style="text-align:center"><div style="font-size:10px;color:var(--t3)">DISPONIBLE</div><div style="font-size:13px;font-weight:700;color:#155724" id="treso-disponible-detail">0 Ar</div></div>
           </div>
@@ -3120,6 +3124,9 @@ input,select,textarea{font-family:inherit}
     </div>
     <div class="mfield"><label>Mode de paiement</label>
       <select id="tx-mode"><option>Cash</option><option>Mobile Money</option><option>Virement</option></select>
+    </div>
+    <div class="mfield"><label>Compte</label>
+      <select id="tx-compte"><option>Sous-caisse</option><option>Banque</option></select>
     </div>
     <div class="mfield"><label>Date de la transaction (optionnel)</label><input type="date" id="tx-date-manuelle"></div>
     <div id="tx-cotis-row" style="display:none">
@@ -3413,7 +3420,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.12.3/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
 <script>
 if (window.pdfjsLib) {
@@ -9320,13 +9328,19 @@ async function loadTreso() {
     snap.forEach(function(d) { allTx.push(Object.assign({id:d.id}, d.data())); });
 
     // Calcul solde — uniquement les transactions VALIDÉES (double contrôle)
+    // Réparti par compte (Sous-caisse / Banque) — décision de l'AG. Les anciennes
+    // transactions sans compte précisé sont comptées en Sous-caisse par défaut.
     var solde = 0;
     var totalE = 0; var totalD = 0;
+    var soldeSousCaisse = 0, soldeBanque = 0;
     for (var i = 0; i < allTx.length; i++) {
       var tx = allTx[i];
       if (tx.statut !== 'validee') continue;
-      if (tx.type === 'entree')  { solde += tx.montant; totalE += tx.montant; }
-      if (tx.type === 'depense') { solde -= tx.montant; totalD += tx.montant; }
+      var compte = tx.compte || 'Sous-caisse';
+      var delta = tx.type === 'entree' ? tx.montant : -tx.montant;
+      solde += delta;
+      if (tx.type === 'entree') { totalE += tx.montant; } else { totalD += tx.montant; }
+      if (compte === 'Banque') { soldeBanque += delta; } else { soldeSousCaisse += delta; }
     }
 
     // Fonds bloqués — détail réservé au Bureau, mais impacte le solde disponible affiché à tous.
@@ -9352,9 +9366,13 @@ async function loadTreso() {
     var scEl = document.getElementById('treso-solde-caisse');
     var tfEl = document.getElementById('treso-total-fonds');
     var tdEl2 = document.getElementById('treso-disponible-detail');
+    var scSous = document.getElementById('treso-solde-souscaisse');
+    var scBanque = document.getElementById('treso-solde-banque');
     if (scEl) scEl.textContent = solde.toLocaleString('fr-FR') + ' Ar';
     if (tfEl) tfEl.textContent = totalFonds.toLocaleString('fr-FR') + ' Ar';
     if (tdEl2) tdEl2.textContent = disponible.toLocaleString('fr-FR') + ' Ar';
+    if (scSous) scSous.textContent = soldeSousCaisse.toLocaleString('fr-FR') + ' Ar';
+    if (scBanque) scBanque.textContent = soldeBanque.toLocaleString('fr-FR') + ' Ar';
 
     var te = document.getElementById('total-entrees');
     var td = document.getElementById('total-depenses');
@@ -9574,7 +9592,7 @@ function renderPendingTx(list) {
       <div class="tx-pending-top">
         <div class="tx-info">
           <div class="tx-nom">${escHtml(tx.description||'—')}</div>
-          <div class="tx-meta">${escHtml(tx.categorie||'—')} · saisi par ${escHtml(tx.auteurNom||'—')}</div>
+          <div class="tx-meta">${escHtml(tx.categorie||'—')} · ${(tx.compte||'Sous-caisse')==='Banque'?'🏦 Banque':'💰 Sous-caisse'} · saisi par ${escHtml(tx.auteurNom||'—')}</div>
           ${tx.commentaireDivergence ? `<div class="tx-diverg-note">💬 ${escHtml(tx.commentaireDivergence)}</div>` : ''}
           ${tx.justificatif ? `<button data-action="tx-view-justif" data-url="${escHtml(tx.justificatif)}" style="font-size:11px;color:var(--gold);font-weight:600;margin-top:3px;background:none">📷 Voir le justificatif</button>` : ''}
         </div>
@@ -9696,11 +9714,12 @@ function renderTransactions(list) {
     var dt   = txEffectiveDate(tx);
     var date = dt ? dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) : '—';
     var justifBtn = tx.justificatif ? ' · <button data-action="tx-view-justif" data-url="' + escHtml(tx.justificatif) + '" style="color:var(--gold);font-weight:600;background:none">📷 Photo</button>' : '';
+    var compteLbl = (tx.compte || 'Sous-caisse') === 'Banque' ? '🏦 Banque' : '💰 Sous-caisse';
     html += '<div class="tx-item" data-txid="' + tx.id + '">';
     html += '<div class="tx-ic ' + (isE ? 'e' : 'd') + '">' + (isE ? '📈' : '📉') + '</div>';
     html += '<div class="tx-info">';
     html += '<div class="tx-nom">' + escHtml(tx.description || '—') + '</div>';
-    html += '<div class="tx-meta">' + escHtml(tx.categorie || '—') + ' · ' + date + ' · ✅ validé par ' + escHtml(tx.validateurNom || '—') + justifBtn + '</div>';
+    html += '<div class="tx-meta">' + escHtml(tx.categorie || '—') + ' · ' + compteLbl + ' · ' + date + ' · ✅ validé par ' + escHtml(tx.validateurNom || '—') + justifBtn + '</div>';
     html += '</div>';
     html += '<div class="tx-amount ' + (isE ? 'e' : 'd') + '">' + sign + Number(tx.montant).toLocaleString('fr-FR') + ' Ar</div>';
     if (canDel) html += '<button class="tx-item-del" data-action="tx-del-validated" data-id="' + tx.id + '" title="Supprimer">🗑️</button>';
@@ -9806,6 +9825,7 @@ window.openModalTx = function(type) {
   document.getElementById('tx-desc').value    = '';
   document.getElementById('tx-cat').value = 'Cotisation';
   document.getElementById('tx-mode').value = 'Cash';
+  document.getElementById('tx-compte').value = 'Sous-caisse';
   document.getElementById('tx-date-manuelle').value = '';
   document.getElementById('tx-justif-name').value = '';
   var anneeSel = document.getElementById('tx-periode');
@@ -9866,6 +9886,7 @@ window.submitTransaction = async function() {
     type: curTxType, montant: montant,
     description: desc, categorie: cat,
     mode: document.getElementById('tx-mode').value,
+    compte: document.getElementById('tx-compte').value,
     membreUid: membreUid || null, membreNom: membreNom || null, periode: periode || null,
     dateTx: dateManuelle,
     justificatif: txJustifUrl || '',
@@ -10302,6 +10323,11 @@ function materielQte(m) {
   if (m.lots && m.lots.length) return m.lots.reduce((s,l) => s + (Number(l.quantite)||0), 0);
   return Number(m.quantite) || 0;
 }
+// Valeur totale du matériel (somme quantité×prix unitaire de chaque lot) — utile pour la déclaration d'actifs.
+function materielValeur(m) {
+  if (!m.lots) return 0;
+  return m.lots.reduce((s,l) => s + ((Number(l.quantite)||0) * (Number(l.prixUnitaire)||0)), 0);
+}
 function materielDerniereAcqLabel(m) {
   const lots = (m.lots && m.lots.length) ? m.lots : (m.dateAcquisitionISO ? [{date:m.dateAcquisitionISO}] : []);
   if (!lots.length) return m.dateAcquisition || '—';
@@ -10341,6 +10367,8 @@ async function loadLogistique() {
   body.innerHTML = '<div class="empty"><div class="empty-ic">⏳</div><div class="empty-t">Chargement...</div></div>';
   await loadLogResponsablesConfig();
   document.getElementById('lg-add-btn').style.display = isLogResponsable(CU?.uid) ? 'flex' : 'none';
+  const scanBtn = document.getElementById('lg-scan-btn');
+  if (scanBtn) scanBtn.style.display = isLogResponsable(CU?.uid) ? 'flex' : 'none';
   document.getElementById('lg-resp-btn').style.display = isPresidentOrVP(CP) ? 'block' : 'none';
   const navDemandes = document.getElementById('lg-nav-demandes');
   if (navDemandes) navDemandes.style.display = (isLogResponsable(CU?.uid) || isBureau(CP)) ? 'inline-block' : 'none';
@@ -10367,8 +10395,11 @@ function renderLogistiqueOverview() {
   const visibles = allMateriels.filter(m => !m.retire);
   const totalQte = visibles.reduce((s,m) => s + materielQte(m), 0);
   const retireCount = allMateriels.filter(m => m.retire).length;
+  const totalValeur = visibles.reduce((s,m) => s + materielValeur(m), 0);
   document.getElementById('lg-ov-total').textContent = totalQte;
   document.getElementById('lg-ov-retire').textContent = retireCount;
+  const ovValeur = document.getElementById('lg-ov-valeur');
+  if (ovValeur) ovValeur.textContent = totalValeur.toLocaleString('fr-FR') + ' Ar';
   const catsHtml = LG_CATS.map(c => {
     const qte = visibles.filter(m => m.categories && m.categories[c.key]).reduce((s,m) => s + materielQte(m), 0);
     return `<span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:10px;background:${c.bg};color:${c.fg}">${c.label} : ${qte}</span>`;
@@ -10460,6 +10491,7 @@ const LG_TABLE_COLS = [
   { key:'ref', label:'Réf' },
   { key:'nom', label:'Nom' },
   { key:'qte', label:'Qté' },
+  { key:'valeur', label:'Valeur' },
   { key:'lieuStockage', label:'Lieu' },
   { key:'etat', label:'État' },
   { key:'criticite', label:'Criticité' },
@@ -10468,6 +10500,7 @@ const LG_TABLE_COLS = [
 ];
 function lgTableSortVal(m, key) {
   if (key === 'qte') return materielQte(m);
+  if (key === 'valeur') return materielValeur(m);
   if (key === 'derniereAcq') return materielDerniereAcqLabel(m);
   if (key === 'criticite') return m.criticite || 'Utile';
   return (m[key] || '').toString().toLowerCase();
@@ -10496,6 +10529,7 @@ function renderLogistiqueTable(list) {
         <td>${escHtml(m.ref||'—')}</td>
         <td>${escHtml(m.nom||'—')}</td>
         <td>${materielQte(m)}</td>
+        <td>${materielValeur(m) ? materielValeur(m).toLocaleString('fr-FR') + ' Ar' : '—'}</td>
         <td>${escHtml(m.lieuStockage||'—')}</td>
         <td>${m.retire ? '🔧 Retiré' : escHtml(m.etat||'Bon état')}</td>
         <td>${escHtml(m.criticite||'Utile')}</td>
@@ -10518,6 +10552,8 @@ function renderMaterielDetailFields(m) {
   else photoWrap.style.display = 'none';
   document.getElementById('lgd-cats-card').innerHTML = (catBadgesHtml(m, false) || '<span style="font-size:12px;color:var(--t3)">Aucune catégorie</span>') + criticiteBadge(m);
   document.getElementById('lgd-qte').textContent = materielQte(m);
+  const val = materielValeur(m);
+  document.getElementById('lgd-valeur').textContent = val ? val.toLocaleString('fr-FR') + ' Ar' : '—';
   document.getElementById('lgd-date').textContent = materielDerniereAcqLabel(m);
   document.getElementById('lgd-lieu').textContent = m.lieuStockage || '—';
   document.getElementById('lgd-resp').textContent = m.responsable || '—';
@@ -10538,11 +10574,15 @@ function renderLotsList(m) {
   const lots = (m.lots || []).slice().sort((a,b) => (b.date||'').localeCompare(a.date||''));
   const isResp = isLogResponsable(CU?.uid);
   if (!lots.length) { el.innerHTML = '<div style="font-size:12px;color:var(--t3);padding:8px 0">Aucun lot enregistré.</div>'; return; }
-  el.innerHTML = lots.map((l, i) => `
+  el.innerHTML = lots.map((l, i) => {
+    const prix = Number(l.prixUnitaire) || 0;
+    const total = prix * (Number(l.quantite)||0);
+    return `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--surface2)">
-      <span style="font-size:12.5px;color:var(--t2)">${l.date ? new Date(l.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : 'Date inconnue'} · +${l.quantite}</span>
+      <span style="font-size:12.5px;color:var(--t2)">${l.date ? new Date(l.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : 'Date inconnue'} · +${l.quantite}${prix ? ' · ' + prix.toLocaleString('fr-FR') + ' Ar/u · ' + total.toLocaleString('fr-FR') + ' Ar' : ''}</span>
       ${isResp ? `<button data-action="del-lot" data-idx="${i}" style="font-size:11px;color:var(--red);background:none">🗑</button>` : ''}
-    </div>`).join('');
+    </div>`;
+  }).join('');
   el.querySelectorAll('[data-action="del-lot"]').forEach(btn => {
     btn.addEventListener('click', () => deleteLot(Number(btn.getAttribute('data-idx')), lots));
   });
@@ -10573,15 +10613,17 @@ window.openAddLotModal = function() {
   if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
   document.getElementById('lot-date').value = '';
   document.getElementById('lot-qte').value = 1;
+  document.getElementById('lot-prix').value = '';
   document.getElementById('ov-lot').classList.add('on');
 };
 window.saveLot = async function() {
   if (!isLogResponsable(CU?.uid) || !curMaterielData) { toast('Réservé aux responsables logistique'); return; }
   const date = document.getElementById('lot-date').value || null;
   const quantite = Number(document.getElementById('lot-qte').value) || 0;
+  const prixUnitaire = Number(document.getElementById('lot-prix').value) || 0;
   if (quantite <= 0) { toast('Quantité invalide'); return; }
   try {
-    const newLots = (curMaterielData.lots || []).concat([{ date, quantite }]);
+    const newLots = (curMaterielData.lots || []).concat([{ date, quantite, prixUnitaire }]);
     const totalQte = newLots.reduce((s,l) => s + (Number(l.quantite)||0), 0);
     const lastDate = newLots.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).pop().date;
     await db.collection('logistique_materiel').doc(curMaterielId).update({
@@ -10596,15 +10638,54 @@ window.saveLot = async function() {
     loadLogistique();
   } catch(e) { toast('Erreur : ' + e.message); }
 };
-window.openQrModal = function() {
-  if (!curMaterielData) return;
-  const container = document.getElementById('qr-materiel-container');
-  container.innerHTML = '';
-  new QRCode(container, { text: buildMaterielLink(curMaterielData), width:200, height:200 });
-  document.getElementById('qr-materiel-label').textContent = (curMaterielData.ref||'') + ' · ' + (curMaterielData.nom||'');
+window.openBarcodeModal = function() {
+  if (!curMaterielData || !curMaterielData.ref) { toast('Ce matériel n\'a pas encore de référence'); return; }
+  try {
+    JsBarcode('#barcode-svg', curMaterielData.ref, {
+      format: 'CODE128', width: 2, height: 70, displayValue: true, fontSize: 16, margin: 10
+    });
+  } catch(e) { toast('Erreur de génération : ' + e.message); return; }
+  document.getElementById('qr-materiel-label').textContent = curMaterielData.nom || '';
   document.getElementById('ov-qr-materiel').classList.add('on');
 };
 window.printQr = function() { window.print(); };
+
+/* ── Scanner de code-barres (caméra) ─────────────────────────────────── */
+let scannerCodeReader = null;
+window.openScannerModal = async function() {
+  if (!isLogResponsable(CU?.uid)) { toast('Réservé aux responsables logistique'); return; }
+  if (!window.ZXing) { toast('Scanner non disponible sur cet appareil'); return; }
+  document.getElementById('ov-scanner').classList.add('on');
+  const statusEl = document.getElementById('scanner-status');
+  statusEl.textContent = 'Initialisation de la caméra...';
+  try {
+    scannerCodeReader = new ZXing.BrowserMultiFormatReader();
+    const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+    const backCam = devices.find(d => /back|rear|environment/i.test(d.label || '')) || devices[devices.length - 1];
+    const deviceId = backCam ? backCam.deviceId : undefined;
+    statusEl.textContent = 'Vise le code-barres collé sur le matériel...';
+    scannerCodeReader.decodeFromVideoDevice(deviceId, 'scanner-video', (result) => {
+      if (result) {
+        const text = result.getText();
+        closeScannerModal();
+        handleScannedRef(text);
+      }
+    });
+  } catch(e) {
+    statusEl.textContent = 'Erreur caméra : ' + e.message;
+  }
+};
+window.closeScannerModal = function(e) {
+  if (e && e.target !== e.currentTarget) return;
+  if (scannerCodeReader) { try { scannerCodeReader.reset(); } catch(err) {} scannerCodeReader = null; }
+  document.getElementById('ov-scanner').classList.remove('on');
+};
+function handleScannedRef(ref) {
+  const clean = (ref || '').trim();
+  const m = allMateriels.find(x => x.ref === clean);
+  if (m) { openMaterielDetail(m.id); toast('📦 ' + m.nom); }
+  else toast('Référence introuvable : ' + clean);
+}
 function openMaterielDetail(id) {
   curMaterielId = id;
   const m = allMateriels.find(x => x.id === id);
@@ -10630,7 +10711,9 @@ window.openNewMaterielModal = function() {
   document.getElementById('mat-ref').value = '';
   document.getElementById('mat-qte').value = 1;
   document.getElementById('mat-date').value = '';
+  document.getElementById('mat-prix').value = '';
   document.getElementById('mat-qte-date-row').style.display = 'flex';
+  document.getElementById('mat-prix-row').style.display = 'block';
   document.getElementById('mat-lieu').value = '';
   document.getElementById('mat-resp').value = '';
   document.getElementById('mat-etat').value = 'Neuf';
@@ -10649,6 +10732,7 @@ window.openEditMaterielModal = function() {
   document.getElementById('mat-nom').value = m.nom || '';
   document.getElementById('mat-ref').value = m.ref || '';
   document.getElementById('mat-qte-date-row').style.display = 'none';
+  document.getElementById('mat-prix-row').style.display = 'none';
   document.getElementById('mat-lieu').value = m.lieuStockage || '';
   document.getElementById('mat-resp').value = m.responsable || '';
   document.getElementById('mat-etat').value = m.etat || 'Neuf';
@@ -10689,7 +10773,8 @@ window.saveMateriel = async function() {
     } else {
       const dateVal = document.getElementById('mat-date').value;
       const qteInit = Number(document.getElementById('mat-qte').value) || 0;
-      payload.lots = [{ date: dateVal || null, quantite: qteInit }];
+      const prixInit = Number(document.getElementById('mat-prix').value) || 0;
+      payload.lots = [{ date: dateVal || null, quantite: qteInit, prixUnitaire: prixInit }];
       payload.quantite = qteInit;
       payload.dateAcquisitionISO = dateVal || null;
       payload.dateAcquisition = dateVal ? new Date(dateVal).toLocaleDateString('fr-FR',{month:'long',year:'numeric'}) : null;
@@ -12014,7 +12099,10 @@ async function renderDashAnnoncePreview() {
   <div class="proj-hd">
     <div class="proj-hd-top">
       <div><div class="proj-title">Logistique</div><div class="proj-sub" id="lg-count">—</div></div>
-      <button class="btn-new-proj" id="lg-add-btn" style="display:none" onclick="openNewMaterielModal()">➕ Matériel</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn-new-proj" id="lg-scan-btn" style="display:none;background:var(--surface2);color:var(--t1)" onclick="openScannerModal()">📷 Scanner</button>
+        <button class="btn-new-proj" id="lg-add-btn" style="display:none" onclick="openNewMaterielModal()">➕ Matériel</button>
+      </div>
     </div>
     <input type="text" class="proj-search" id="lg-search" placeholder="🔍 Nom du matériel..." oninput="renderLogistique()">
     <div class="filters" style="padding:10px 0 0" id="lg-subnav">
@@ -12041,6 +12129,10 @@ async function renderDashAnnoncePreview() {
       <div style="display:grid;grid-template-columns:1fr 1fr;padding:14px 16px;gap:10px">
         <div style="text-align:center"><div style="font-size:11px;color:var(--t3)">MATÉRIELS (QTÉ TOTALE)</div><div style="font-size:19px;font-weight:700;color:var(--t1)" id="lg-ov-total">0</div></div>
         <div style="text-align:center"><div style="font-size:11px;color:var(--t3)">RETIRÉS / HS</div><div style="font-size:19px;font-weight:700;color:var(--gold)" id="lg-ov-retire">0</div></div>
+      </div>
+      <div style="padding:0 16px 14px;text-align:center;border-top:1px solid var(--surface2);padding-top:12px">
+        <div style="font-size:11px;color:var(--t3)">VALEUR TOTALE DU PARC (déclaration d'actifs)</div>
+        <div style="font-size:19px;font-weight:700;color:#155724" id="lg-ov-valeur">0 Ar</div>
       </div>
       <div id="lg-ov-cats" style="padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:6px"></div>
       <button id="lg-migrate-btn" style="display:none;width:100%;height:38px;background:var(--surface2);color:var(--t2);border-top:1px solid var(--surface3);font-size:11.5px;font-weight:600" onclick="migrerAnciensMateriels()">🔄 Mettre à jour les anciennes fiches (réf + lots)</button>
@@ -12070,6 +12162,7 @@ async function renderDashAnnoncePreview() {
     <div class="pd-card" id="lgd-cats-card" style="padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap"></div>
     <div class="pd-card">
       <div class="det-row"><span class="det-row-l">Quantité</span><span class="det-row-v" id="lgd-qte">—</span></div>
+      <div class="det-row"><span class="det-row-l">Valeur totale</span><span class="det-row-v" id="lgd-valeur" style="color:#155724;font-weight:700">—</span></div>
       <div class="det-row"><span class="det-row-l">Dernière acquisition</span><span class="det-row-v" id="lgd-date">—</span></div>
       <div class="det-row"><span class="det-row-l">Lieu de stockage</span><span class="det-row-v" id="lgd-lieu">—</span></div>
       <div class="det-row"><span class="det-row-l">Responsable</span><span class="det-row-v" id="lgd-resp">—</span></div>
@@ -12088,7 +12181,7 @@ async function renderDashAnnoncePreview() {
       <div id="lgd-lots-list" style="padding:0 16px 12px"></div>
     </div>
     <div class="pd-card" style="padding:14px 16px">
-      <button class="btn-join-proj" onclick="openQrModal()">🔳 QR Code de cette fiche</button>
+      <button class="btn-join-proj" onclick="openBarcodeModal()">📊 Code-barres de cette fiche</button>
     </div>
     <div class="pd-card" id="lgd-admin-card" style="display:none;padding:14px 16px;flex-direction:column;gap:8px">
       <button class="btn-join-proj" onclick="openEditMaterielModal()">✏️ Modifier ce matériel</button>
@@ -12113,6 +12206,7 @@ async function renderDashAnnoncePreview() {
       <div class="mfield" style="margin-bottom:0"><label>Quantité initiale</label><input type="number" id="mat-qte" min="0" value="1"></div>
       <div class="mfield" style="margin-bottom:0"><label>Date d'acquisition</label><input type="date" id="mat-date"></div>
     </div>
+    <div class="mfield" id="mat-prix-row"><label>Prix unitaire (Ar)</label><input type="number" id="mat-prix" min="0" placeholder="Ex: 300000"></div>
     <div class="mfield"><label>Lieu de stockage</label><input type="text" id="mat-lieu" placeholder="Ex: Andavamamba"></div>
     <div class="mfield"><label>Responsable</label><input type="text" id="mat-resp" placeholder="Nom du responsable"></div>
     <div class="mrow">
@@ -12139,7 +12233,10 @@ async function renderDashAnnoncePreview() {
     <div class="mhandle"></div>
     <div class="mtitle">Ajouter un lot</div>
     <div class="mfield"><label>Date d'acquisition</label><input type="date" id="lot-date"></div>
-    <div class="mfield"><label>Quantité ajoutée *</label><input type="number" id="lot-qte" min="1" value="1"></div>
+    <div class="mrow">
+      <div class="mfield" style="margin-bottom:0"><label>Quantité ajoutée *</label><input type="number" id="lot-qte" min="1" value="1"></div>
+      <div class="mfield" style="margin-bottom:0"><label>Prix unitaire (Ar)</label><input type="number" id="lot-prix" min="0" placeholder="0"></div>
+    </div>
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-lot')">Annuler</button>
       <button class="bsub" onclick="saveLot()"><span>Ajouter</span></button>
@@ -12152,14 +12249,26 @@ async function renderDashAnnoncePreview() {
   <div class="modal" onclick="event.stopPropagation()">
     <div class="mhandle"></div>
     <div id="qr-print-area" style="text-align:center">
-      <div class="mtitle" style="text-align:center">QR Code matériel</div>
-      <div id="qr-materiel-container" style="display:flex;justify-content:center;margin:10px 0"></div>
+      <div class="mtitle" style="text-align:center">Code-barres matériel</div>
+      <div style="display:flex;justify-content:center;margin:10px 0"><svg id="barcode-svg"></svg></div>
       <div id="qr-materiel-label" style="font-size:12px;color:var(--t2);margin-bottom:14px"></div>
     </div>
     <div class="mbtns">
       <button class="bcnl" onclick="closeOverlay('ov-qr-materiel')">Fermer</button>
       <button class="bsub" onclick="printQr()"><span>🖨️ Imprimer</span></button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL SCANNER DE CODE-BARRES -->
+<div class="overlay" id="ov-scanner" onclick="closeScannerModal(event)">
+  <div class="modal" onclick="event.stopPropagation()" style="padding:0;overflow:hidden">
+    <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--surface2)">
+      <div class="mtitle" style="margin:0">Scanner un code-barres</div>
+      <button onclick="closeScannerModal()" style="background:none;font-size:20px;color:var(--t2)">✕</button>
+    </div>
+    <video id="scanner-video" style="width:100%;max-height:320px;background:#000;object-fit:cover;display:block"></video>
+    <div style="padding:14px 16px;font-size:12px;color:var(--t3);text-align:center" id="scanner-status">Vise le code-barres collé sur le matériel...</div>
   </div>
 </div>
 
