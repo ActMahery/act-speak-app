@@ -1398,6 +1398,12 @@ input,select,textarea{font-family:inherit}
       <div class="prow"><div class="prow-l"><div class="prow-ic" style="background:#F0FDF4"><i data-feather="star"></i></div><div><div class="prow-lbl">Score</div><div class="prow-sub" id="p-score-d">0 pts</div></div></div></div>
     </div>
     <div class="pcard">
+      <div class="pcard-t">Ma cotisation</div>
+      <div class="prow" style="display:block">
+        <div id="ma-cotisation-content"></div>
+      </div>
+    </div>
+    <div class="pcard">
       <div class="pcard-t">Mon Espace</div>
       <div class="prow" onclick="go('agenda')"><div class="prow-l"><div class="prow-ic" style="background:#F0FDF4"><i data-feather="calendar"></i></div><div><div class="prow-lbl">Mon agenda</div><div class="prow-sub">Calendrier, programmes, points</div></div></div><div class="prow-r">›</div></div>
       <div class="prow" onclick="go('finperso')"><div class="prow-l"><div class="prow-ic" style="background:#D4EDDA"><i data-feather="dollar-sign"></i></div><div><div class="prow-lbl">Mes finances</div><div class="prow-sub">Solde, entrées, dépenses personnelles</div></div></div><div class="prow-r">›</div></div>
@@ -3762,6 +3768,7 @@ function go(screen) {
   if (screen === 'agenda-asso') loadAgendaAsso();
   if (screen === 'annonces') loadAnnonces();
   if (screen === 'cotisations') loadCotisations();
+  if (screen === 'profil') renderMaCotisation();
   if (screen === 'finperso') loadFinPerso();
   if (screen === 'biblio') loadBiblio();
   if (screen === 'logistique') loadLogistique();
@@ -9500,6 +9507,7 @@ function renderDonutCategories() {
 
 /* ── Suivi des cotisations par membre ──────────────────────────────── */
 let cotisPeriode = '';
+let cotisMontantAnnuel = 0;
 async function loadCotisations() {
   if (!CU || !CP || !isBureau(CP)) { go('dash'); toast('Accès réservé au Bureau'); return; }
   const sel = document.getElementById('cotis-periode-input');
@@ -9508,8 +9516,23 @@ async function loadCotisations() {
   for (let y = curY - 2; y <= curY + 1; y++) opts += `<option${y===curY?' selected':''}>${y}</option>`;
   sel.innerHTML = opts;
   cotisPeriode = String(curY);
+  try {
+    const cfgSnap = await db.collection('association_config').doc('cotisation').get();
+    cotisMontantAnnuel = cfgSnap.exists ? (Number(cfgSnap.data().montant) || 0) : 0;
+  } catch(e) { cotisMontantAnnuel = 0; }
+  document.getElementById('cotis-montant-input').value = cotisMontantAnnuel || '';
   renderCotisations();
 }
+window.saveCotisationMontant = async function() {
+  if (!canProposeTx(CP)) { toast('Réservé au Président, Trésorier, Trésorier Adjoint ou Secrétaire Financier'); return; }
+  const montant = Number(document.getElementById('cotis-montant-input').value) || 0;
+  try {
+    await db.collection('association_config').doc('cotisation').set({ montant });
+    cotisMontantAnnuel = montant;
+    toast('Montant enregistré ✅');
+    renderCotisations();
+  } catch(e) { toast('Erreur : ' + e.message); }
+};
 window.checkCotisations = function() {
   cotisPeriode = document.getElementById('cotis-periode-input').value;
   renderCotisations();
@@ -9524,25 +9547,83 @@ async function renderCotisations() {
       db.collection('users').get(),
       db.collection('tresorerie').where('categorie','==','Cotisation').get()
     ]);
-    const membresPayes = new Set();
+    const payePar = {};
     txSnap.forEach(d => {
       const t = d.data();
-      if (t.statut === 'validee' && t.periode === cotisPeriode && t.membreUid) membresPayes.add(t.membreUid);
+      if (t.statut === 'validee' && t.periode === cotisPeriode && t.membreUid) {
+        payePar[t.membreUid] = (payePar[t.membreUid] || 0) + (Number(t.montant) || 0);
+      }
     });
     const membres = [];
     usersSnap.forEach(d => {
       const u = d.data();
-      if (u.nom && u.categorie !== 'honoraire') membres.push({ uid: d.id, nom: u.nom, paye: membresPayes.has(d.id) });
+      if (!u.nom || u.categorie === 'honoraire') return;
+      const totalPaye = payePar[d.id] || 0;
+      const reste = cotisMontantAnnuel ? Math.max(cotisMontantAnnuel - totalPaye, 0) : 0;
+      const statut = !cotisMontantAnnuel ? 'inconnu' : (reste <= 0 ? 'paye' : (totalPaye > 0 ? 'partiel' : 'nonpaye'));
+      membres.push({ uid: d.id, nom: u.nom, totalPaye, reste, statut });
     });
-    membres.sort((a,b) => (a.paye === b.paye) ? a.nom.localeCompare(b.nom) : (a.paye ? 1 : -1));
-    const payeCount = membres.filter(m => m.paye).length;
-    if (summary) summary.textContent = payeCount + ' / ' + membres.length + ' ont payé pour « ' + cotisPeriode + ' »';
+    const ordre = { nonpaye:0, partiel:1, inconnu:2, paye:3 };
+    membres.sort((a,b) => (ordre[a.statut]-ordre[b.statut]) || a.nom.localeCompare(b.nom));
+    const payeCount = membres.filter(m => m.statut === 'paye').length;
+    if (summary) summary.textContent = (cotisMontantAnnuel ? payeCount + ' / ' + membres.length + ' à jour' : 'Montant non configuré') + ' pour « ' + cotisPeriode + ' »';
     if (!membres.length) { body.innerHTML = '<div class="empty"><div class="empty-b">Aucun membre trouvé.</div></div>'; return; }
-    body.innerHTML = membres.map(m => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--surface2)">
-      <span style="font-size:13px;color:var(--t1)">${escHtml(m.nom)}</span>
-      <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:${m.paye?'#D4EDDA':'#FDE8E8'};color:${m.paye?'#155724':'#C0392B'}">${m.paye?'✅ Payé':'❌ Non payé'}</span>
-    </div>`).join('');
+    const badges = {
+      paye:    { label:'✅ Payé',        bg:'#D4EDDA', fg:'#155724' },
+      partiel: { label:'🟡 Partiel',     bg:'#FFF3CD', fg:'#856404' },
+      nonpaye: { label:'❌ Non payé',    bg:'#FDE8E8', fg:'#C0392B' },
+      inconnu: { label:'—',              bg:'var(--surface2)', fg:'var(--t3)' }
+    };
+    body.innerHTML = membres.map(m => {
+      const b = badges[m.statut];
+      const sousLigne = cotisMontantAnnuel && m.statut !== 'paye'
+        ? `<div style="font-size:11px;color:var(--t3);margin-top:2px">${m.totalPaye.toLocaleString('fr-FR')} / ${cotisMontantAnnuel.toLocaleString('fr-FR')} Ar — reste ${m.reste.toLocaleString('fr-FR')} Ar</div>`
+        : '';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--surface2)">
+        <div><span style="font-size:13px;color:var(--t1)">${escHtml(m.nom)}</span>${sousLigne}</div>
+        <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:${b.bg};color:${b.fg};white-space:nowrap">${b.label}</span>
+      </div>`;
+    }).join('');
   } catch(e) { body.innerHTML = '<div class="empty"><div class="empty-t">Erreur de chargement</div></div>'; }
+}
+
+// Affichage personnel de la cotisation sur le Profil du membre lui-même.
+async function renderMaCotisation() {
+  const el = document.getElementById('ma-cotisation-content');
+  if (!el || !CU) return;
+  el.innerHTML = '<div style="font-size:12px;color:var(--t3);padding:4px 0">Chargement...</div>';
+  try {
+    const anneeCourante = String(new Date().getFullYear());
+    const cfgSnap = await db.collection('association_config').doc('cotisation').get();
+    const montant = cfgSnap.exists ? (Number(cfgSnap.data().montant) || 0) : 0;
+    const txSnap = await db.collection('tresorerie')
+      .where('categorie', '==', 'Cotisation')
+      .where('membreUid', '==', CU.uid)
+      .get();
+    let totalPaye = 0;
+    txSnap.forEach(d => {
+      const t = d.data();
+      if (t.statut === 'validee' && t.periode === anneeCourante) totalPaye += Number(t.montant) || 0;
+    });
+    if (!montant) {
+      el.innerHTML = `<div style="font-size:12.5px;color:var(--t3)">Le montant de la cotisation ${anneeCourante} n'a pas encore été configuré par le Bureau.</div>`;
+      return;
+    }
+    const reste = Math.max(montant - totalPaye, 0);
+    if (reste <= 0) {
+      el.innerHTML = `<div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:10px;background:#D4EDDA;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-feather="check-circle" style="color:#155724"></i></div>
+        <div><div style="font-size:13.5px;font-weight:700;color:#155724">Cotisation ${anneeCourante} payée ✅</div><div style="font-size:11.5px;color:var(--t3)">${totalPaye.toLocaleString('fr-FR')} / ${montant.toLocaleString('fr-FR')} Ar</div></div>
+      </div>`;
+    } else {
+      el.innerHTML = `<div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:10px;background:#FDE8E8;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i data-feather="alert-circle" style="color:#C0392B"></i></div>
+        <div><div style="font-size:13.5px;font-weight:700;color:#C0392B">Cotisation ${anneeCourante} — reste ${reste.toLocaleString('fr-FR')} Ar</div><div style="font-size:11.5px;color:var(--t3)">${totalPaye.toLocaleString('fr-FR')} / ${montant.toLocaleString('fr-FR')} Ar payés</div></div>
+      </div>`;
+    }
+  } catch(e) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--t3)">Impossible de charger ta cotisation pour le moment.</div>';
+  }
 }
 
 /* ── Section transactions en attente de validation (Session 7) ────── */
@@ -12696,6 +12777,11 @@ async function renderDashAnnoncePreview() {
     </div>
     <div style="display:flex;gap:8px;padding:10px 16px 4px">
       <select id="cotis-periode-input" onchange="checkCotisations()" style="flex:1;height:40px;border-radius:var(--r8);border:1px solid var(--surface3);background:var(--surface2);padding:0 12px;font-size:13px;color:var(--t1)"></select>
+    </div>
+    <div style="display:flex;gap:8px;padding:8px 16px 4px;align-items:center">
+      <span style="font-size:11.5px;color:var(--t2);white-space:nowrap">Montant annuel</span>
+      <input type="number" id="cotis-montant-input" min="0" placeholder="Ex: 20000" style="flex:1;height:38px;border-radius:var(--r8);border:1px solid var(--surface3);background:var(--surface2);padding:0 10px;font-size:13px;color:var(--t1)">
+      <button onclick="saveCotisationMontant()" style="height:38px;padding:0 14px;border-radius:var(--r8);background:var(--gold);color:#fff;font-size:12px;font-weight:600">OK</button>
     </div>
   </div>
   <div class="proj-body">
