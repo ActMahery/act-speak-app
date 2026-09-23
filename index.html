@@ -3708,6 +3708,7 @@ function isSG(p) { return isBureau(p) && normAccents(p && p.role).includes('secr
 function canManageAgendaAsso(p) { return isPresident(p) || isVP(p) || isSG(p); }
 // Supervision globale des tâches (vue de toutes les tâches, délégation à tout membre, rappels)
 function isPresidentOrVP(p) { return isPresident(p) || isVP(p); }
+function isPresidentOuSG(p) { return isPresident(p) || isSG(p); }
 // Accès aux données personnelles (agenda/finances/programmes) d'un autre membre :
 // uniquement le Président, en plus du propriétaire lui-même (choix validé — v2.0)
 function canAccessPersonalData(viewer, targetUid) {
@@ -3956,7 +3957,7 @@ function fillDash() {
     safe('p-av', el => el.innerHTML = img);
   }
   if (categorie === 'bureau') {
-    safe('admin-btn',   el => el.style.display = 'block');
+    safe('admin-btn',   el => el.style.display = isPresidentOuSG(CP) ? 'block' : 'none');
     safe('treso-btn',   el => el.style.display = 'block');
     safe('stats-btn',   el => el.style.display = 'block');
   }
@@ -5985,6 +5986,7 @@ async function submitTask() {
 
 // ── ADMIN ─────────────────────────────────────────────────────────
 async function loadMembers() {
+  if (!isPresidentOuSG(CP)) { toast('Réservé au Président et au Secrétaire Général'); go('dash'); return; }
   const list = document.getElementById('mem-list');
   try {
     const snap = await db.collection('users').get();
@@ -6041,6 +6043,7 @@ async function loadMembers() {
 }
 
 async function saveRole(uid, role) {
+  if (!isPresidentOuSG(CP)) { toast('Réservé au Président et au Secrétaire Général'); return; }
   role = (role||'').trim();
   try {
     const flags = computeRoleFlags(role);
@@ -6056,15 +6059,18 @@ async function saveRole(uid, role) {
 }
 
 async function setStt(uid, s) {
+  if (!isPresidentOuSG(CP)) { toast('Réservé au Président et au Secrétaire Général'); return; }
   await db.collection('users').doc(uid).update({statut:s});
   toast(s==='bloque'?'Accès bloqué':'Accès rétabli'); loadMembers();
 }
 async function setCategorie(uid, cat) {
+  if (!isPresidentOuSG(CP)) { toast('Réservé au Président et au Secrétaire Général'); return; }
   if (!CAT_LABEL[cat]) return;
   await db.collection('users').doc(uid).update({categorie:cat});
   toast('Catégorie → '+CAT_LABEL[cat]); loadMembers();
 }
 async function inviteMember() {
+  if (!isPresidentOuSG(CP)) { toast('Réservé au Président et au Secrétaire Général'); return; }
   const email = document.getElementById('inv-email').value.trim();
   const nom   = document.getElementById('inv-nom').value.trim();
   const role  = document.getElementById('inv-role').value.trim();
