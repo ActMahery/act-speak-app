@@ -2931,7 +2931,10 @@ input,select,textarea{font-family:inherit}
       <div>
         <div class="sec-title" style="display:flex;justify-content:space-between;align-items:center">
           <span>Transactions récentes</span>
-          <button onclick="go('cotisations')" style="font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;background:var(--surface2);color:var(--t1)">📋 Cotisations</button>
+          <div style="display:flex;gap:6px">
+            <button onclick="exportTresorerieExcel()" style="font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;background:var(--surface2);color:var(--t1)">📥 Exporter</button>
+            <button onclick="go('cotisations')" style="font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;background:var(--surface2);color:var(--t1)">📋 Cotisations</button>
+          </div>
         </div>
         <div class="card" id="tx-list">
           <div class="empty"><div class="empty-ic">💰</div><div class="empty-t">Aucune transaction</div></div>
@@ -3428,6 +3431,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.12.3/JsBarcode.all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
 <script>
 if (window.pdfjsLib) {
@@ -9594,6 +9598,109 @@ async function renderCotisations() {
 }
 
 // Affichage personnel de la cotisation sur le Profil du membre lui-même.
+/* ── Export Excel de la Trésorerie (Journal de caisse / Cotisations / Fonds bloqués) ── */
+window.exportTresorerieExcel = async function() {
+  if (!isBureau(CP)) { toast('Réservé au Bureau'); return; }
+  if (!window.XLSX) { toast('Bibliothèque Excel non disponible — vérifie ta connexion'); return; }
+  toast('Génération du fichier...');
+  try {
+    const wb = XLSX.utils.book_new();
+    const anneeCourante = String(new Date().getFullYear());
+
+    // ── Feuille 1 : Journal de caisse ──
+    const validees = (allTx || []).filter(t => t.statut === 'validee').slice().sort((a,b) => {
+      const da = txEffectiveDate(a), db2 = txEffectiveDate(b);
+      return (da ? da.getTime() : 0) - (db2 ? db2.getTime() : 0);
+    });
+    let nE = 0, nS = 0, solde = 0, totalE = 0, totalD = 0;
+    const parMois = {};
+    const journalRows = [
+      ['JOURNAL DE CAISSE — ACT & SPEAK'],
+      ['Généré le ' + new Date().toLocaleDateString('fr-FR', {day:'2-digit', month:'long', year:'numeric'})],
+      [],
+      ['N° Bon','N° Pièce','Date','Mois','Libellé','Catégorie','Compte','Entrée','Sortie','Solde cumulé']
+    ];
+    validees.forEach(t => {
+      const dt = txEffectiveDate(t);
+      const isE = t.type === 'entree';
+      if (isE) { nE++; totalE += t.montant; solde += t.montant; } else { nS++; totalD += t.montant; solde -= t.montant; }
+      const moisLbl = dt ? dt.toLocaleDateString('fr-FR', {month:'long', year:'numeric'}) : '';
+      if (moisLbl) {
+        if (!parMois[moisLbl]) parMois[moisLbl] = { e:0, d:0 };
+        if (isE) parMois[moisLbl].e += t.montant; else parMois[moisLbl].d += t.montant;
+      }
+      journalRows.push([
+        isE ? 'BE-' + String(nE).padStart(3,'0') : 'BS-' + String(nS).padStart(3,'0'),
+        isE ? 'PJ-E-' + String(nE).padStart(3,'0') : 'PJ-S-' + String(nS).padStart(3,'0'),
+        dt ? dt.toLocaleDateString('fr-FR') : '', moisLbl,
+        t.description || '', t.categorie || '', t.compte || 'Sous-caisse',
+        isE ? t.montant : '', isE ? '' : t.montant, solde
+      ]);
+    });
+    journalRows.push([]);
+    journalRows.push(['SYNTHÈSE']);
+    journalRows.push(['Total entrées', totalE]);
+    journalRows.push(['Total sorties', totalD]);
+    journalRows.push(['Solde final', solde]);
+    journalRows.push([]);
+    journalRows.push(['RÉPARTITION PAR MOIS', 'Argent introduit', 'Argent dépensé']);
+    Object.keys(parMois).forEach(mois => journalRows.push([mois, parMois[mois].e, parMois[mois].d]));
+    const wsJournal = XLSX.utils.aoa_to_sheet(journalRows);
+    wsJournal['!cols'] = [{wch:10},{wch:12},{wch:12},{wch:16},{wch:30},{wch:16},{wch:12},{wch:12},{wch:12},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, wsJournal, 'Journal de caisse');
+
+    // ── Feuille 2 : Cotisations ──
+    const cfgSnap = await db.collection('association_config').doc('cotisation').get();
+    const montantAttendu = cfgSnap.exists ? (Number(cfgSnap.data().montant) || 0) : 0;
+    const [usersSnap, cotisSnap] = await Promise.all([
+      db.collection('users').get(),
+      db.collection('tresorerie').where('categorie','==','Cotisation').get()
+    ]);
+    const payePar = {};
+    cotisSnap.forEach(d => {
+      const t = d.data();
+      if (t.statut === 'validee' && t.periode === anneeCourante && t.membreUid) {
+        payePar[t.membreUid] = (payePar[t.membreUid] || 0) + (Number(t.montant) || 0);
+      }
+    });
+    const cotisRows = [
+      ['COTISATIONS ' + anneeCourante + ' — ACT & SPEAK'],
+      ['Montant attendu par membre : ' + montantAttendu.toLocaleString('fr-FR') + ' Ar'],
+      [],
+      ['N°', 'Nom', 'Montant attendu', 'Payé', 'Reste à payer', 'Statut']
+    ];
+    let num = 0;
+    usersSnap.forEach(d => {
+      const u = d.data();
+      if (!u.nom || u.categorie === 'honoraire') return;
+      num++;
+      const paye = payePar[d.id] || 0;
+      const reste = Math.max(montantAttendu - paye, 0);
+      const statut = !montantAttendu ? '—' : (reste <= 0 ? 'OK' : (paye > 0 ? 'Partiel' : 'Non payé'));
+      cotisRows.push([num, u.nom, montantAttendu, paye, reste, statut]);
+    });
+    const wsCotis = XLSX.utils.aoa_to_sheet(cotisRows);
+    wsCotis['!cols'] = [{wch:5},{wch:28},{wch:16},{wch:12},{wch:16},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, wsCotis, 'Cotisations');
+
+    // ── Feuille 3 : Fonds bloqués ──
+    const fondsRows = [
+      ['FONDS BLOQUÉS — ACT & SPEAK'],
+      [],
+      ['Nom', 'Montant', 'Origine', 'Condition', 'Statut']
+    ];
+    (allFonds || []).forEach(f => {
+      fondsRows.push([f.nom || '', Number(f.montant) || 0, f.origine || '', f.condition || '', f.statut === 'libere' ? 'Libéré' : 'Actif']);
+    });
+    const wsFonds = XLSX.utils.aoa_to_sheet(fondsRows);
+    wsFonds['!cols'] = [{wch:24},{wch:14},{wch:20},{wch:34},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, wsFonds, 'Fonds bloqués');
+
+    XLSX.writeFile(wb, 'Tresorerie_ACT_SPEAK_' + anneeCourante + '.xlsx');
+    toast('Fichier téléchargé ✅');
+  } catch(e) { toast('Erreur export : ' + e.message); }
+};
+
 async function renderMaCotisation() {
   const el = document.getElementById('ma-cotisation-content');
   if (!el || !CU) return;
