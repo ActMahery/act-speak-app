@@ -3705,7 +3705,14 @@ function isSecFin(p)           { return isBureau(p) && normAccents(p && p.role).
 // Peut proposer (saisir) une transaction
 function canProposeTx(p) { return isPresident(p) || isTresorier(p) || isTresorierAdjoint(p) || isSecFin(p); }
 // Peut autoriser (valider) une transaction — Président ou Trésorier uniquement, jamais sa propre saisie
-function canValidateTx(p, tx) { return (isPresident(p) || isTresorier(p)) && p && tx && p.uid !== tx.auteurId; }
+function canValidateTx(p, tx) {
+  if (!p || !tx || !(isPresident(p) || isTresorier(p))) return false;
+  if (p.uid !== tx.auteurId) return true;
+  // L'auteur ne valide jamais seul sa saisie : il peut seulement apporter la 2e signature
+  // quand une AUTRE personne (ex. le Trésorier) a déjà validé.
+  var v = tx.validations || {};
+  return Object.keys(v).some(function(k) { return v[k] && v[k].uid && v[k].uid !== p.uid; });
+}
 
 // ── Rôles Président / Vice-Président (Session 7 — v2.0 Architecture) ──
 function isVP(p) { return isBureau(p) && normAccents(p && p.role).includes('vice president'); }
