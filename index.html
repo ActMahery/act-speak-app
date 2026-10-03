@@ -3130,6 +3130,7 @@ input,select,textarea{font-family:inherit}
         <option>Partenariat</option>
         <option>Autre</option>
       </select>
+      <button type="button" id="tx-cat-add" onclick="addTxCategory()" style="display:none;margin-top:6px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:8px;background:var(--surface2);color:var(--t1)">＋ Nouvelle catégorie</button>
     </div>
     <div class="mfield"><label>Mode de paiement</label>
       <select id="tx-mode"><option>Cash</option><option>Mobile Money</option><option>Virement</option></select>
@@ -10006,6 +10007,7 @@ window.openModalTx = function(type) {
   ensureMentionCache().then(members => {
     memSel.innerHTML = '<option value="">— Choisir —</option>' + members.map(m => `<option value="${m.uid}">${escHtml(m.nom)}</option>`).join('');
   });
+  loadTxCategories();
   toggleTxCotisationFields();
   document.getElementById('ov-tx').classList.add('on');
 };
@@ -10014,6 +10016,39 @@ window.viewJustif = function(url, title) {
   const t = document.querySelector('#ov-justif-view .mtitle');
   if (t) t.textContent = title || 'Justificatif';
   document.getElementById('ov-justif-view').classList.add('on');
+};
+var TX_CATS_BASE = null;
+window.loadTxCategories = async function(selectName) {
+  var sel = document.getElementById('tx-cat');
+  if (!sel) return;
+  if (!TX_CATS_BASE) TX_CATS_BASE = Array.prototype.map.call(sel.options, function(o) { return o.value; });
+  var btn = document.getElementById('tx-cat-add');
+  if (btn) btn.style.display = isBureau(CP) ? 'inline-block' : 'none';
+  var custom = [];
+  try {
+    var snap = await db.collection('association_config').doc('categories_tresorerie').get();
+    if (snap.exists && Array.isArray(snap.data().liste)) custom = snap.data().liste;
+  } catch(e) {}
+  var cur = selectName || sel.value;
+  var all = TX_CATS_BASE.slice();
+  custom.forEach(function(c) { if (all.indexOf(c) < 0) all.push(c); });
+  sel.innerHTML = all.map(function(c) { return '<option>' + escHtml(c) + '</option>'; }).join('');
+  if (all.indexOf(cur) >= 0) sel.value = cur;
+  toggleTxCotisationFields();
+};
+window.addTxCategory = async function() {
+  if (!isBureau(CP)) { toast('Réservé au Bureau'); return; }
+  var nom = (prompt('Nom de la nouvelle catégorie :') || '').trim();
+  if (!nom) return;
+  if (nom.length > 40) { toast('Nom trop long (40 caractères max)'); return; }
+  var sel = document.getElementById('tx-cat');
+  var existe = Array.prototype.find.call(sel.options, function(o) { return o.value.toLowerCase() === nom.toLowerCase(); });
+  if (existe) { sel.value = existe.value; toggleTxCotisationFields(); toast('Cette catégorie existe déjà'); return; }
+  try {
+    await db.collection('association_config').doc('categories_tresorerie').set({ liste: firebase.firestore.FieldValue.arrayUnion(nom) }, { merge: true });
+    await loadTxCategories(nom);
+    toast('Catégorie ajoutée ✅');
+  } catch(e) { toast('Erreur : ' + e.message); }
 };
 window.toggleTxCotisationFields = function() {
   const row = document.getElementById('tx-cotis-row');
