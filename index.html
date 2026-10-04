@@ -3589,13 +3589,18 @@ window.activerNotifications = async function() {
 };
 window.testerNotifications = async function() {
   if (!CU) { toast('Connecte-toi d\'abord'); return; }
-  var r = [];
+  var r = [], lastTok = null;
   try {
     r.push('1. Permission navigateur : ' + (window.Notification ? Notification.permission : 'non supporté'));
     var reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
     r.push('2. Service worker : ' + (reg ? 'OK (' + (reg.active ? 'actif' : 'pas actif') + ')' : 'ABSENT'));
+    var hostOf = function(sub) { try { return sub ? new URL(sub.endpoint).host : 'AUCUN abonnement push'; } catch(e) { return '?'; } };
+    var sub0 = reg ? await reg.pushManager.getSubscription() : null;
+    var marques = (navigator.userAgentData && navigator.userAgentData.brands) ? navigator.userAgentData.brands.map(function(b) { return b.brand; }).join(', ') : navigator.userAgent.slice(-40);
+    r.push('2b. Service push : ' + hostOf(sub0) + ' | ' + marques);
     var snap = await db.collection('users').doc(CU.uid).get();
     var tok = snap.exists ? snap.data().fcmToken : null;
+    lastTok = tok;
     r.push('3. Jeton enregistré : ' + (tok ? 'OUI (' + tok.length + ' car.)' : 'NON — active le bouton, puis réessaie'));
     var at = null;
     try { at = await getFcmAccessToken(); r.push('4. Clé du compte de service : OK'); }
@@ -3618,8 +3623,10 @@ window.testerNotifications = async function() {
           var nt = await ctx.messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: ctx.reg });
           await db.collection('users').doc(CU.uid).update({ fcmToken: nt });
           setupFcmForegroundHandler(ctx.messaging);
+          lastTok = nt;
+          var sub1 = await ctx.reg.pushManager.getSubscription();
           var y = await envoyer(nt);
-          r.push('6. Jeton régénéré, nouvel envoi : ' + y.status + (y.ok ? ' OK ✅ — une notification doit apparaître' : ' — ' + y.txt.slice(0, 90).replace(/\s+/g, ' ')));
+          r.push('6. Jeton ' + (nt === tok ? 'IDENTIQUE à l\'ancien' : 'nouveau') + ' (' + hostOf(sub1) + '), nouvel envoi : ' + y.status + (y.ok ? ' OK ✅ — une notification doit apparaître' : ' — ' + y.txt.slice(0, 90).replace(/\s+/g, ' ')));
         } catch(e) { r.push('6. Régénération du jeton : ERREUR — ' + e.message); }
       }
     } else {
@@ -3627,6 +3634,7 @@ window.testerNotifications = async function() {
     }
   } catch(e) { r.push('Erreur : ' + e.message); }
   alert(r.join('\n'));
+  if (typeof lastTok !== 'undefined' && lastTok) prompt('Jeton de cet appareil (pour un test depuis la console Firebase) :', lastTok);
 };
 window.desactiverNotifications = async function() {
   if (!CU) return;
