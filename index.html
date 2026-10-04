@@ -3554,7 +3554,8 @@ async function envoyerNotification(targetUid, titre, corps, data) {
 // Active/désactive les notifications push pour l'utilisateur courant.
 async function initFcmMessaging() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
-  const reg = await navigator.serviceWorker.register('sw.js');
+  await navigator.serviceWorker.register('sw.js');
+  const reg = await navigator.serviceWorker.ready;
   const messaging = firebase.messaging();
   return { messaging, reg };
 }
@@ -3587,9 +3588,21 @@ window.activerNotifications = async function() {
     toast('Notifications activées ✅');
   } catch(e) { toast('Erreur : ' + e.message); }
 };
+async function fcmHardResetIfFlagged() {
+  if (!localStorage.getItem('fcmHardReset')) return;
+  localStorage.removeItem('fcmHardReset');
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = reg ? await reg.pushManager.getSubscription() : null;
+    if (sub) await sub.unsubscribe();
+  } catch(e) {}
+  await Promise.all(['firebase-messaging-database', 'firebase-installations-database'].map(function(n) {
+    return new Promise(function(res) { var q = indexedDB.deleteDatabase(n); q.onsuccess = q.onerror = q.onblocked = function() { res(); }; });
+  }));
+}
 window.testerNotifications = async function() {
   if (!CU) { toast('Connecte-toi d\'abord'); return; }
-  var r = [], lastTok = null;
+  var r = [], lastTok = null, needReload = false;
   try {
     r.push('1. Permission navigateur : ' + (window.Notification ? Notification.permission : 'non supporté'));
     var reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -3627,14 +3640,15 @@ window.testerNotifications = async function() {
           var sub1 = await ctx.reg.pushManager.getSubscription();
           var y = await envoyer(nt);
           r.push('6. Jeton ' + (nt === tok ? 'IDENTIQUE à l\'ancien' : 'nouveau') + ' (' + hostOf(sub1) + '), nouvel envoi : ' + y.status + (y.ok ? ' OK ✅ — une notification doit apparaître' : ' — ' + y.txt.slice(0, 90).replace(/\s+/g, ' ')));
-        } catch(e) { r.push('6. Régénération du jeton : ERREUR — ' + e.message); }
+          if (!y.ok || !sub1) { localStorage.setItem('fcmHardReset', '1'); r.push('➜ Réinitialisation complète : l\'app va se recharger. Rouvre-la, attends 5 s, puis relance ce test.'); needReload = true; }
+        } catch(e) { r.push('6. Régénération du jeton : ERREUR — ' + e.message); localStorage.setItem('fcmHardReset', '1'); needReload = true; }
       }
     } else {
       r.push('5. Envoi FCM : non tenté');
     }
   } catch(e) { r.push('Erreur : ' + e.message); }
   alert(r.join('\n'));
-  if (typeof lastTok !== 'undefined' && lastTok) prompt('Jeton de cet appareil (pour un test depuis la console Firebase) :', lastTok);
+  if (needReload) { location.reload(); }
 };
 window.desactiverNotifications = async function() {
   if (!CU) return;
@@ -4006,8 +4020,8 @@ function fillDash() {
   safe('p-email',   el => el.textContent = CU.email);
   safe('p-role-d',  el => el.textContent = (CAT_LABEL[categorie]||'Membre') + (CP.role ? ' · ' + CP.role : ''));
   safe('notif-tog', el => el.classList.toggle('on', !!CP.fcmToken));
-  if (CP.fcmToken) {
-    initFcmMessaging().then(async ctx => {
+  if (CP.fcmToken || localStorage.getItem('fcmHardReset')) {
+    fcmHardResetIfFlagged().then(function() { return CP.fcmToken ? initFcmMessaging() : null; }).then(async ctx => {
       if (!ctx) return;
       setupFcmForegroundHandler(ctx.messaging);
       try {
