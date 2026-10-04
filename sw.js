@@ -2,7 +2,7 @@
 // Aucune mise en cache de l'app : toujours le réseau, pour que tous les appareils
 // chargent la dernière version déployée.
 
-const SW_VERSION = 'v4-push-direct';
+const SW_VERSION = 'v5-badge-always';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
@@ -32,14 +32,10 @@ self.addEventListener('push', event => {
   const body = d.body || '';
 
   event.waitUntil((async () => {
-    // Un message de chat n'est pas notifié si l'app est déjà visible à l'écran.
-    const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const visible = clientList.some(c => c.visibilityState === 'visible');
-    if (visible && d.type === 'message') return;
     await self.registration.showNotification(title, {
       body: body,
       icon: 'icon-192.png',
-      badge: 'icon-192.png',
+      badge: 'badge-96.png',
       tag: (d.type || 'act-speak') + (d.convId ? '-' + d.convId : ''),
       renotify: true,
       vibrate: [200, 100, 200],

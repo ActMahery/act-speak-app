@@ -3551,6 +3551,35 @@ async function envoyerNotification(targetUid, titre, corps, data) {
     toast('🔔 Erreur notif : ' + e.message);
   }
 }
+// Envoie une notification à plusieurs membres (tous, ou filtrés). Jamais bloquant.
+async function envoyerNotificationGroupe(titre, corps, data, opts) {
+  try {
+    opts = opts || {};
+    const snap = await db.collection('users').where('fcmToken', '>', '').get();
+    const cibles = [];
+    snap.forEach(doc => {
+      if (CU && doc.id === CU.uid) return;
+      const p = Object.assign({ uid: doc.id }, doc.data());
+      if (opts.filtre) { try { if (!opts.filtre(p)) return; } catch(e) { return; } }
+      if (p.fcmToken) cibles.push(p.fcmToken);
+    });
+    if (!cibles.length) return;
+    const accessToken = await getFcmAccessToken();
+    const url = 'https://fcm.googleapis.com/v1/projects/' + FCM_SERVICE_ACCOUNT.project_id + '/messages:send';
+    const payloadData = Object.assign({}, data || {}, { title: String(titre || 'ACT & SPEAK'), body: String(corps || '') });
+    let ok = 0;
+    for (let i = 0; i < cibles.length; i += 10) {
+      const res = await Promise.all(cibles.slice(i, i + 10).map(t =>
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: { token: t, data: payloadData, webpush: { headers: { Urgency: 'high', TTL: '86400' }, fcm_options: { link: location.origin + location.pathname } } } })
+        }).then(r => r.ok).catch(() => false)));
+      ok += res.filter(Boolean).length;
+    }
+    toast('🔔 Notification envoyée à ' + ok + ' membre' + (ok > 1 ? 's' : ''));
+  } catch(e) { console.warn('Notification groupée non envoyée :', e.message); }
+}
 // Active/désactive les notifications push pour l'utilisateur courant.
 async function initFcmMessaging() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
@@ -6543,6 +6572,10 @@ window.sendMsg = async function() {
     if (curConvId.indexOf('priv_') === 0) {
       const otherUid = curConvId.replace('priv_', '').split('_').find(u => u !== CU.uid);
       if (otherUid) envoyerNotification(otherUid, CP?.nom || 'Nouveau message', txt, { type:'message', convId: curConvId });
+    } else if (curConvId === 'general') {
+      envoyerNotificationGroupe((CP?.nom || 'Membre') + ' • 🌐 Général', txt.slice(0, 140), { type:'message', convId: curConvId });
+    } else if (curConvId === 'bureau') {
+      envoyerNotificationGroupe((CP?.nom || 'Membre') + ' • 🏛️ Bureau', txt.slice(0, 140), { type:'message', convId: curConvId }, { filtre: p => isBureau(p) });
     }
   } catch(e) { toast('Erreur : ' + e.message); }
 };
@@ -7180,6 +7213,7 @@ window.submitReunion = async function() {
     closeOverlay('ov-reun');
     loadReunions();
     toast('✅ Réunion créée — ' + snap.size + ' membres convoqués');
+    envoyerNotificationGroupe('🗓️ Réunion convoquée', nom + ' — ' + date + ' à ' + heure, { type: 'reunion' });
   } catch(e) { toast('Erreur : ' + e.message); }
   finally { btn.disabled = false; btn.querySelector('span').textContent = 'Convoquer'; }
 };
@@ -10191,6 +10225,7 @@ window.submitTransaction = async function() {
   }
   try {
     await db.collection('tresorerie').add(payload);
+    if (payload.statut === 'attente') envoyerNotificationGroupe('💰 Transaction à valider', (payload.type === 'entree' ? '+' : '−') + Number(payload.montant).toLocaleString('fr-FR') + ' Ar — ' + (payload.description || ''), { type: 'tresorerie' }, { filtre: p => isPresident(p) || isTresorier(p) });
     closeOverlay('ov-tx');
     loadTreso();
     toast((curTxType === 'entree' ? 'Entrée' : 'Dépense') + (payload.statut === 'validee' ? ' enregistrée et validée ✅' : ' enregistrée — en attente de validation'));
@@ -10453,6 +10488,7 @@ window.submitSondage = async function() {
     closeOverlay('ov-sond');
     loadSondages();
     toast('Sondage lancé ✅');
+    envoyerNotificationGroupe('🗳️ Nouveau sondage', q, { type: 'sondage' });
   } catch(e) { toast('Erreur : ' + e.message); }
   finally { btn.disabled = false; btn.querySelector('span').textContent = 'Lancer'; }
 };
@@ -12093,6 +12129,7 @@ window.saveAgendaAsso = async function() {
       payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       await db.collection('agenda_association').add(payload);
       toast('Événement ajouté ✅');
+      envoyerNotificationGroupe('📅 Nouvel événement', titre + (dateDebut ? ' — ' + dateDebut : ''), { type: 'evenement' });
     }
     closeOverlay('ov-agenda-asso');
     loadAgendaAsso();
@@ -12311,6 +12348,7 @@ window.publierAnnonce = async function() {
     });
     closeOverlay('ov-annonce');
     toast('Publication ajoutée ✅');
+    envoyerNotificationGroupe('📢 Nouvelle annonce — ' + (CP.nom || 'ACT & SPEAK'), String(texte || '').slice(0, 140) || 'Nouvelle publication', { type: 'annonce' });
     loadAnnonces();
   } catch(e) { toast('Erreur : ' + e.message); }
   finally { btn.disabled = false; }
