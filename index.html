@@ -1436,6 +1436,7 @@ input,select,textarea{font-family:inherit}
         <div class="prow-l"><div class="prow-ic" style="background:#EFF6FF"><i data-feather="bell"></i></div><div><div class="prow-lbl">Notifications push</div><div class="prow-sub">Tâches et messages, même app fermée</div></div></div>
         <div class="tog" id="notif-tog" onclick="toggleNotifications()"><div class="tog-dot"></div></div>
       </div>
+      <button type="button" onclick="testerNotifications()" style="margin:8px 0 2px;font-size:12px;font-weight:600;padding:7px 12px;border-radius:8px;background:var(--surface2);color:var(--t1)">🔔 Tester mes notifications</button>
     </div>
     <div class="pcard" id="stats-btn" style="display:none">
       <div class="pcard-t">Bureau</div>
@@ -3585,6 +3586,33 @@ window.activerNotifications = async function() {
     document.getElementById('notif-tog').classList.add('on');
     toast('Notifications activées ✅');
   } catch(e) { toast('Erreur : ' + e.message); }
+};
+window.testerNotifications = async function() {
+  if (!CU) { toast('Connecte-toi d\'abord'); return; }
+  var r = [];
+  try {
+    r.push('1. Permission navigateur : ' + (window.Notification ? Notification.permission : 'non supporté'));
+    var reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
+    r.push('2. Service worker : ' + (reg ? 'OK (' + (reg.active ? 'actif' : 'pas actif') + ')' : 'ABSENT'));
+    var snap = await db.collection('users').doc(CU.uid).get();
+    var tok = snap.exists ? snap.data().fcmToken : null;
+    r.push('3. Jeton enregistré : ' + (tok ? 'OUI (' + tok.length + ' car.)' : 'NON — active le bouton, puis réessaie'));
+    var at = null;
+    try { at = await getFcmAccessToken(); r.push('4. Clé du compte de service : OK'); }
+    catch(e) { r.push('4. Clé du compte de service : ERREUR — ' + e.message); }
+    if (tok && at) {
+      var resp = await fetch('https://fcm.googleapis.com/v1/projects/' + FCM_SERVICE_ACCOUNT.project_id + '/messages:send', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + at, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: { token: tok, notification: { title: 'Test ACT & SPEAK', body: 'Si tu vois ceci, les notifications marchent ✅' } } })
+      });
+      var txt = await resp.text();
+      r.push('5. Envoi FCM : ' + resp.status + (resp.ok ? ' OK' : ' — ' + txt.slice(0, 220)));
+    } else {
+      r.push('5. Envoi FCM : non tenté');
+    }
+  } catch(e) { r.push('Erreur : ' + e.message); }
+  alert(r.join('\n'));
 };
 window.desactiverNotifications = async function() {
   if (!CU) return;
