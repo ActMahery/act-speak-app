@@ -1,19 +1,13 @@
-// ACT & SPEAK — Service Worker minimal (Session 7 v2.0)
-// Objectif : garantir que TOUS les appareils (PC, mobile, APK) chargent toujours
-// la dernière version déployée, sans jamais servir une version mise en cache.
-// Aucune mise en cache de l'app elle-même — uniquement ce qui est nécessaire pour
-// que le navigateur considère le site comme une PWA installable.
+// ACT & SPEAK — Service Worker (notifications push système)
+// Aucune mise en cache de l'app : toujours le réseau, pour que tous les appareils
+// chargent la dernière version déployée.
 
-const SW_VERSION = 'v' + Date.now(); // change à chaque déploiement, forcé par le commentaire ci-dessous
+const SW_VERSION = 'v3-notifs-data-only';
 
-// S'active immédiatement dès qu'une nouvelle version est détectée, sans attendre
-// la fermeture de tous les onglets ouverts.
 self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// Prend le contrôle immédiatement de toutes les pages ouvertes, et supprime
-// tout cache résiduel d'une ancienne version du Service Worker (si présent).
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key))))
@@ -21,16 +15,14 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Ne met RIEN en cache — toujours réseau, jamais de version figée.
-// (Un vrai mode hors-ligne pourra être ajouté plus tard si besoin, avec une
-// stratégie "network-first + fallback cache" explicite plutôt que ce mode neutre.)
 self.addEventListener('fetch', event => {
   event.respondWith(fetch(event.request));
 });
 
-/* ══ NOTIFICATIONS PUSH (FCM) — reçoit et affiche les notifications même
-   quand l'app est complètement fermée. N'affecte pas le comportement
-   "toujours réseau" ci-dessus : ce sont deux mécanismes indépendants. ══ */
+/* ══ NOTIFICATIONS PUSH (FCM) ══
+   L'app envoie des messages "data-only" : le service worker affiche lui-même
+   la notification système (barre de notifications du téléphone), app fermée
+   comme ouverte en arrière-plan. */
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
@@ -45,21 +37,22 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Affiche la notification système quand un message FCM arrive alors que
-// l'app n'est pas au premier plan.
 messaging.onBackgroundMessage(payload => {
-  const title = (payload.notification && payload.notification.title) || 'ACT & SPEAK';
-  const options = {
-    body: (payload.notification && payload.notification.body) || '',
+  const d = payload.data || {};
+  const title = d.title || (payload.notification && payload.notification.title) || 'ACT & SPEAK';
+  const body = d.body || (payload.notification && payload.notification.body) || '';
+  return self.registration.showNotification(title, {
+    body: body,
     icon: 'icon-192.png',
     badge: 'icon-192.png',
-    data: payload.data || {}
-  };
-  self.registration.showNotification(title, options);
+    tag: (d.type || 'act-speak') + (d.convId ? '-' + d.convId : ''),
+    renotify: true,
+    vibrate: [200, 100, 200],
+    data: d
+  });
 });
 
-// Au tap sur la notification : ouvre l'app (ou la ramène au premier plan
-// si elle est déjà ouverte dans un onglet/fenêtre existant).
+// Au tap : ouvre l'app ou la ramène au premier plan.
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   event.waitUntil(
@@ -67,7 +60,7 @@ self.addEventListener('notificationclick', event => {
       for (const client of clientList) {
         if ('focus' in client) return client.focus();
       }
-      if (self.clients.openWindow) return self.clients.openWindow('/');
+      if (self.clients.openWindow) return self.clients.openWindow('./');
     })
   );
 });

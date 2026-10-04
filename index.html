@@ -3527,16 +3527,15 @@ async function envoyerNotification(targetUid, titre, corps, data) {
     if (!targetUid || targetUid === CU?.uid) return; // pas de notif à soi-même
     const snap = await db.collection('users').doc(targetUid).get();
     const fcmToken = snap.exists ? snap.data().fcmToken : null;
-    if (!fcmToken) return;
+    if (!fcmToken) { if (data && data.type === 'tache') toast('🔔 Ce membre n\'a pas activé les notifications'); return; }
     const accessToken = await getFcmAccessToken();
     const resp = await fetch('https://fcm.googleapis.com/v1/projects/' + FCM_SERVICE_ACCOUNT.project_id + '/messages:send', {
       method:'POST',
       headers:{ 'Authorization':'Bearer ' + accessToken, 'Content-Type':'application/json' },
       body: JSON.stringify({ message: {
         token: fcmToken,
-        notification: { title: titre, body: corps },
-        data: data || {},
-        webpush: { fcm_options: { link: location.origin + location.pathname } }
+        data: Object.assign({}, data || {}, { title: String(titre || 'ACT & SPEAK'), body: String(corps || '') }),
+        webpush: { headers: { Urgency: 'high', TTL: '86400' }, fcm_options: { link: location.origin + location.pathname } }
       }})
     });
     if (!resp.ok) {
@@ -3565,8 +3564,8 @@ function setupFcmForegroundHandler(messaging) {
   if (_fcmForegroundSetup) return;
   try {
     messaging.onMessage(payload => {
-      const title = (payload.notification && payload.notification.title) || 'ACT & SPEAK';
-      const body = (payload.notification && payload.notification.body) || '';
+      const title = (payload.data && payload.data.title) || (payload.notification && payload.notification.title) || 'ACT & SPEAK';
+      const body = (payload.data && payload.data.body) || (payload.notification && payload.notification.body) || '';
       toast('🔔 ' + title + (body ? ' — ' + body : ''));
     });
     _fcmForegroundSetup = true;
@@ -3609,7 +3608,7 @@ window.testerNotifications = async function() {
       var resp = await fetch('https://fcm.googleapis.com/v1/projects/' + FCM_SERVICE_ACCOUNT.project_id + '/messages:send', {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + at, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: { token: t, notification: { title: 'Test ACT & SPEAK', body: 'Si tu vois ceci, les notifications marchent ✅' } } })
+        body: JSON.stringify({ message: { token: t, data: { title: 'Test ACT & SPEAK', body: 'Si tu vois ceci, les notifications marchent ✅' }, webpush: { headers: { Urgency: 'high' } } } })
       });
       return { ok: resp.ok, status: resp.status, txt: await resp.text() };
     };
@@ -4006,7 +4005,19 @@ function fillDash() {
   safe('p-email',   el => el.textContent = CU.email);
   safe('p-role-d',  el => el.textContent = (CAT_LABEL[categorie]||'Membre') + (CP.role ? ' · ' + CP.role : ''));
   safe('notif-tog', el => el.classList.toggle('on', !!CP.fcmToken));
-  if (CP.fcmToken) { initFcmMessaging().then(ctx => { if (ctx) setupFcmForegroundHandler(ctx.messaging); }); }
+  if (CP.fcmToken) {
+    initFcmMessaging().then(async ctx => {
+      if (!ctx) return;
+      setupFcmForegroundHandler(ctx.messaging);
+      try {
+        if (window.Notification && Notification.permission !== 'granted') return;
+        const sub = await ctx.reg.pushManager.getSubscription();
+        if (!sub) { try { await ctx.messaging.deleteToken(); } catch(e) {} }
+        const nt = await ctx.messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: ctx.reg });
+        if (nt && nt !== CP.fcmToken) { await db.collection('users').doc(CU.uid).update({ fcmToken: nt }); CP.fcmToken = nt; }
+      } catch(e) { console.warn('Réparation jeton FCM :', e.message); }
+    });
+  }
 
   renderTodaySummary();
   renderDashAnnoncePreview();
