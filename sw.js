@@ -1,8 +1,8 @@
-// ACT & SPEAK — Service Worker (notifications push système)
+// ACT & SPEAK — Service Worker v4 (notifications système fiables)
 // Aucune mise en cache de l'app : toujours le réseau, pour que tous les appareils
 // chargent la dernière version déployée.
 
-const SW_VERSION = 'v3-notifs-data-only';
+const SW_VERSION = 'v4-push-direct';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
@@ -19,37 +19,33 @@ self.addEventListener('fetch', event => {
   event.respondWith(fetch(event.request));
 });
 
-/* ══ NOTIFICATIONS PUSH (FCM) ══
-   L'app envoie des messages "data-only" : le service worker affiche lui-même
-   la notification système (barre de notifications du téléphone), app fermée
-   comme ouverte en arrière-plan. */
-importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
+/* ══ NOTIFICATIONS PUSH ══
+   Le service worker traite directement l'événement "push" (sans dépendre du SDK
+   Firebase) : il affiche une vraie notification système dans la barre de
+   notifications du téléphone, app fermée comme ouverte. Les messages envoyés par
+   l'app sont de type "data-only" : { data: { title, body, type, convId } }. */
+self.addEventListener('push', event => {
+  let payload = {};
+  try { payload = event.data ? event.data.json() : {}; } catch (e) {}
+  const d = payload.data || payload.notification || payload || {};
+  const title = d.title || 'ACT & SPEAK';
+  const body = d.body || '';
 
-firebase.initializeApp({
-  apiKey: "AIzaSyCg0iChSrt3yLXn0yd-RFPUy8YmKy0hX8Y",
-  authDomain: "act-speak.firebaseapp.com",
-  projectId: "act-speak",
-  storageBucket: "act-speak.firebasestorage.app",
-  messagingSenderId: "126056935392",
-  appId: "1:126056935392:web:5eb731a61b08e8197f8585"
-});
-
-const messaging = firebase.messaging();
-
-messaging.onBackgroundMessage(payload => {
-  const d = payload.data || {};
-  const title = d.title || (payload.notification && payload.notification.title) || 'ACT & SPEAK';
-  const body = d.body || (payload.notification && payload.notification.body) || '';
-  return self.registration.showNotification(title, {
-    body: body,
-    icon: 'icon-192.png',
-    badge: 'icon-192.png',
-    tag: (d.type || 'act-speak') + (d.convId ? '-' + d.convId : ''),
-    renotify: true,
-    vibrate: [200, 100, 200],
-    data: d
-  });
+  event.waitUntil((async () => {
+    // Un message de chat n'est pas notifié si l'app est déjà visible à l'écran.
+    const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const visible = clientList.some(c => c.visibilityState === 'visible');
+    if (visible && d.type === 'message') return;
+    await self.registration.showNotification(title, {
+      body: body,
+      icon: 'icon-192.png',
+      badge: 'icon-192.png',
+      tag: (d.type || 'act-speak') + (d.convId ? '-' + d.convId : ''),
+      renotify: true,
+      vibrate: [200, 100, 200],
+      data: d
+    });
+  })());
 });
 
 // Au tap : ouvre l'app ou la ramène au premier plan.
