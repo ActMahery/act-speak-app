@@ -3545,6 +3545,7 @@ async function envoyerNotification(targetUid, titre, corps, data) {
       try { detail = JSON.parse(errTxt).error?.message || errTxt; } catch(e) {}
       toast('🔔 ' + resp.status + ' : ' + detail.slice(0,120));
     }
+    else if (data && data.type === 'tache') toast('🔔 Notification envoyée ✅');
   } catch(e) {
     console.warn('Notification non envoyée :', e.message);
     toast('🔔 Erreur notif : ' + e.message);
